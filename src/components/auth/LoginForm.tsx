@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -13,7 +14,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
-  const { login } = useAuth();
+  const { login, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -78,8 +79,12 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
               autoComplete="current-password"
             />
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign In"}
+          <Button type="submit" className="w-full" disabled={isLoading || authLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in...
+              </>
+            ) : "Sign In"}
           </Button>
         </form>
       </CardContent>
@@ -89,11 +94,6 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
           <Button variant="link" className="p-0 h-auto" onClick={onRegisterClick}>
             Sign up
           </Button>
-        </div>
-        <div className="text-xs text-center text-muted-foreground">
-          <p>Demo Accounts:</p>
-          <p>Customer: customer@example.com / password123</p>
-          <p>Technician: tech@example.com / password123</p>
         </div>
       </CardFooter>
     </Card>

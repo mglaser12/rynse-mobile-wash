@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 interface RegisterFormProps {
   onSuccess?: () => void;
@@ -14,7 +15,7 @@ interface RegisterFormProps {
 }
 
 export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
-  const { register } = useAuth();
+  const { register, isLoading: authLoading } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -119,8 +120,12 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
               </div>
             </RadioGroup>
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating account..." : "Create Account"}
+          <Button type="submit" className="w-full" disabled={isLoading || authLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating account...
+              </>
+            ) : "Create Account"}
           </Button>
         </form>
       </CardContent>
