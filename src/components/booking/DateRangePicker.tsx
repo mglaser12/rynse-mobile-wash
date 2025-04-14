@@ -66,26 +66,36 @@ export function DateRangePicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode={allowRange ? "range" : "single"}
-          selected={
-            allowRange && startDate && endDate
-              ? { from: startDate, to: endDate }
-              : startDate
-          }
-          onSelect={allowRange ? (range) => {
-            if (range?.from) {
-              onStartDateChange(range.from);
-              onEndDateChange(range.to);
-            } else {
-              onStartDateChange(undefined);
-              onEndDateChange(undefined);
-            }
-          } : (date) => handleSelect(date)}
-          initialFocus
-          disabled={(date) => date < new Date()}
-          className={cn("p-3 pointer-events-auto")}
-        />
+        {allowRange ? (
+          <Calendar
+            mode="range"
+            selected={{
+              from: startDate || undefined,
+              to: endDate || undefined
+            }}
+            onSelect={(range) => {
+              if (range?.from) {
+                onStartDateChange(range.from);
+                onEndDateChange(range.to);
+              } else {
+                onStartDateChange(undefined);
+                onEndDateChange(undefined);
+              }
+            }}
+            initialFocus
+            disabled={(date) => date < new Date()}
+            className={cn("p-3 pointer-events-auto")}
+          />
+        ) : (
+          <Calendar
+            mode="single"
+            selected={startDate}
+            onSelect={handleSelect}
+            initialFocus
+            disabled={(date) => date < new Date()}
+            className={cn("p-3 pointer-events-auto")}
+          />
+        )}
       </PopoverContent>
     </Popover>
   );
