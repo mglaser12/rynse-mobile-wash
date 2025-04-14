@@ -1,0 +1,56 @@
+
+import { Vehicle } from "@/models/types";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Car } from "lucide-react";
+
+interface VehicleCardProps {
+  vehicle: Vehicle;
+  onClick?: () => void;
+  selected?: boolean;
+  selectionMode?: boolean;
+}
+
+export function VehicleCard({ vehicle, onClick, selected = false, selectionMode = false }: VehicleCardProps) {
+  return (
+    <Card 
+      className={`overflow-hidden transition-all duration-200 ${selected ? 'ring-2 ring-primary' : ''} ${onClick ? 'cursor-pointer hover:bg-accent' : ''}`}
+      onClick={onClick}
+    >
+      <CardContent className="p-0">
+        <div className="flex items-center p-3">
+          <div className="h-14 w-14 rounded-md bg-muted flex items-center justify-center overflow-hidden">
+            {vehicle.image ? (
+              <img 
+                src={vehicle.image} 
+                alt={`${vehicle.make} ${vehicle.model}`} 
+                className="h-full w-full object-cover" 
+              />
+            ) : (
+              <Car className="h-6 w-6 text-muted-foreground" />
+            )}
+          </div>
+          <div className="ml-4 flex-1">
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold">
+                {vehicle.make} {vehicle.model}
+              </h4>
+              {selectionMode && (
+                <Checkbox checked={selected} className="mr-1" />
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {vehicle.year} • {vehicle.color} • {vehicle.licensePlate}
+            </p>
+            <div className="mt-1 flex items-center">
+              <Badge variant="outline" className="text-xs">
+                {vehicle.type}
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

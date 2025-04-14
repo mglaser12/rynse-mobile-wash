@@ -1,0 +1,99 @@
+
+import React from "react";
+import { format } from "date-fns";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { WashRequest } from "@/models/types";
+import { useVehicles } from "@/contexts/VehicleContext";
+import { Calendar, MapPin, Car } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+interface WashRequestCardProps {
+  washRequest: WashRequest;
+  onClick?: () => void;
+  actions?: React.ReactNode;
+}
+
+export function WashRequestCard({ washRequest, onClick, actions }: WashRequestCardProps) {
+  const { vehicles } = useVehicles();
+  
+  // Find vehicles associated with this wash request
+  const requestVehicles = vehicles.filter(v => washRequest.vehicles.includes(v.id));
+
+  const statusColors: Record<string, string> = {
+    pending: "bg-yellow-100 text-yellow-800",
+    confirmed: "bg-blue-100 text-blue-800",
+    in_progress: "bg-purple-100 text-purple-800",
+    completed: "bg-green-100 text-green-800",
+    cancelled: "bg-red-100 text-red-800",
+  };
+
+  const statusMessages: Record<string, string> = {
+    pending: "Awaiting confirmation",
+    confirmed: "Scheduled",
+    in_progress: "In progress",
+    completed: "Completed",
+    cancelled: "Cancelled",
+  };
+
+  const formatDateRange = () => {
+    const { start, end } = washRequest.preferredDates;
+    if (!end) {
+      return format(start, "MMM dd, yyyy");
+    }
+    return `${format(start, "MMM dd")} - ${format(end, "MMM dd, yyyy")}`;
+  };
+
+  return (
+    <Card 
+      className={`overflow-hidden ${onClick ? "cursor-pointer hover:border-primary transition-colors" : ""}`}
+      onClick={onClick}
+    >
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start">
+          <div className="space-y-1">
+            <Badge className={`${statusColors[washRequest.status]}`}>
+              {statusMessages[washRequest.status]}
+            </Badge>
+            <h4 className="font-medium">
+              {requestVehicles.length} Vehicle{requestVehicles.length !== 1 && "s"}
+            </h4>
+          </div>
+          <div className="text-right">
+            <p className="font-medium">${washRequest.price.toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground">
+              {format(washRequest.createdAt, "MMM dd, yyyy")}
+            </p>
+          </div>
+        </div>
+        
+        <div className="mt-3 space-y-2 text-sm">
+          <div className="flex gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
+            <span>{formatDateRange()}</span>
+          </div>
+          
+          <div className="flex gap-2">
+            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+            <span>{washRequest.location.name}</span>
+          </div>
+          
+          <div className="flex gap-2">
+            <Car className="h-4 w-4 text-muted-foreground mt-0.5" />
+            <div>
+              {requestVehicles.slice(0, 2).map((vehicle, index) => (
+                <span key={vehicle.id}>
+                  {vehicle.make} {vehicle.model}
+                  {index < Math.min(requestVehicles.length, 2) - 1 && ", "}
+                </span>
+              ))}
+              {requestVehicles.length > 2 && ` +${requestVehicles.length - 2} more`}
+            </div>
+          </div>
+        </div>
+        
+        {actions && <div className="mt-4">{actions}</div>}
+      </CardContent>
+    </Card>
+  );
+}
