@@ -3,10 +3,13 @@ import React, { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { VehicleList } from "@/components/vehicles/VehicleList";
 import { AddVehicleForm } from "@/components/vehicles/AddVehicleForm";
+import { EditVehicleForm } from "@/components/vehicles/EditVehicleForm";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { useVehicles } from "@/contexts/VehicleContext";
 
 const VehiclesPage = () => {
+  const { vehicles } = useVehicles();
   const [showAddVehicleDialog, setShowAddVehicleDialog] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
 
@@ -17,6 +20,14 @@ const VehiclesPage = () => {
   const handleSelectVehicle = (id: string) => {
     setSelectedVehicleId(id);
   };
+
+  const handleCloseEditDialog = () => {
+    setSelectedVehicleId(null);
+  };
+
+  const selectedVehicle = selectedVehicleId 
+    ? vehicles.find(v => v.id === selectedVehicleId) 
+    : null;
 
   return (
     <AppLayout>
@@ -47,12 +58,26 @@ const VehiclesPage = () => {
         </div>
       </div>
 
+      {/* Add Vehicle Dialog */}
       <Dialog open={showAddVehicleDialog} onOpenChange={setShowAddVehicleDialog}>
         <DialogContent className="w-full max-w-lg overflow-y-auto max-h-[90vh]">
           <AddVehicleForm 
             onSuccess={() => setShowAddVehicleDialog(false)}
             onCancel={() => setShowAddVehicleDialog(false)}
           />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Vehicle Dialog */}
+      <Dialog open={!!selectedVehicleId} onOpenChange={(open) => !open && handleCloseEditDialog()}>
+        <DialogContent className="w-full max-w-lg overflow-y-auto max-h-[90vh]">
+          {selectedVehicle && (
+            <EditVehicleForm 
+              vehicle={selectedVehicle}
+              onSuccess={handleCloseEditDialog}
+              onCancel={handleCloseEditDialog}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </AppLayout>
