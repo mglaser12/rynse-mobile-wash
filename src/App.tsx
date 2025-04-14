@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { VehicleProvider } from "@/contexts/VehicleContext";
 import { WashProvider } from "@/contexts/WashContext";
@@ -19,12 +19,17 @@ import { Badge } from "./components/ui/badge";
 
 const queryClient = new QueryClient();
 
-// Route guard component
+// Route guard component with useLocation to avoid render loops
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
   
   if (!isAuthenticated) {
-    return <Navigate to="/auth" />;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   
   return <>{children}</>;
@@ -38,23 +43,29 @@ const RoleRoute = ({
   children: React.ReactNode;
   allowedRole: "customer" | "technician";
 }) => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
   
   if (user?.role !== allowedRole) {
-    return <Navigate to="/" />;
+    return <Navigate to="/" replace />;
   }
   
   return <>{children}</>;
 };
 
 const AppRoutes = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   
   // Render different home page based on user role
   const renderHome = () => {
-    if (!user) return <Navigate to="/auth" />;
+    if (isLoading) {
+      return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    }
     
-    return user.role === "technician" ? (
+    return user?.role === "technician" ? (
       <TechnicianHome />
     ) : (
       <CustomerHome />

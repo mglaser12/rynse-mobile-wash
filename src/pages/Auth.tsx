@@ -11,14 +11,21 @@ const Auth = () => {
   const [currentView, setCurrentView] = useState<"login" | "register">("login");
   const navigate = useNavigate();
 
-  // Redirect if already authenticated
-  if (isAuthenticated) {
-    return <Navigate to="/" />;
-  }
+  // Use useEffect for navigation to avoid render loops
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSuccessfulAuth = () => {
     navigate("/");
   };
+
+  // Don't return Navigate directly in render to avoid render loops
+  if (isAuthenticated) {
+    return null; // Will redirect in useEffect
+  }
 
   return (
     <AppLayout hideNavigation>
