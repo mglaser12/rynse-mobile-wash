@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -63,7 +62,6 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Rynse brand colors
 				brand: {
 					primary: '#9b87f5', // Rynse purple
 					secondary: '#7E69AB', // Darker purple
