@@ -42,6 +42,13 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
+        <div className="flex justify-center mb-2">
+          <img 
+            src="/public/lovable-uploads/3d6deccc-d4a2-4bfb-9acc-18c6e46f5b73.png" 
+            alt="Rynse Icon" 
+            className="h-10 w-10" 
+          />
+        </div>
         <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
         <CardDescription className="text-center">
           Sign in to your account to continue

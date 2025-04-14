@@ -65,21 +65,23 @@ export function MobileNavigation() {
 
   return (
     <nav className="bottom-navigation bg-white">
-      {navItems.map((item) => (
-        <Link
-          key={item.name}
-          to={item.href}
-          className={cn(
-            "flex flex-col items-center pt-1 pb-0.5 px-4 text-xs font-medium",
-            pathname === item.href
-              ? "text-brand-primary"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          <item.icon className="h-5 w-5 mb-1" />
-          <span>{item.name}</span>
-        </Link>
-      ))}
+      <div className="flex justify-center items-center">
+        {navItems.map((item) => (
+          <Link
+            key={item.name}
+            to={item.href}
+            className={cn(
+              "flex flex-col items-center pt-1 pb-0.5 px-4 text-xs font-medium",
+              pathname === item.href
+                ? "text-brand-primary"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <item.icon className="h-5 w-5 mb-1" />
+            <span>{item.name}</span>
+          </Link>
+        ))}
+      </div>
     </nav>
   );
 }

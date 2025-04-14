@@ -56,9 +56,16 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
+        <div className="flex justify-center mb-2">
+          <img 
+            src="/public/lovable-uploads/3d6deccc-d4a2-4bfb-9acc-18c6e46f5b73.png" 
+            alt="Rynse Icon" 
+            className="h-10 w-10" 
+          />
+        </div>
         <CardTitle className="text-2xl text-center">Create Account</CardTitle>
         <CardDescription className="text-center">
-          Sign up to get started with Shine Mobile Fleet
+          Sign up to get started with Rynse Mobile Wash
         </CardDescription>
       </CardHeader>
       <CardContent>

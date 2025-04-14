@@ -31,11 +31,13 @@ const Auth = () => {
     <AppLayout hideNavigation>
       <div className="car-wash-container pt-10">
         <div className="mb-10 text-center">
-          <img 
-            src="https://assets.website-files.com/62a8107832c78d2f3800033c/62a8107832c78d5450000393_Group%2013473.svg" 
-            alt="Rynse Logo" 
-            className="h-12 mx-auto mb-4" 
-          />
+          <div className="flex justify-center items-center mb-4">
+            <img 
+              src="/public/lovable-uploads/5e29517a-c169-4798-98fa-075394612b76.png" 
+              alt="Rynse Logo" 
+              className="h-12" 
+            />
+          </div>
           <p className="text-muted-foreground">Mobile wash services</p>
         </div>
         
