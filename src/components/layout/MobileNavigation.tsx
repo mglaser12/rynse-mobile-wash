@@ -64,7 +64,7 @@ export function MobileNavigation() {
   const navItems = user?.role === "technician" ? technicianNavItems : customerNavItems;
 
   return (
-    <nav className="bottom-navigation">
+    <nav className="bottom-navigation bg-white">
       {navItems.map((item) => (
         <Link
           key={item.name}
@@ -72,7 +72,7 @@ export function MobileNavigation() {
           className={cn(
             "flex flex-col items-center pt-1 pb-0.5 px-4 text-xs font-medium",
             pathname === item.href
-              ? "text-primary"
+              ? "text-brand-primary"
               : "text-muted-foreground hover:text-foreground"
           )}
         >

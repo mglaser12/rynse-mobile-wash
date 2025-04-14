@@ -31,8 +31,12 @@ const Auth = () => {
     <AppLayout hideNavigation>
       <div className="car-wash-container pt-10">
         <div className="mb-10 text-center">
-          <h1 className="text-3xl font-bold text-brand-primary">Shine Mobile Fleet</h1>
-          <p className="text-muted-foreground">Wash services on demand</p>
+          <img 
+            src="https://assets.website-files.com/62a8107832c78d2f3800033c/62a8107832c78d5450000393_Group%2013473.svg" 
+            alt="Rynse Logo" 
+            className="h-12 mx-auto mb-4" 
+          />
+          <p className="text-muted-foreground">Mobile wash services</p>
         </div>
         
         {currentView === "login" ? (

@@ -63,13 +63,13 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Car wash app colors
+				// Rynse brand colors
 				brand: {
-					primary: '#0EA5E9', // Ocean Blue
-					secondary: '#33C3F0', // Sky Blue
-					accent: '#1EAEDB', // Bright Blue
-					light: '#D3E4FD', // Soft Blue
-					dark: '#1A1F2C', // Dark Purple
+					primary: '#9b87f5', // Rynse purple
+					secondary: '#7E69AB', // Darker purple
+					accent: '#6E59A5', // Even darker purple
+					light: '#E5DEFF', // Light purple
+					dark: '#1A1F2C', // Dark shade
 				},
 			},
 			borderRadius: {
