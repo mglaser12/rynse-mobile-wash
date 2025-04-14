@@ -8,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface RegisterFormProps {
   onSuccess?: () => void;
@@ -22,6 +23,7 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState<UserRole>("customer");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +42,9 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
     
     try {
       await register(name, email, password, role);
+      toast.success("Registration successful! Please login to continue.");
+      // Redirect to login view
+      onLoginClick();
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Registration error:", error);

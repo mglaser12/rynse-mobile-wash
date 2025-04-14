@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { Navigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -9,11 +9,16 @@ import { useAuth } from "@/contexts/AuthContext";
 const Auth = () => {
   const { isAuthenticated, user } = useAuth();
   const [currentView, setCurrentView] = useState<"login" | "register">("login");
+  const navigate = useNavigate();
 
   // Redirect if already authenticated
   if (isAuthenticated) {
     return <Navigate to="/" />;
   }
+
+  const handleSuccessfulAuth = () => {
+    navigate("/");
+  };
 
   return (
     <AppLayout hideNavigation>
@@ -26,12 +31,12 @@ const Auth = () => {
         {currentView === "login" ? (
           <LoginForm 
             onRegisterClick={() => setCurrentView("register")}
-            onSuccess={() => {}} // Will redirect automatically on auth
+            onSuccess={handleSuccessfulAuth}
           />
         ) : (
           <RegisterForm 
             onLoginClick={() => setCurrentView("login")}
-            onSuccess={() => {}} // Will redirect automatically on auth
+            onSuccess={handleSuccessfulAuth}
           />
         )}
       </div>
