@@ -1,7 +1,8 @@
+
 import React, { createContext, useState, useContext, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // Extend the User type to include organization info
 export type User = {
@@ -24,7 +25,7 @@ export type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
-  isLoading: false,
+  isLoading: true, // Default to true so components know we're checking auth
   user: null,
   login: async () => {},
   register: async () => {},
@@ -37,9 +38,10 @@ export function useAuth() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -148,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Modify the loadUserProfile function to include organization information
+  // Load user profile function to include organization information
   const loadUserProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -180,18 +182,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Modify the getSession function to include organization information
+  // Get session function with important updates to fix loading state
   const getSession = useCallback(async () => {
+    console.log("Getting session...");
     try {
-      setIsLoading(true);
-      
       const { data, error } = await supabase.auth.getSession();
       
       if (error) {
-        throw error;
+        console.error("Error getting session:", error);
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsLoading(false); // Important: Set loading to false even on error
+        return;
       }
       
       if (data?.session) {
+        console.log("Session found, loading user profile");
         const userId = data.session.user.id;
         const profile = await loadUserProfile(userId);
         
@@ -206,6 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         setIsAuthenticated(true);
       } else {
+        console.log("No session found");
         setUser(null);
         setIsAuthenticated(false);
       }
@@ -214,16 +221,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setIsAuthenticated(false);
     } finally {
+      // CRITICAL: Always set loading to false when finished, regardless of outcome
       setIsLoading(false);
+      console.log("Session check complete, loading set to false");
     }
-  }, [loadUserProfile, navigate]);
+  }, []);
 
   useEffect(() => {
-    getSession();
-
-    supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        loadUserProfile(session.user.id).then(profile => {
+    console.log("Auth provider initialized");
+    
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event);
+      
+      if (session) {
+        // Use setTimeout to avoid potential deadlock with Supabase client
+        setTimeout(async () => {
+          const profile = await loadUserProfile(session.user.id);
           setUser({
             id: session.user.id,
             email: session.user.email,
@@ -233,13 +247,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             avatarUrl: profile?.avatarUrl
           });
           setIsAuthenticated(true);
-        });
+          setIsLoading(false);
+        }, 0);
       } else {
         setUser(null);
         setIsAuthenticated(false);
+        setIsLoading(false);
       }
     });
-  }, [getSession, loadUserProfile]);
+
+    // Check for existing session
+    getSession();
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [getSession]);
+
+  // Debug output to help diagnose loading issues
+  useEffect(() => {
+    console.log("Auth state:", { isAuthenticated, isLoading, user, path: location.pathname });
+  }, [isAuthenticated, isLoading, user, location]);
 
   const value = {
     isAuthenticated,

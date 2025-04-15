@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { VehicleProvider } from "@/contexts/VehicleContext";
 import { WashProvider } from "@/contexts/WashContext";
+import { Loader2 } from "lucide-react";
 
 import Auth from "./pages/Auth";
 import CustomerHome from "./pages/customer/CustomerHome";
@@ -25,7 +26,14 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
   }
   
   if (!isAuthenticated) {
@@ -46,7 +54,14 @@ const RoleRoute = ({
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
   }
   
   if (user?.role !== allowedRole) {
@@ -62,7 +77,14 @@ const AppRoutes = () => {
   // Render different home page based on user role
   const renderHome = () => {
     if (isLoading) {
-      return <div className="flex items-center justify-center h-screen">Loading...</div>;
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      );
     }
     
     return user?.role === "technician" ? (
@@ -156,20 +178,27 @@ const AppRoutes = () => {
   );
 };
 
+// App loading component to show initial loading state
+const AppWithProviders = () => {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <VehicleProvider>
+          <WashProvider>
+            <Toaster />
+            <Sonner />
+            <AppRoutes />
+          </WashProvider>
+        </VehicleProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <VehicleProvider>
-            <WashProvider>
-              <Toaster />
-              <Sonner />
-              <AppRoutes />
-            </WashProvider>
-          </VehicleProvider>
-        </AuthProvider>
-      </BrowserRouter>
+      <AppWithProviders />
     </TooltipProvider>
   </QueryClientProvider>
 );
