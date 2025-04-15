@@ -1,4 +1,3 @@
-
 // Add the UserRole type to the existing types
 export type UserRole = "fleet_manager" | "technician" | "admin";
 
@@ -40,14 +39,20 @@ export type WashRequest = {
   createdAt: Date;
   updatedAt: Date;
   organizationId?: string; // Organization ID field
+  vehicleWashStatuses?: VehicleWashStatus[]; // Added reference to vehicle wash statuses
 };
 
 // New type to track the wash status for each vehicle
 export type VehicleWashStatus = {
+  id?: string;
   vehicleId: string;
+  washRequestId?: string;
+  technicianId?: string;
   completed: boolean;
   postWashPhoto?: string;
   notes?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
 export type Organization = {
@@ -101,6 +106,18 @@ export type SupabaseWashRequestVehicle = {
   wash_request_id: string;
   vehicle_id: string;
   created_at: string;
+};
+
+export type SupabaseVehicleWashStatus = {
+  id: string;
+  wash_request_id: string;
+  vehicle_id: string;
+  technician_id: string | null;
+  completed: boolean;
+  notes: string | null;
+  post_wash_photo: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type SupabaseProfile = {

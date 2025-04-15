@@ -71,6 +71,71 @@ export type Database = {
           },
         ]
       }
+      vehicle_wash_statuses: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          notes: string | null
+          post_wash_photo: string | null
+          technician_id: string | null
+          updated_at: string
+          vehicle_id: string
+          wash_request_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          notes?: string | null
+          post_wash_photo?: string | null
+          technician_id?: string | null
+          updated_at?: string
+          vehicle_id: string
+          wash_request_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          notes?: string | null
+          post_wash_photo?: string | null
+          technician_id?: string | null
+          updated_at?: string
+          vehicle_id?: string
+          wash_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_wash_statuses_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_wash_statuses_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_wash_statuses_wash_request_id_fkey"
+            columns: ["wash_request_id"]
+            isOneToOne: false
+            referencedRelation: "organization_wash_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_wash_statuses_wash_request_id_fkey"
+            columns: ["wash_request_id"]
+            isOneToOne: false
+            referencedRelation: "wash_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicles: {
         Row: {
           color: string | null

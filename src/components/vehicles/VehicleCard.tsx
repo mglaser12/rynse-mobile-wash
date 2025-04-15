@@ -10,7 +10,8 @@ interface VehicleCardProps {
   onClick?: () => void;
   selected?: boolean;
   selectionMode?: boolean;
-  className?: string; // Added className prop
+  className?: string; 
+  clickable?: boolean; // Added to explicitly mark a card as clickable
 }
 
 export function VehicleCard({ 
@@ -18,12 +19,15 @@ export function VehicleCard({
   onClick, 
   selected = false, 
   selectionMode = false,
-  className = ""
+  className = "",
+  clickable = false
 }: VehicleCardProps) {
+  const isClickable = clickable || !!onClick;
+  
   return (
     <Card 
-      className={`overflow-hidden transition-all duration-200 ${selected ? 'ring-2 ring-primary' : ''} ${onClick ? 'cursor-pointer hover:bg-accent' : ''} ${className}`}
-      onClick={onClick}
+      className={`overflow-hidden transition-all duration-200 ${selected ? 'ring-2 ring-primary' : ''} ${isClickable ? 'cursor-pointer hover:bg-accent' : ''} ${className}`}
+      onClick={isClickable ? onClick : undefined}
     >
       <CardContent className="p-0">
         <div className="flex items-center p-3">
