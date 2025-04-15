@@ -147,11 +147,18 @@ export async function createWashRequest(
         const requestId = crypto.randomUUID(); // Generate a UUID for the new request
         
         // Create a direct API call to insert the wash request
-        const response = await fetch(`${process.env.SUPABASE_URL || "https://ebzruvonvlowdglrmduf.supabase.co"}/rest/v1/wash_requests`, {
+        const SUPABASE_URL = "https://ebzruvonvlowdglrmduf.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVienJ1dm9udmxvd2RnbHJtZHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2NzAzNTEsImV4cCI6MjA2MDI0NjM1MX0.1Hdcd2TyWfmGo6-1xIif2XoF8a14v7iHRRk7Tlw7DC0";
+        
+        // Get the access token
+        const session = await supabase.auth.getSession();
+        const accessToken = session.data.session?.access_token;
+        
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests`, {
           method: 'POST',
           headers: {
-            'apikey': process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVienJ1dm9udmxvd2RnbHJtZHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2NzAzNTEsImV4cCI6MjA2MDI0NjM1MX0.1Hdcd2TyWfmGo6-1xIif2XoF8a14v7iHRRk7Tlw7DC0",
-            'Authorization': `Bearer ${supabase.auth.getSession().then(res => res.data.session?.access_token)}`,
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
             'Prefer': 'return=representation'
           },
