@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -83,12 +84,13 @@
   }
 
   .bottom-navigation {
-    @apply fixed bottom-0 left-0 right-0 flex justify-around items-center py-2 bg-white border-t border-gray-200 z-50 shadow-lg;
-    padding-bottom: env(safe-area-inset-bottom, 1rem);
+    @apply fixed bottom-0 left-0 right-0 flex justify-around items-center bg-white border-t border-gray-200 z-50 shadow-lg;
+    padding-bottom: env(safe-area-inset-bottom, 0.5rem);
+    padding-top: 0.5rem;
   }
 
   main {
-    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(3rem + env(safe-area-inset-bottom, 0px));
   }
 
   .app-card {
