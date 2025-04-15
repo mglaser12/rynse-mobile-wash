@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,7 +25,7 @@ const CustomerHome = () => {
       <header className="bg-white p-4 border-b sticky top-0 z-10">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-xl font-bold">Shine Mobile Fleet</h1>
+            <h1 className="text-xl font-bold">ABC Denver</h1>
             <p className="text-sm text-muted-foreground">Welcome, {user?.name}</p>
           </div>
           <Button onClick={() => setShowNewRequestDialog(true)}>
