@@ -79,6 +79,7 @@ export type SupabaseVehicle = {
   image_url: string | null;
   created_at: string;
   updated_at: string;
+  organization_id: string | null; // Added organization_id field
 };
 
 export type SupabaseWashRequest = {

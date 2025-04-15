@@ -22,7 +22,6 @@ export const OrganizationManager = () => {
   const [selectedVehicles, setSelectedVehicles] = useState<string[]>([]);
   const [defaultOrg, setDefaultOrg] = useState<string | null>(null);
   
-  // Load organizations
   const loadOrganizations = async () => {
     setIsLoadingOrgs(true);
     try {
@@ -36,7 +35,6 @@ export const OrganizationManager = () => {
       
       setOrganizations(data || []);
       
-      // Set the first org as default if any exists
       if (data && data.length > 0) {
         setDefaultOrg(data[0].id);
       }
@@ -48,7 +46,6 @@ export const OrganizationManager = () => {
     }
   };
   
-  // Load users
   const loadUsers = async () => {
     setIsLoadingUsers(true);
     try {
@@ -69,7 +66,6 @@ export const OrganizationManager = () => {
     }
   };
   
-  // Load all vehicles
   const loadVehicles = async () => {
     setIsLoadingVehicles(true);
     try {
@@ -90,7 +86,6 @@ export const OrganizationManager = () => {
     }
   };
   
-  // Assign user to organization
   const assignUserToOrg = async () => {
     if (!selectedUser || !selectedOrg) {
       toast.error("Please select both a user and an organization");
@@ -112,7 +107,6 @@ export const OrganizationManager = () => {
       
       toast.success("User successfully assigned to organization");
       
-      // Refresh users list
       await loadUsers();
     } catch (error) {
       console.error("Error in assignUserToOrg:", error);
@@ -122,7 +116,6 @@ export const OrganizationManager = () => {
     }
   };
   
-  // Assign vehicles to organization
   const assignVehiclesToOrg = async () => {
     if (!selectedOrg || selectedVehicles.length === 0) {
       toast.error("Please select both vehicles and an organization");
@@ -131,7 +124,6 @@ export const OrganizationManager = () => {
     
     setIsAssigningVehicles(true);
     try {
-      // Update each selected vehicle with the organization ID
       for (const vehicleId of selectedVehicles) {
         const { error } = await supabase
           .from('vehicles')
@@ -146,7 +138,6 @@ export const OrganizationManager = () => {
       
       toast.success(`${selectedVehicles.length} vehicles assigned to organization`);
       
-      // Refresh vehicles list
       await loadVehicles();
       setSelectedVehicles([]);
     } catch (error) {
@@ -157,7 +148,6 @@ export const OrganizationManager = () => {
     }
   };
   
-  // Assign all vehicles to the default organization
   const assignAllVehiclesToDefaultOrg = async () => {
     if (!defaultOrg) {
       toast.error("No default organization found");
@@ -166,7 +156,6 @@ export const OrganizationManager = () => {
     
     setIsAssigningVehicles(true);
     try {
-      // Get all vehicles without an organization
       const { data, error } = await supabase
         .from('vehicles')
         .select('id')
@@ -184,7 +173,6 @@ export const OrganizationManager = () => {
         return;
       }
       
-      // Update all vehicles to the default organization
       const vehicleIds = data.map(v => v.id);
       
       const { error: updateError } = await supabase
@@ -200,7 +188,6 @@ export const OrganizationManager = () => {
       
       toast.success(`${vehicleIds.length} vehicles assigned to default organization`);
       
-      // Refresh vehicles list
       await loadVehicles();
     } catch (error) {
       console.error("Error in assignAllVehiclesToDefaultOrg:", error);
@@ -210,7 +197,6 @@ export const OrganizationManager = () => {
     }
   };
   
-  // Toggle vehicle selection
   const toggleVehicleSelection = (vehicleId: string) => {
     if (selectedVehicles.includes(vehicleId)) {
       setSelectedVehicles(selectedVehicles.filter(id => id !== vehicleId));
@@ -219,7 +205,6 @@ export const OrganizationManager = () => {
     }
   };
   
-  // Load data on component mount
   useEffect(() => {
     loadOrganizations();
     loadUsers();
@@ -231,7 +216,6 @@ export const OrganizationManager = () => {
       <h1 className="text-2xl font-bold">Organization Manager</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Organizations Card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
@@ -277,7 +261,6 @@ export const OrganizationManager = () => {
           </CardContent>
         </Card>
         
-        {/* Users Card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
@@ -328,7 +311,6 @@ export const OrganizationManager = () => {
         </Card>
       </div>
       
-      {/* Assign User to Organization */}
       <Card>
         <CardHeader>
           <CardTitle>Assign User to Organization</CardTitle>
@@ -365,7 +347,6 @@ export const OrganizationManager = () => {
         </CardContent>
       </Card>
       
-      {/* Vehicles Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex justify-between items-center">
@@ -432,7 +413,6 @@ export const OrganizationManager = () => {
         </CardContent>
       </Card>
       
-      {/* Assign Vehicles to Organization */}
       <Card>
         <CardHeader>
           <CardTitle>Assign Vehicles to Organization</CardTitle>

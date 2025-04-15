@@ -80,6 +80,7 @@ export type Database = {
           license_plate: string | null
           make: string
           model: string
+          organization_id: string | null
           type: string | null
           updated_at: string
           user_id: string
@@ -94,6 +95,7 @@ export type Database = {
           license_plate?: string | null
           make: string
           model: string
+          organization_id?: string | null
           type?: string | null
           updated_at?: string
           user_id: string
@@ -108,13 +110,22 @@ export type Database = {
           license_plate?: string | null
           make?: string
           model?: string
+          organization_id?: string | null
           type?: string | null
           updated_at?: string
           user_id?: string
           vin_number?: string | null
           year?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wash_locations: {
         Row: {
