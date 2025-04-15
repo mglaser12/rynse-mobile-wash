@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,9 +45,9 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
       return;
     }
 
-    // Validate required fields
-    if (!vehicleData.make || !vehicleData.model || !vehicleData.year || !vehicleData.licensePlate) {
-      toast.error("Please fill in all required fields");
+    // Validate required fields - only Make, Model, and Year
+    if (!vehicleData.make || !vehicleData.model || !vehicleData.year) {
+      toast.error("Please fill in all required fields: Make, Model, and Year");
       return;
     }
     
@@ -181,7 +180,7 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="color">Color*</Label>
+            <Label htmlFor="color">Color</Label>
             <Input
               id="color"
               name="color"
@@ -189,12 +188,11 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
               onChange={handleInputChange}
               disabled={isLoading}
               placeholder="Blue"
-              required
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="type">Type*</Label>
+            <Label htmlFor="type">Type</Label>
             <Input
               id="type"
               name="type"
@@ -202,12 +200,11 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
               onChange={handleInputChange}
               disabled={isLoading}
               placeholder="Sedan, SUV, etc."
-              required
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="licensePlate">License Plate*</Label>
+            <Label htmlFor="licensePlate">License Plate</Label>
             <Input
               id="licensePlate"
               name="licensePlate"
@@ -215,7 +212,6 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
               onChange={handleInputChange}
               disabled={isLoading}
               placeholder="ABC123"
-              required
             />
           </div>
         </div>
