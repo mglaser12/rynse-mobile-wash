@@ -14,6 +14,7 @@ import CustomerHome from "./pages/customer/CustomerHome";
 import VehiclesPage from "./pages/customer/VehiclesPage";
 import BookingsPage from "./pages/customer/BookingsPage";
 import TechnicianHome from "./pages/technician/TechnicianHome";
+import TechnicianJobsPage from "./pages/technician/TechnicianJobsPage";
 import ProfilePage from "./pages/ProfilePage";
 import OrganizationPage from "./pages/admin/OrganizationPage";
 import NotFound from "./pages/NotFound";
@@ -136,7 +137,7 @@ const AppRoutes = () => {
         element={
           <PrivateRoute>
             <RoleRoute allowedRole="technician">
-              <div>Jobs Page (Coming Soon)</div>
+              <TechnicianJobsPage />
             </RoleRoute>
           </PrivateRoute>
         } 
