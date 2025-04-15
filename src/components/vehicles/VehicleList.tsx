@@ -6,21 +6,27 @@ import { useVehicles } from "@/contexts/VehicleContext";
 import { VehicleCard } from "./VehicleCard";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { Vehicle } from "@/models/types";
 
 interface VehicleListProps {
   onAddVehicle: () => void;
   onSelectVehicle: (vehicleId: string) => void;
   selectedVehicleIds?: string[];
   selectionMode?: boolean;
+  vehicles?: Vehicle[];
 }
 
 export function VehicleList({ 
   onAddVehicle, 
   onSelectVehicle,
   selectedVehicleIds = [],
-  selectionMode = false
+  selectionMode = false,
+  vehicles: propVehicles
 }: VehicleListProps) {
-  const { vehicles, isLoading } = useVehicles();
+  const { vehicles: contextVehicles, isLoading } = useVehicles();
+  
+  // Use provided vehicles or fall back to context vehicles
+  const vehicles = propVehicles || contextVehicles;
 
   if (isLoading) {
     return (
