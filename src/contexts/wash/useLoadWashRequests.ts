@@ -45,19 +45,31 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
         
         // For technicians, we show all pending requests and their own assigned requests
         if (effectiveRole === 'technician') {
-          // Fix: Use proper OR filter syntax for pending status and technician assignment
-          query = query.or(`status.eq.pending,technician_id.eq.${userId}`);
+          // Try direct OR conditions instead of using template string
+          query = query
+            .or('status.eq.pending,technician_id.eq.' + userId);
+          
           console.log("Loading requests for technician - showing all pending and assigned requests");
           
-          // Additional debug: Check how many pending requests exist in total
+          // Additional debug: Check for ALL pending requests
           const { data: pendingCount, error: pendingError } = await supabase
             .from('wash_requests')
-            .select('id')
+            .select('id, status, technician_id, user_id');
+            
+          console.log(`Total wash requests in system:`, pendingCount);
+          if (pendingError) {
+            console.error("Error counting all wash requests:", pendingError);
+          }
+          
+          // Try direct query for just pending requests
+          const { data: justPending, error: justPendingError } = await supabase
+            .from('wash_requests')
+            .select('id, status, technician_id, user_id')
             .eq('status', 'pending');
             
-          console.log(`Total pending requests in system: ${pendingCount?.length || 0}`);
-          if (pendingError) {
-            console.error("Error counting pending requests:", pendingError);
+          console.log(`Just pending requests:`, justPending);
+          if (justPendingError) {
+            console.error("Error querying just pending requests:", justPendingError);
           }
         } else {
           // For customers/fleet managers, only show their own requests
@@ -82,11 +94,11 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
         // Using a simple select * and count the results instead of using count(*)
         const { data: countData, error: countError } = await supabase
           .from('wash_requests')
-          .select('id, status');
+          .select('id, status, technician_id, user_id');
           
         const totalRequestsCount = countData ? countData.length : 0;
         console.log("Total wash requests in database:", totalRequestsCount);
-        console.log("Status of all requests:", countData?.map(r => r.status));
+        console.log("Details of all requests:", countData);
         
         if (countError) {
           console.error("Error counting requests:", countError);
