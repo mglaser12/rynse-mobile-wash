@@ -66,52 +66,34 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
     
     console.log("Final update data being sent to Supabase:", updateData);
 
-    // Try direct REST API call first as it's more reliable
-    try {
-      console.log("Attempting direct PATCH to Supabase REST API...");
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'  // Use minimal for better performance
-        },
-        body: JSON.stringify(updateData)
-      });
-      
-      console.log("DIRECT API RESPONSE:", {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
-      
-      if (response.ok) {
-        console.log("Direct API update successful!");
-        toast.success("Request updated successfully");
-        return true;
-      } else {
-        console.error("Direct API update failed:", await response.text());
-      }
-    } catch (directError) {
-      console.error("Error with direct API call:", directError);
-    }
+    // Try direct PATCH API call as it's more reliable
+    console.log("Attempting direct PATCH to Supabase REST API...");
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'  // Use minimal for better performance
+      },
+      body: JSON.stringify(updateData)
+    });
     
-    // Fall back to supabase client method if direct method fails
-    console.log("Trying Supabase client update method as fallback...");
-    const { error } = await supabase
-      .from('wash_requests')
-      .update(updateData)
-      .eq('id', id);
-      
-    if (error) {
-      console.error("Error updating wash request:", error);
+    console.log("DIRECT API RESPONSE:", {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+    
+    if (response.ok) {
+      console.log("Direct API update successful!");
+      toast.success("Request updated successfully");
+      return true;
+    } else {
+      console.error("Direct API update failed:", await response.text());
       toast.error("Failed to update wash request");
       return false;
     }
-    
-    toast.success("Request updated successfully");
-    return true;
   } catch (error) {
     console.error("Error updating wash request:", error);
     toast.error("Failed to update wash request");
@@ -119,7 +101,7 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
   }
 }
 
-// Enhanced job acceptance function with better logging and error handling
+// Enhanced job acceptance function with two-step update process
 async function acceptJob(
   requestId: string, 
   technicianId: string, 
@@ -135,9 +117,42 @@ async function acceptJob(
       return false;
     }
     
-    // Simple update payload
-    const updatePayload: any = {
+    // STEP 1: Update technician_id first
+    const technicianUpdatePayload = {
       technician_id: technicianId,
+      updated_at: new Date().toISOString()
+    };
+    
+    console.log("STEP 1: Updating technician_id with payload:", technicianUpdatePayload);
+    
+    const technicianResponse = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests?id=eq.${requestId}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(technicianUpdatePayload)
+    });
+    
+    console.log("TECHNICIAN UPDATE RESPONSE:", {
+      status: technicianResponse.status,
+      statusText: technicianResponse.statusText,
+      ok: technicianResponse.ok
+    });
+    
+    if (!technicianResponse.ok) {
+      console.error("Failed to update technician_id:", await technicianResponse.text());
+      toast.error("Failed to assign technician");
+      return false;
+    }
+    
+    // Add a small delay before the next update
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // STEP 2: Update status and dates in a separate request
+    const statusUpdatePayload: any = {
       status: 'confirmed',
       updated_at: new Date().toISOString()
     };
@@ -145,67 +160,45 @@ async function acceptJob(
     // If a specific date was selected during scheduling
     if (preferredDates && preferredDates.start) {
       console.log("Setting scheduled date:", preferredDates.start);
-      updatePayload.preferred_date_start = preferredDates.start.toISOString();
+      statusUpdatePayload.preferred_date_start = preferredDates.start.toISOString();
       
       // If end date is explicitly provided
       if (preferredDates.end) {
-        updatePayload.preferred_date_end = preferredDates.end.toISOString();
+        statusUpdatePayload.preferred_date_end = preferredDates.end.toISOString();
       } else {
         // If scheduling for a single day, clear the end date
-        updatePayload.preferred_date_end = null;
+        statusUpdatePayload.preferred_date_end = null;
       }
     }
 
-    console.log("Sending job acceptance payload to database:", updatePayload);
+    console.log("STEP 2: Updating status with payload:", statusUpdatePayload);
     
-    // Try direct PATCH request first as it's more reliable
-    try {
-      console.log("Trying direct PATCH request...");
-      const directResponse = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests?id=eq.${requestId}`, {
-        method: 'PATCH',
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'  // Use minimal for better performance
-        },
-        body: JSON.stringify(updatePayload)
-      });
-      
-      console.log("DIRECT API RESPONSE:", {
-        status: directResponse.status,
-        statusText: directResponse.statusText,
-        ok: directResponse.ok
-      });
-      
-      if (directResponse.ok) {
-        console.log("Direct API update successful!");
-        toast.success("Job scheduled successfully!");
-        return true;
-      } else {
-        const errorText = await directResponse.text();
-        console.error(`Direct API update failed: Status ${directResponse.status}`, errorText);
-      }
-    } catch (directError) {
-      console.error("Error with direct API call:", directError);
-    }
+    const statusResponse = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests?id=eq.${requestId}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(statusUpdatePayload)
+    });
     
-    // Fall back to client method
-    console.log("Falling back to Supabase client method...");
-    const { error } = await supabase
-      .from('wash_requests')
-      .update(updatePayload)
-      .eq('id', requestId);
+    console.log("STATUS UPDATE RESPONSE:", {
+      status: statusResponse.status,
+      statusText: statusResponse.statusText,
+      ok: statusResponse.ok
+    });
     
-    if (error) {
-      console.error("Error updating job:", error);
-      toast.error("Database error: " + error.message);
+    if (statusResponse.ok) {
+      console.log("Job acceptance successful - both updates completed!");
+      toast.success("Job scheduled successfully!");
+      return true;
+    } else {
+      console.error("Failed to update job status:", await statusResponse.text());
+      toast.error("Job assigned but status update failed");
       return false;
     }
-    
-    toast.success("Job scheduled successfully!");
-    return true;
-    
   } catch (error) {
     console.error("CRITICAL ERROR in job acceptance process:", error);
     toast.error("An unexpected error occurred");
