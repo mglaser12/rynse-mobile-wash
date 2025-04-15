@@ -21,6 +21,20 @@ export function useLoadWashRequests(userId: string | undefined) {
 
         console.log("Attempting to load wash requests for user:", userId);
 
+        // First, check if the user exists in the profiles table
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', userId)
+          .single();
+
+        if (profileError) {
+          console.error("Error verifying user profile:", profileError);
+        } else {
+          console.log("User profile found:", profileData);
+        }
+
+        // Check for wash requests
         const { data: requestsData, error: requestsError } = await supabase
           .from('wash_requests')
           .select('*, wash_request_vehicles(vehicle_id)')
@@ -35,6 +49,28 @@ export function useLoadWashRequests(userId: string | undefined) {
         }
 
         console.log("Wash requests raw data:", requestsData);
+
+        // Check if there are actual wash requests in the database (regardless of user)
+        const { count: totalRequestsCount, error: countError } = await supabase
+          .from('wash_requests')
+          .select('*', { count: 'exact', head: true });
+
+        console.log("Total wash requests in database:", totalRequestsCount);
+        if (countError) {
+          console.error("Error counting requests:", countError);
+        }
+
+        // Check RLS permissions
+        try {
+          const { data: rlsTestData, error: rlsError } = await supabase
+            .from('wash_requests')
+            .select('count(*)')
+            .limit(1);
+          
+          console.log("RLS test result:", { data: rlsTestData, error: rlsError });
+        } catch (rlsError) {
+          console.error("RLS test failed:", rlsError);
+        }
 
         if (!requestsData || !Array.isArray(requestsData) || requestsData.length === 0) {
           console.log("No wash requests found for user", userId);
