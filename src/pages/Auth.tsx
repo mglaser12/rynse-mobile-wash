@@ -33,7 +33,7 @@ const Auth = () => {
         <div className="mb-10 text-center">
           <div className="flex justify-center items-center mb-4">
             <img 
-              src="/public/lovable-uploads/5e29517a-c169-4798-98fa-075394612b76.png" 
+              src="/lovable-uploads/5e29517a-c169-4798-98fa-075394612b76.png" 
               alt="Rynse Logo" 
               className="h-12" 
             />

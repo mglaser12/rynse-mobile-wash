@@ -44,7 +44,7 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
       <CardHeader>
         <div className="flex justify-center mb-2">
           <img 
-            src="/public/lovable-uploads/3d6deccc-d4a2-4bfb-9acc-18c6e46f5b73.png" 
+            src="/lovable-uploads/3d6deccc-d4a2-4bfb-9acc-18c6e46f5b73.png" 
             alt="Rynse Icon" 
             className="h-10 w-10" 
           />
