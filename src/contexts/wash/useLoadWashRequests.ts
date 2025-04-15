@@ -34,15 +34,31 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
           console.log("User profile found:", profileData);
         }
 
+        // Determine role from either parameter or profile data
+        const effectiveRole = userRole || profileData?.role;
+        console.log("Effective role for query:", effectiveRole);
+        
         // Base query
         let query = supabase
           .from('wash_requests')
           .select('*, wash_request_vehicles(vehicle_id)');
         
         // For technicians, we show all pending requests and their own assigned requests
-        if (userRole === 'technician' || profileData?.role === 'technician') {
+        if (effectiveRole === 'technician') {
+          // Fix: Use proper OR filter syntax for pending status and technician assignment
           query = query.or(`status.eq.pending,technician_id.eq.${userId}`);
           console.log("Loading requests for technician - showing all pending and assigned requests");
+          
+          // Additional debug: Check how many pending requests exist in total
+          const { data: pendingCount, error: pendingError } = await supabase
+            .from('wash_requests')
+            .select('id')
+            .eq('status', 'pending');
+            
+          console.log(`Total pending requests in system: ${pendingCount?.length || 0}`);
+          if (pendingError) {
+            console.error("Error counting pending requests:", pendingError);
+          }
         } else {
           // For customers/fleet managers, only show their own requests
           query = query.eq('user_id', userId);
@@ -66,25 +82,14 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
         // Using a simple select * and count the results instead of using count(*)
         const { data: countData, error: countError } = await supabase
           .from('wash_requests')
-          .select('id');
+          .select('id, status');
           
         const totalRequestsCount = countData ? countData.length : 0;
         console.log("Total wash requests in database:", totalRequestsCount);
+        console.log("Status of all requests:", countData?.map(r => r.status));
         
         if (countError) {
           console.error("Error counting requests:", countError);
-        }
-
-        // Check RLS permissions with a simple query
-        try {
-          const { data: rlsTestData, error: rlsError } = await supabase
-            .from('wash_requests')
-            .select('id')
-            .limit(1);
-          
-          console.log("RLS test result:", { data: rlsTestData, error: rlsError });
-        } catch (rlsError) {
-          console.error("RLS test failed:", rlsError);
         }
 
         if (!requestsData || !Array.isArray(requestsData) || requestsData.length === 0) {
