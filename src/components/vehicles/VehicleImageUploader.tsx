@@ -63,11 +63,14 @@ export function VehicleImageUploader({
   };
 
   const handleRemoveImage = () => {
+    // Explicitly set image to undefined to remove it
     onImageChange(undefined);
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    // Add toast confirmation
+    toast.success('Image removed');
   };
 
   return (

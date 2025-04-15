@@ -188,14 +188,23 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
         color: data.color,
         type: data.type,
         vin_number: data.vinNumber,
-        image_url: imageUrl,
         updated_at: new Date()
       };
+      
+      // Handle image removal explicitly
+      if (data.image === undefined) {
+        updateData.image_url = null; // Set to null in database when image is removed
+        imageUrl = undefined; // Also update the local imageUrl variable
+      } else if (imageUrl) {
+        updateData.image_url = imageUrl; // Only update if we have a new image URL
+      }
 
       // Remove undefined fields
       Object.keys(updateData).forEach(key => 
         updateData[key] === undefined && delete updateData[key]
       );
+
+      console.log("Updating vehicle with data:", updateData);
 
       // Update in Supabase
       const { error } = await supabase
@@ -212,7 +221,7 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
       // Update local state
       setVehicles(prev => prev.map(vehicle => 
         vehicle.id === id 
-          ? { ...vehicle, ...data, image: imageUrl || vehicle.image } 
+          ? { ...vehicle, ...data, image: imageUrl } 
           : vehicle
       ));
       
