@@ -39,6 +39,176 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicles: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          license_plate: string | null
+          make: string
+          model: string
+          type: string | null
+          updated_at: string
+          user_id: string
+          vin_number: string | null
+          year: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          license_plate?: string | null
+          make: string
+          model: string
+          type?: string | null
+          updated_at?: string
+          user_id: string
+          vin_number?: string | null
+          year: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          license_plate?: string | null
+          make?: string
+          model?: string
+          type?: string | null
+          updated_at?: string
+          user_id?: string
+          vin_number?: string | null
+          year?: string
+        }
+        Relationships: []
+      }
+      wash_locations: {
+        Row: {
+          address: string
+          city: string
+          created_at: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          state: string
+          updated_at: string
+          zip_code: string
+        }
+        Insert: {
+          address: string
+          city: string
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          state: string
+          updated_at?: string
+          zip_code: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          state?: string
+          updated_at?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      wash_request_vehicles: {
+        Row: {
+          created_at: string
+          id: string
+          vehicle_id: string
+          wash_request_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          vehicle_id: string
+          wash_request_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          vehicle_id?: string
+          wash_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wash_request_vehicles_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wash_request_vehicles_wash_request_id_fkey"
+            columns: ["wash_request_id"]
+            isOneToOne: false
+            referencedRelation: "wash_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wash_requests: {
+        Row: {
+          created_at: string
+          id: string
+          location_id: string
+          notes: string | null
+          preferred_date_end: string | null
+          preferred_date_start: string
+          price: number
+          status: string
+          technician_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location_id: string
+          notes?: string | null
+          preferred_date_end?: string | null
+          preferred_date_start: string
+          price: number
+          status?: string
+          technician_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location_id?: string
+          notes?: string | null
+          preferred_date_end?: string | null
+          preferred_date_start?: string
+          price?: number
+          status?: string
+          technician_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wash_requests_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "wash_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

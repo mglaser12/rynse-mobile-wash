@@ -49,3 +49,52 @@ export type WashRequest = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type SupabaseVehicle = {
+  id: string;
+  user_id: string;
+  make: string;
+  model: string;
+  year: string;
+  license_plate: string | null;
+  color: string | null;
+  type: string | null;
+  vin_number: string | null;
+  image_url: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SupabaseLocation = {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  latitude: number | null;
+  longitude: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SupabaseWashRequest = {
+  id: string;
+  user_id: string;
+  location_id: string;
+  preferred_date_start: string;
+  preferred_date_end: string | null;
+  status: string;
+  technician_id: string | null;
+  price: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SupabaseWashRequestVehicle = {
+  id: string;
+  wash_request_id: string;
+  vehicle_id: string;
+  created_at: string;
+};
