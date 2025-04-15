@@ -15,8 +15,8 @@ interface JobCalendarViewProps {
 export const JobCalendarView = ({ assignedRequests, onSelectJob }: JobCalendarViewProps) => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   
-  // Group jobs by date
-  const jobsByDate = assignedRequests.reduce((acc, job) => {
+  // Group jobs by date with null check on assignedRequests
+  const jobsByDate = (assignedRequests || []).reduce((acc, job) => {
     const dateKey = format(job.preferredDates.start, "yyyy-MM-dd");
     if (!acc[dateKey]) {
       acc[dateKey] = [];
@@ -112,7 +112,7 @@ export const JobCalendarView = ({ assignedRequests, onSelectJob }: JobCalendarVi
                         <div>
                           <p className="font-medium">{getCustomerName(job.customerId)}</p>
                           <p className="text-sm text-muted-foreground">
-                            {job.vehicles.length} vehicle{job.vehicles.length !== 1 ? 's' : ''}
+                            {job.vehicles.length} vehicle{job.vehicles.length !== 1 && "s"}
                           </p>
                         </div>
                         <div className="text-right">
@@ -148,19 +148,25 @@ export const JobCalendarView = ({ assignedRequests, onSelectJob }: JobCalendarVi
             
             {/* Date List */}
             <div className="flex flex-wrap gap-2 justify-center">
-              {datesWithJobs.map(date => (
-                <Badge 
-                  key={format(date, "yyyy-MM-dd")}
-                  variant={isSameDay(date, currentDate) ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => setCurrentDate(date)}
-                >
-                  {format(date, "MMM d")}
-                  <span className="ml-1 text-xs">
-                    ({jobsByDate[format(date, "yyyy-MM-dd")].length})
-                  </span>
-                </Badge>
-              ))}
+              {datesWithJobs.map(date => {
+                // Make sure jobsByDate[format(date, "yyyy-MM-dd")] exists before accessing its length
+                const dateKey = format(date, "yyyy-MM-dd");
+                const jobsForDate = jobsByDate[dateKey] || [];
+                
+                return (
+                  <Badge 
+                    key={dateKey}
+                    variant={isSameDay(date, currentDate) ? "default" : "outline"}
+                    className="cursor-pointer"
+                    onClick={() => setCurrentDate(date)}
+                  >
+                    {format(date, "MMM d")}
+                    <span className="ml-1 text-xs">
+                      ({jobsForDate.length})
+                    </span>
+                  </Badge>
+                );
+              })}
             </div>
           </div>
         </CardContent>

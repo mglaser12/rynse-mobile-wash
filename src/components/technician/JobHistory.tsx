@@ -21,7 +21,7 @@ interface JobHistoryProps {
   onViewJobDetails: (requestId: string) => void;
 }
 
-export const JobHistory = ({ completedJobs, onViewJobDetails }: JobHistoryProps) => {
+export const JobHistory = ({ completedJobs = [], onViewJobDetails }: JobHistoryProps) => {
   const isMobile = useIsMobile();
   
   // Function to get customer name based on ID
@@ -52,7 +52,7 @@ export const JobHistory = ({ completedJobs, onViewJobDetails }: JobHistoryProps)
     }
   };
 
-  if (completedJobs.length === 0) {
+  if (!completedJobs || completedJobs.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -93,7 +93,7 @@ export const JobHistory = ({ completedJobs, onViewJobDetails }: JobHistoryProps)
                   <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                     <div>
                       <p className="text-muted-foreground">Vehicles:</p>
-                      <p>{job.vehicles.length}</p>
+                      <p>{job.vehicles ? job.vehicles.length : 0}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Price:</p>
@@ -133,7 +133,7 @@ export const JobHistory = ({ completedJobs, onViewJobDetails }: JobHistoryProps)
                       {format(job.updatedAt, "MMM dd, yyyy")}
                     </TableCell>
                     <TableCell>{getCustomerName(job.customerId)}</TableCell>
-                    <TableCell>{job.vehicles.length}</TableCell>
+                    <TableCell>{job.vehicles ? job.vehicles.length : 0}</TableCell>
                     <TableCell>${job.price.toFixed(2)}</TableCell>
                     <TableCell>{getStatusBadge(job.status)}</TableCell>
                     <TableCell className="text-right">

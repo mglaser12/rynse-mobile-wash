@@ -22,12 +22,12 @@ const TechnicianJobsPage = () => {
     loadData
   } = useWashManagement();
 
-  // Get assigned requests
+  // Get assigned requests with proper null checking
   const assignedRequests = Array.isArray(washRequests) 
     ? washRequests.filter(req => req.status === "confirmed" && req.technician === user?.id)
     : [];
 
-  // Get selected request
+  // Get selected request with proper null checking
   const selectedRequest = selectedRequestId && Array.isArray(washRequests)
     ? washRequests.find(req => req.id === selectedRequestId) 
     : null;
