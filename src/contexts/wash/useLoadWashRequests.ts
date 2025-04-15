@@ -38,60 +38,97 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
         const effectiveRole = userRole || profileData?.role;
         console.log("Effective role for query:", effectiveRole);
         
-        // Base query
-        let query = supabase
+        // First check for total requests in the system for debugging
+        const { data: allRequests, error: allRequestsError } = await supabase
           .from('wash_requests')
-          .select('*, wash_request_vehicles(vehicle_id)');
+          .select('id, status, technician_id, user_id');
+          
+        console.log("Total requests in system:", allRequests);
+        if (allRequestsError) {
+          console.error("Error fetching all requests:", allRequestsError);
+        }
+        
+        // Specific check for pending requests
+        const { data: pendingRequests, error: pendingError } = await supabase
+          .from('wash_requests')
+          .select('id, status, technician_id, user_id')
+          .eq('status', 'pending');
+          
+        console.log("All pending requests:", pendingRequests);
+        if (pendingError) {
+          console.error("Error fetching pending requests:", pendingError);
+        }
+        
+        let query;
         
         // For technicians, we show all pending requests and their own assigned requests
         if (effectiveRole === 'technician') {
-          // Try direct OR conditions instead of using template string
-          query = query
-            .or('status.eq.pending,technician_id.eq.' + userId);
-          
           console.log("Loading requests for technician - showing all pending and assigned requests");
           
-          // Additional debug: Check for ALL pending requests
-          const { data: pendingCount, error: pendingError } = await supabase
+          // Use two separate queries and combine the results for more reliable behavior
+          const pendingQuery = supabase
             .from('wash_requests')
-            .select('id, status, technician_id, user_id');
-            
-          console.log(`Total wash requests in system:`, pendingCount);
-          if (pendingError) {
-            console.error("Error counting all wash requests:", pendingError);
-          }
-          
-          // Try direct query for just pending requests
-          const { data: justPending, error: justPendingError } = await supabase
-            .from('wash_requests')
-            .select('id, status, technician_id, user_id')
+            .select('*, wash_request_vehicles(vehicle_id)')
             .eq('status', 'pending');
             
-          console.log(`Just pending requests:`, justPending);
-          if (justPendingError) {
-            console.error("Error querying just pending requests:", justPendingError);
+          const assignedQuery = supabase
+            .from('wash_requests')
+            .select('*, wash_request_vehicles(vehicle_id)')
+            .eq('technician_id', userId);
+            
+          // Execute both queries
+          const [pendingResult, assignedResult] = await Promise.all([
+            pendingQuery,
+            assignedQuery
+          ]);
+          
+          // Handle errors
+          if (pendingResult.error) {
+            console.error("Error fetching pending requests:", pendingResult.error);
           }
+          
+          if (assignedResult.error) {
+            console.error("Error fetching assigned requests:", assignedResult.error);
+          }
+          
+          // Combine results
+          const combinedData = [
+            ...(pendingResult.data || []), 
+            ...(assignedResult.data || [])
+          ];
+          
+          // Remove duplicates (in case a pending request is also assigned to this tech)
+          const uniqueData = combinedData.filter((v, i, a) => 
+            a.findIndex(t => t.id === v.id) === i
+          );
+          
+          console.log("Combined wash request data:", uniqueData);
+          
+          // Proceed with the combined data
+          var requestsData = uniqueData;
         } else {
           // For customers/fleet managers, only show their own requests
-          query = query.eq('user_id', userId);
           console.log("Loading requests for customer - showing only their own requests");
-        }
-
-        // Execute the query
-        const { data: requestsData, error: requestsError } = await query;
-
-        if (requestsError) {
-          console.error("Error loading wash requests from Supabase:", requestsError);
-          toast.error("Failed to load wash requests");
-          setWashRequests([]);
-          setIsLoading(false);
-          return;
+          
+          const { data, error } = await supabase
+            .from('wash_requests')
+            .select('*, wash_request_vehicles(vehicle_id)')
+            .eq('user_id', userId);
+            
+          if (error) {
+            console.error("Error loading customer wash requests:", error);
+            toast.error("Failed to load wash requests");
+            setWashRequests([]);
+            setIsLoading(false);
+            return;
+          }
+          
+          var requestsData = data;
         }
 
         console.log("Wash requests raw data:", requestsData);
 
         // Check if there are actual wash requests in the database (regardless of user)
-        // Using a simple select * and count the results instead of using count(*)
         const { data: countData, error: countError } = await supabase
           .from('wash_requests')
           .select('id, status, technician_id, user_id');

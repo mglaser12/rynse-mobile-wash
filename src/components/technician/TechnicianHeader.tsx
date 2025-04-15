@@ -1,6 +1,5 @@
 
 import React from "react";
-import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useWashRequests } from "@/contexts/WashContext";
@@ -8,15 +7,21 @@ import { toast } from "sonner";
 
 interface TechnicianHeaderProps {
   userName?: string;
+  onRefresh?: () => void;
 }
 
-export const TechnicianHeader = ({ userName }: TechnicianHeaderProps) => {
-  const { washRequests, isLoading } = useWashRequests();
+export const TechnicianHeader = ({ userName, onRefresh }: TechnicianHeaderProps) => {
+  const { isLoading } = useWashRequests();
   
   const handleRefresh = () => {
-    // Force a browser refresh to reload all data
-    window.location.reload();
-    toast.info("Refreshing data...");
+    if (onRefresh) {
+      onRefresh();
+      toast.info("Refreshing data...");
+    } else {
+      // Fallback to page reload
+      window.location.reload();
+      toast.info("Refreshing data...");
+    }
   };
   
   return (
@@ -24,7 +29,7 @@ export const TechnicianHeader = ({ userName }: TechnicianHeaderProps) => {
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
           <h1 className="text-xl font-bold">Technician Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Welcome, {userName}</p>
+          <p className="text-sm text-muted-foreground">Welcome, {userName || 'Technician'}</p>
         </div>
         
         <Button 
