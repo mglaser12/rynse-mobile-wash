@@ -36,7 +36,8 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       console.log("Updating wash requests from loaded data:", loadedWashRequests);
       setWashRequests(loadedWashRequests);
     } else {
-      setWashRequests([]);
+      // If we get undefined or null, keep existing state
+      console.log("Received non-array wash requests data:", loadedWashRequests);
     }
   }, [loadedWashRequests]);
 
@@ -44,31 +45,43 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
   const handleCreateWashRequest = async (washRequestData: Omit<WashRequest, "id" | "status" | "createdAt" | "updatedAt">) => {
     if (!user) return null;
     
-    const newWashRequest = await createWashRequest(user, washRequestData);
-    if (newWashRequest) {
-      setWashRequests(prev => [...prev, newWashRequest]);
+    try {
+      const newWashRequest = await createWashRequest(user, washRequestData);
+      if (newWashRequest) {
+        setWashRequests(prev => [...prev, newWashRequest]);
+      }
+      return newWashRequest;
+    } catch (error) {
+      console.error("Error creating wash request:", error);
+      toast.error("Failed to create wash request");
+      return null;
     }
-    return newWashRequest;
   };
 
   // Cancel a wash request
   const handleCancelWashRequest = async (id: string) => {
-    const success = await cancelWashRequest(id);
-    if (success) {
-      setWashRequests(prev => 
-        prev.map(request => 
-          request.id === id ? { ...request, status: "cancelled" } : request
-        )
-      );
-      // Force refresh data to ensure everything is in sync
-      await safeRefreshData();
+    try {
+      const success = await cancelWashRequest(id);
+      if (success) {
+        setWashRequests(prev => 
+          prev.map(request => 
+            request.id === id ? { ...request, status: "cancelled" } : request
+          )
+        );
+        // Force refresh data to ensure everything is in sync
+        await safeRefreshData();
+      }
+      return success;
+    } catch (error) {
+      console.error("Error cancelling wash request:", error);
+      return false;
     }
-    return success;
   };
 
-  // Safe refresh data with debouncing
+  // Safe refresh data with throttling
   const safeRefreshData = useCallback(async () => {
     const now = Date.now();
+    // Throttle refresh calls to prevent flooding
     if (now - lastUpdateTimestampRef.current < 3000) { // 3 second throttle
       console.log("Refresh throttled - too soon after last update");
       return;
@@ -76,7 +89,11 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
     
     lastUpdateTimestampRef.current = now;
     console.log("Safely refreshing data");
-    await refreshData();
+    try {
+      await refreshData();
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    }
   }, [refreshData]);
 
   // Update a wash request with throttling to prevent infinite loops
@@ -113,11 +130,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       const success = await updateWashRequest(id, data);
       
       if (success) {
-        console.log("Update was successful, refreshing data from server");
-        // Force refresh data from server to ensure we have the latest state, but with a delay
-        setTimeout(() => {
-          refreshData();
-        }, 1500); // Add a small delay before refreshing
+        console.log("Update was successful");
         return true;
       } else {
         console.log("Update failed, reverting to previous state");
@@ -132,6 +145,13 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       return false;
     } finally {
       setIsUpdating(false);
+      
+      // Refresh data after a delay to avoid immediate loops
+      setTimeout(() => {
+        refreshData().catch(err => {
+          console.error("Error refreshing data after update:", err);
+        });
+      }, 2000);
     }
   }, [washRequests, refreshData, isUpdating]);
 
