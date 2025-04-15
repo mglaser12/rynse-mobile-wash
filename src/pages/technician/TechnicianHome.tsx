@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useWashRequests } from "@/contexts/WashContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,70 +8,15 @@ import { TechnicianHeader } from "@/components/technician/TechnicianHeader";
 import { TodaySchedule } from "@/components/technician/TodaySchedule";
 import { JobRequestsTabs } from "@/components/technician/JobRequestsTabs";
 import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 const TechnicianHome = () => {
   const { user } = useAuth();
-  const { washRequests = [], isLoading, updateWashRequest } = useWashRequests();
+  const { washRequests = [], isLoading, updateWashRequest, refreshData } = useWashRequests();
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDebugMode, setIsDebugMode] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
-  
-  // Enhanced debug information on mount and when refresh is triggered
-  useEffect(() => {
-    const checkDatabase = async () => {
-      if (user?.id) {
-        console.log("TechnicianHome: Manually checking database for wash requests");
-
-        try {
-          // Try to directly query all wash requests
-          const { data: allRequests, error: allError } = await supabase
-            .from('wash_requests')
-            .select('id, status, technician_id, user_id');
-          
-          console.log("Manual database check - All wash requests:", allRequests);
-          console.log("Manual database check - Error:", allError);
-          
-          // Try to directly query all pending requests
-          const { data: pendingRequests, error: pendingError } = await supabase
-            .from('wash_requests')
-            .select('id, status, technician_id, user_id')
-            .eq('status', 'pending');
-            
-          console.log("Manual check - Pending requests:", pendingRequests);
-          console.log("Manual check - Pending error:", pendingError);
-          
-          // Get assigned requests
-          const { data: assignedRequests, error: assignedError } = await supabase
-            .from('wash_requests')
-            .select('id, status, technician_id, user_id')
-            .eq('technician_id', user.id);
-            
-          console.log("Manual check - Assigned requests:", assignedRequests);
-          console.log("Manual check - Assigned error:", assignedError);
-          
-          // Set debug info for UI display if needed
-          if (isDebugMode) {
-            setDebugInfo({
-              all: { data: allRequests, error: allError },
-              pending: { data: pendingRequests, error: pendingError },
-              assigned: { data: assignedRequests, error: assignedError }
-            });
-          }
-        } catch (err) {
-          console.error("Error in manual database check:", err);
-          if (isDebugMode) {
-            setDebugInfo({ error: String(err) });
-          }
-        }
-      }
-    };
-    
-    checkDatabase();
-  }, [user?.id, isDebugMode]);
   
   // Safely filter wash requests (defensive programming)
   const pendingRequests = Array.isArray(washRequests) 
@@ -100,6 +45,7 @@ const TechnicianHome = () => {
       
       if (result) {
         toast.success("Request accepted successfully");
+        refreshData(); // Refresh data after accepting a request
       } else {
         toast.error("Failed to accept request");
       }
@@ -121,6 +67,7 @@ const TechnicianHome = () => {
       
       if (result) {
         toast.success("Wash started successfully");
+        refreshData(); // Refresh data after starting a wash
       } else {
         toast.error("Failed to start wash");
       }
@@ -142,6 +89,7 @@ const TechnicianHome = () => {
       
       if (result) {
         toast.success("Wash completed successfully");
+        refreshData(); // Refresh data after completing a wash
       } else {
         toast.error("Failed to complete wash");
       }
@@ -154,10 +102,6 @@ const TechnicianHome = () => {
     }
   };
   
-  const handleRefresh = () => {
-    window.location.reload();
-  };
-  
   // Toggle debug mode
   const toggleDebugMode = () => {
     setIsDebugMode(!isDebugMode);
@@ -165,10 +109,7 @@ const TechnicianHome = () => {
 
   return (
     <AppLayout>
-      <TechnicianHeader 
-        userName={user?.name} 
-        onRefresh={handleRefresh}
-      />
+      <TechnicianHeader userName={user?.name} />
       
       <div className="car-wash-container animate-fade-in p-4">
         {isLoading ? (
@@ -177,11 +118,22 @@ const TechnicianHome = () => {
           </div>
         ) : (
           <>
-            {/* Debug section */}
-            {isDebugMode && debugInfo && (
+            {/* Debug information about requests */}
+            {isDebugMode && (
               <div className="bg-gray-100 p-4 mb-6 rounded-lg text-xs overflow-auto max-h-48">
                 <h3 className="font-bold mb-2">Debug Information:</h3>
-                <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+                <p>Pending requests: {pendingRequests.length}</p>
+                <p>Assigned requests: {assignedRequests.length}</p>
+                <p>In-progress requests: {inProgressRequests.length}</p>
+                <p>Total requests: {washRequests.length}</p>
+                <p>User ID: {user?.id}</p>
+                <p>User Role: {user?.role}</p>
+                <button 
+                  className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"
+                  onClick={refreshData}
+                >
+                  Force Refresh
+                </button>
               </div>
             )}
             

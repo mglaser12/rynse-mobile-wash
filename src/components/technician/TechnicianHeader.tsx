@@ -7,21 +7,14 @@ import { toast } from "sonner";
 
 interface TechnicianHeaderProps {
   userName?: string;
-  onRefresh?: () => void;
 }
 
-export const TechnicianHeader = ({ userName, onRefresh }: TechnicianHeaderProps) => {
-  const { isLoading } = useWashRequests();
+export const TechnicianHeader = ({ userName }: TechnicianHeaderProps) => {
+  const { isLoading, refreshData } = useWashRequests();
   
   const handleRefresh = () => {
-    if (onRefresh) {
-      onRefresh();
-      toast.info("Refreshing data...");
-    } else {
-      // Fallback to page reload
-      window.location.reload();
-      toast.info("Refreshing data...");
-    }
+    refreshData();
+    toast.info("Refreshing data...");
   };
   
   return (
