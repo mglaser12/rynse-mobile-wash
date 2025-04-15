@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WashRequest } from "@/models/types";
-import { Loader2, FileText } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import { JobHistory } from "@/components/technician/JobHistory";
 import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
 import { useWashManagement } from "@/hooks/technician/useWashManagement";
@@ -51,6 +51,20 @@ const TechnicianHistoryPage = () => {
 
   return (
     <AppLayout>
+      <header className="bg-white p-4 border-b sticky top-0 z-10">
+        <div className="flex items-center">
+          <img 
+            src="/lovable-uploads/5e29517a-c169-4798-98fa-075394612b76.png" 
+            alt="Rynse Logo" 
+            className="h-8 mr-3" 
+          />
+          <div>
+            <h1 className="text-2xl font-bold">Job History</h1>
+            <p className="text-sm text-muted-foreground">Review completed wash requests</p>
+          </div>
+        </div>
+      </header>
+      
       <div className="car-wash-container animate-fade-in p-4">
         <div className="flex items-center gap-2 mb-6">
           <FileText className="h-6 w-6 text-primary" />

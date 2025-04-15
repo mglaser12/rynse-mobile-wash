@@ -20,9 +20,16 @@ export const TechnicianHeader = ({ userName }: TechnicianHeaderProps) => {
   return (
     <header className="bg-white p-4 border-b sticky top-0 z-10">
       <div className="flex items-center justify-between">
-        <div className="flex flex-col">
-          <h1 className="text-xl font-bold">Technician Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Welcome, {userName || 'Technician'}</p>
+        <div className="flex items-center">
+          <img 
+            src="/lovable-uploads/5e29517a-c169-4798-98fa-075394612b76.png" 
+            alt="Rynse Logo" 
+            className="h-8 mr-3" 
+          />
+          <div className="flex flex-col">
+            <h1 className="text-xl font-bold">Technician Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Welcome, {userName || 'Technician'}</p>
+          </div>
         </div>
         
         <Button 

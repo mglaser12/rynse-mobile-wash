@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WashRequest } from "@/models/types";
@@ -34,9 +33,21 @@ const TechnicianJobsPage = () => {
 
   return (
     <AppLayout>
+      <header className="bg-white p-4 border-b sticky top-0 z-10">
+        <div className="flex items-center">
+          <img 
+            src="/lovable-uploads/5e29517a-c169-4798-98fa-075394612b76.png" 
+            alt="Rynse Logo" 
+            className="h-8 mr-3" 
+          />
+          <div>
+            <h1 className="text-2xl font-bold">Job Calendar</h1>
+            <p className="text-sm text-muted-foreground">View and manage your assigned jobs</p>
+          </div>
+        </div>
+      </header>
+      
       <div className="car-wash-container animate-fade-in p-4">
-        <h1 className="text-2xl font-bold mb-6">Job Calendar</h1>
-        
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
