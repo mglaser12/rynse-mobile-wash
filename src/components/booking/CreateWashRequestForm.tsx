@@ -6,7 +6,6 @@ import { useWashRequests } from "@/contexts/WashContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { VehicleSelectionSection } from "./VehicleSelectionSection";
 import { DateSelectionSection } from "./DateSelectionSection";
-import { LocationSelectionSection } from "./LocationSelectionSection";
 import { NotesSection } from "./NotesSection";
 import { PriceSummary } from "./PriceSummary";
 import { FormActions } from "./FormActions";
@@ -19,26 +18,20 @@ interface CreateWashRequestFormProps {
 
 export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequestFormProps) {
   const { vehicles } = useVehicles();
-  const { locations = [] } = useWashRequests();
   
   const { 
     isLoading,
     selectedVehicleIds,
     startDate,
     endDate,
-    selectedLocation,
     notes,
     isFormValid,
     setNotes,
     setStartDate,
     setEndDate,
-    setSelectedLocation,
     handleVehicleSelection,
     handleSubmit
   } = useWashRequestForm(onSuccess);
-
-  // Ensure locations is an array to prevent iteration errors
-  const safeLocations = Array.isArray(locations) ? locations : [];
 
   return (
     <div className="space-y-6 overflow-hidden flex flex-col h-full">
@@ -68,13 +61,6 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
               endDate={endDate}
               onStartDateChange={setStartDate}
               onEndDateChange={setEndDate}
-            />
-            
-            {/* Location Selection */}
-            <LocationSelectionSection 
-              locations={safeLocations}
-              selectedLocation={selectedLocation}
-              onSelectLocation={setSelectedLocation}
             />
             
             {/* Additional Notes */}

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { WashRequest, WashLocation, WashStatus } from "@/models/types";
+import { WashRequest, WashStatus } from "@/models/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -37,49 +37,8 @@ export function useLoadWashRequests(userId: string | undefined) {
           return;
         }
 
-        // Load locations for these requests
-        const locationIds = [...new Set(requestsData.map(req => req.location_id))];
-        const { data: locationsData, error: locationsError } = await supabase
-          .from('wash_locations')
-          .select('*')
-          .in('id', locationIds);
-
-        if (locationsError) {
-          console.error("Error loading locations from Supabase:", locationsError);
-          toast.error("Failed to load locations");
-          setWashRequests([]);
-          setIsLoading(false);
-          return;
-        }
-
-        if (!locationsData || !Array.isArray(locationsData)) {
-          console.error("Unexpected locations data format from Supabase");
-          setWashRequests([]);
-          setIsLoading(false);
-          return;
-        }
-
         // Map Supabase data to our WashRequest type
         const transformedWashRequests: WashRequest[] = requestsData.map(washRequest => {
-          // Find the location for this request
-          const locationData = locationsData.find(loc => loc.id === washRequest.location_id);
-          
-          // Create a location object with proper type safety
-          const location: WashLocation = {
-            id: locationData?.id || washRequest.location_id,
-            name: locationData?.name || "Unknown Location",
-            address: locationData?.address || "",
-            city: locationData?.city || "",
-            state: locationData?.state || "",
-            zipCode: locationData?.zip_code || "",
-            coordinates: locationData?.latitude !== undefined && locationData?.longitude !== undefined 
-              ? {
-                  latitude: locationData.latitude,
-                  longitude: locationData.longitude
-                } 
-              : undefined
-          };
-
           // Get vehicle IDs for this request
           const vehicleIds = washRequest.wash_request_vehicles 
             ? washRequest.wash_request_vehicles.map((item: any) => item.vehicle_id)
@@ -89,7 +48,6 @@ export function useLoadWashRequests(userId: string | undefined) {
             id: washRequest.id,
             customerId: washRequest.user_id,
             vehicles: vehicleIds,
-            location: location,
             preferredDates: {
               start: new Date(washRequest.preferred_date_start),
               end: washRequest.preferred_date_end ? new Date(washRequest.preferred_date_end) : undefined

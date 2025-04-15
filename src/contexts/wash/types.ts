@@ -1,9 +1,8 @@
 
-import { WashRequest, WashLocation, WashStatus } from "@/models/types";
+import { WashRequest } from "@/models/types";
 
 export interface WashContextType {
   washRequests: WashRequest[];
-  locations: WashLocation[];
   isLoading: boolean;
   createWashRequest: (requestData: CreateWashRequestData) => Promise<WashRequest | null>;
   updateWashRequest: (id: string, data: Partial<WashRequest>) => Promise<boolean>;
@@ -15,7 +14,6 @@ export interface WashContextType {
 export interface CreateWashRequestData {
   customerId: string;
   vehicles: string[];
-  location: WashLocation;
   preferredDates: {
     start: Date;
     end?: Date;

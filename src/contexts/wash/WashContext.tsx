@@ -1,10 +1,9 @@
 
 import React, { createContext, useState, useContext, useEffect } from "react";
-import { WashLocation, WashRequest } from "@/models/types";
+import { WashRequest } from "@/models/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { WashContextType } from "./types";
 import { useLoadWashRequests } from "./useLoadWashRequests";
-import { useLoadLocations } from "./useLoadLocations";
 import { createWashRequest, cancelWashRequest } from "./washOperations";
 
 const WashContext = createContext<WashContextType>({} as WashContextType);
@@ -21,20 +20,12 @@ export function useWash() {
 export function WashProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { washRequests: loadedWashRequests, isLoading: isLoadingWashRequests } = useLoadWashRequests(user?.id);
-  const { locations: loadedLocations, isLoading: isLoadingLocations } = useLoadLocations();
   const [washRequests, setWashRequests] = useState<WashRequest[]>([]);
-  const [locations, setLocations] = useState<WashLocation[]>([]);
 
   // Update local state when loaded wash requests change
   useEffect(() => {
     setWashRequests(Array.isArray(loadedWashRequests) ? loadedWashRequests : []);
   }, [loadedWashRequests]);
-
-  // Update local state when loaded locations change
-  useEffect(() => {
-    // Always ensure locations is a valid array
-    setLocations(Array.isArray(loadedLocations) ? loadedLocations : []);
-  }, [loadedLocations]);
 
   // Create a new wash request
   const handleCreateWashRequest = async (washRequestData: Omit<WashRequest, "id" | "status" | "createdAt" | "updatedAt">) => {
@@ -79,8 +70,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     washRequests,
-    locations,
-    isLoading: isLoadingWashRequests || isLoadingLocations,
+    isLoading: isLoadingWashRequests,
     createWashRequest: handleCreateWashRequest,
     cancelWashRequest: handleCancelWashRequest,
     updateWashRequest: handleUpdateWashRequest,

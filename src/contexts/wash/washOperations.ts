@@ -1,8 +1,7 @@
 
-import { WashRequest, WashLocation, WashStatus } from "@/models/types";
+import { WashRequest, WashStatus } from "@/models/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { v4 as uuidv4 } from 'uuid';
 
 export async function createWashRequest(
   user: { id: string } | null,
@@ -14,14 +13,13 @@ export async function createWashRequest(
   }
 
   try {
-    const { customerId, vehicles, location, preferredDates, price, notes } = washRequestData;
+    const { customerId, vehicles, preferredDates, price, notes } = washRequestData;
     
     // Insert new wash request in Supabase
     const { data, error } = await supabase
       .from('wash_requests')
       .insert({
         user_id: user.id,
-        location_id: location.id,
         preferred_date_start: preferredDates.start.toISOString(),
         preferred_date_end: preferredDates.end?.toISOString(),
         price,
@@ -53,32 +51,10 @@ export async function createWashRequest(
       // We should handle this better, but for now we'll continue
     }
 
-    // Fetch the location details
-    const { data: locationData } = await supabase
-      .from('wash_locations')
-      .select('*')
-      .eq('id', location.id)
-      .single();
-
-    // Transform to our app's model
-    const washLocation: WashLocation = {
-      id: locationData.id,
-      name: locationData.name,
-      address: locationData.address,
-      city: locationData.city,
-      state: locationData.state,
-      zipCode: locationData.zip_code,
-      coordinates: locationData.latitude && locationData.longitude ? {
-        latitude: locationData.latitude,
-        longitude: locationData.longitude
-      } : undefined
-    };
-
     const newWashRequest: WashRequest = {
       id: data.id,
       customerId: data.user_id,
       vehicles: vehicles,
-      location: washLocation,
       preferredDates: {
         start: new Date(data.preferred_date_start),
         end: data.preferred_date_end ? new Date(data.preferred_date_end) : undefined

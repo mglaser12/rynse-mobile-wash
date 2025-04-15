@@ -13,19 +13,6 @@ export type Vehicle = {
   dateAdded: Date;
 };
 
-export type WashLocation = {
-  id: string;
-  name: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
-};
-
 export type WashStatus = 
   | "pending" 
   | "confirmed" 
@@ -37,7 +24,6 @@ export type WashRequest = {
   id: string;
   customerId: string;
   vehicles: string[]; // Array of vehicle IDs
-  location: WashLocation;
   preferredDates: {
     start: Date;
     end?: Date;
@@ -65,23 +51,9 @@ export type SupabaseVehicle = {
   updated_at: string;
 };
 
-export type SupabaseLocation = {
-  id: string;
-  name: string;
-  address: string;
-  city: string;
-  state: string;
-  zip_code: string;
-  latitude: number | null;
-  longitude: number | null;
-  created_at: string;
-  updated_at: string;
-};
-
 export type SupabaseWashRequest = {
   id: string;
   user_id: string;
-  location_id: string;
   preferred_date_start: string;
   preferred_date_end: string | null;
   status: string;
