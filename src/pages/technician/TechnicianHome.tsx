@@ -5,12 +5,11 @@ import { useWashRequests } from "@/contexts/WashContext";
 import { Loader2 } from "lucide-react";
 import { TechnicianHeader } from "@/components/technician/TechnicianHeader";
 import { TodaySchedule } from "@/components/technician/TodaySchedule";
-import { Button } from "@/components/ui/button";
+import { JobRequestsTabs } from "@/components/technician/JobRequestsTabs";
+import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
 import { VehicleWashProgressDialog } from "@/components/technician/VehicleWashProgressDialog";
 import { DebugPanel } from "@/components/technician/DebugPanel";
 import { useWashManagement } from "@/hooks/technician/useWashManagement";
-import { JobRequestsTabs } from "@/components/technician/JobRequestsTabs";
-import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
 
 const TechnicianHome = () => {
   const { 
@@ -57,11 +56,6 @@ const TechnicianHome = () => {
   const activeWashRequest = activeWashId && Array.isArray(washRequests)
     ? washRequests.find(req => req.id === activeWashId)
     : null;
-  
-  // Toggle debug mode
-  const toggleDebugMode = () => {
-    setIsDebugMode(!isDebugMode);
-  };
 
   return (
     <AppLayout>
@@ -105,18 +99,6 @@ const TechnicianHome = () => {
                 onRequestClick={setSelectedRequestId}
                 onStartWash={handleStartWash}
               />
-            </div>
-            
-            {/* Debug toggle button */}
-            <div className="mt-8 flex justify-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleDebugMode}
-                className="text-xs"
-              >
-                {isDebugMode ? "Hide Debug Info" : "Show Debug Info"}
-              </Button>
             </div>
           </>
         )}
