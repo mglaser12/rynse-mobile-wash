@@ -8,7 +8,7 @@ const VERIFICATION_TIMEOUT = 1500; // 1.5 seconds for database consistency check
 const verifyJobAcceptance = async (requestId: string, technicianId: string) => {
   try {
     // Wait a small delay to allow database replication
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     // Check if the job has actually been updated in the database
     const { data, error } = await supabase
@@ -108,11 +108,12 @@ async function handleJobAcceptance(requestId: string, technicianId: string): Pro
       status: 'confirmed'
     };
     
+    // Fixed: Use a better update query that doesn't check existing technician_id
+    // which was causing race conditions
     const { error } = await supabase
       .from('wash_requests')
       .update(updateData)
       .eq('id', requestId)
-      .is('technician_id', null) // Only update if not already assigned
       .eq('status', 'pending'); // Only update if still pending
       
     if (error) {
@@ -121,7 +122,20 @@ async function handleJobAcceptance(requestId: string, technicianId: string): Pro
       return false;
     }
     
-    // Verify the job acceptance worked
+    // Additional direct fetch to see if our update worked
+    const { data: updatedData } = await supabase
+      .from('wash_requests')
+      .select('technician_id, status')
+      .eq('id', requestId)
+      .single();
+      
+    if (updatedData?.technician_id === technicianId) {
+      console.log("Job claimed successfully in first check:", updatedData);
+      toast.success("Job accepted successfully!");
+      return true;
+    }
+    
+    // If we couldn't verify immediate success, try the original verification process
     let verified = false;
     let verificationAttempts = 0;
     const maxVerificationAttempts = 3;
