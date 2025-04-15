@@ -1,174 +1,122 @@
 
-import { WashRequest, WashStatus } from "@/models/types";
+import { WashRequest, WashLocation } from "@/models/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CreateWashRequestData } from "./types";
+import { v4 as uuidv4 } from 'uuid';
 
 export async function createWashRequest(
-  userId: string | undefined, 
-  requestData: CreateWashRequestData,
-  setWashRequests: React.Dispatch<React.SetStateAction<WashRequest[]>>
+  user: { id: string } | null,
+  washRequestData: Omit<WashRequest, "id" | "status" | "createdAt" | "updatedAt">
 ): Promise<WashRequest | null> {
-  try {
-    if (!userId) {
-      toast.error("You must be logged in to create a wash request");
-      return null;
-    }
+  if (!user) {
+    toast.error("You must be logged in to create a wash request");
+    return null;
+  }
 
-    // Insert wash request in Supabase
+  try {
+    const { customerId, vehicles, location, preferredDates, price, notes } = washRequestData;
+    
+    // Insert new wash request in Supabase
     const { data, error } = await supabase
       .from('wash_requests')
       .insert({
-        user_id: userId,
-        location_id: requestData.location.id,
-        preferred_date_start: requestData.preferredDates.start.toISOString(),
-        preferred_date_end: requestData.preferredDates.end?.toISOString(),
-        notes: requestData.notes,
-        price: requestData.price,
+        user_id: user.id,
+        location_id: location.id,
+        preferred_date_start: preferredDates.start.toISOString(),
+        preferred_date_end: preferredDates.end?.toISOString(),
+        price,
+        notes,
         status: 'pending'
       })
-      .select()
+      .select('*')
       .single();
 
     if (error) {
-      console.error("Error creating wash request in Supabase:", error);
+      console.error("Error adding wash request to Supabase:", error);
       toast.error("Failed to create wash request");
       return null;
     }
 
-    // Add vehicle associations
-    for (const vehicleId of requestData.vehicles) {
-      const { error: vehicleError } = await supabase
-        .from('wash_request_vehicles')
-        .insert({
-          wash_request_id: data.id,
-          vehicle_id: vehicleId
-        });
+    // Create vehicle associations
+    const vehicleInserts = vehicles.map(vehicleId => ({
+      wash_request_id: data.id,
+      vehicle_id: vehicleId
+    }));
 
-      if (vehicleError) {
-        console.error("Error linking vehicle to wash request:", vehicleError);
-        // Continue with other vehicles even if one fails
-      }
+    const { error: vehicleError } = await supabase
+      .from('wash_request_vehicles')
+      .insert(vehicleInserts);
+
+    if (vehicleError) {
+      console.error("Error creating vehicle associations:", vehicleError);
+      toast.error("Failed to link vehicles to wash request");
+      // We should handle this better, but for now we'll continue
     }
 
-    // Create WashRequest object from response
-    const newRequest: WashRequest = {
+    // Fetch the location details
+    const { data: locationData } = await supabase
+      .from('wash_locations')
+      .select('*')
+      .eq('id', location.id)
+      .single();
+
+    // Transform to our app's model
+    const washLocation: WashLocation = {
+      id: locationData.id,
+      name: locationData.name,
+      address: locationData.address,
+      city: locationData.city,
+      state: locationData.state,
+      zipCode: locationData.zip_code,
+      coordinates: locationData.latitude && locationData.longitude ? {
+        latitude: locationData.latitude,
+        longitude: locationData.longitude
+      } : undefined
+    };
+
+    const newWashRequest: WashRequest = {
       id: data.id,
       customerId: data.user_id,
-      vehicles: requestData.vehicles,
-      location: requestData.location,
+      vehicles: vehicles,
+      location: washLocation,
       preferredDates: {
         start: new Date(data.preferred_date_start),
-        end: data.preferred_date_end ? new Date(data.preferred_date_end) : undefined,
+        end: data.preferred_date_end ? new Date(data.preferred_date_end) : undefined
       },
-      status: data.status as WashStatus,
-      technician: data.technician_id || undefined,
-      price: Number(data.price),
-      notes: data.notes || '',
+      status: data.status,
+      price: data.price,
+      notes: data.notes || undefined,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at)
     };
-
-    // Update local state
-    setWashRequests(prev => [...prev, newRequest]);
+    
     toast.success("Wash request created successfully!");
-    return newRequest;
+    return newWashRequest;
   } catch (error) {
-    console.error("Error in createWashRequest:", error);
+    console.error("Error creating wash request:", error);
     toast.error("Failed to create wash request");
     return null;
   }
 }
 
-export async function updateWashRequest(
-  id: string, 
-  data: Partial<WashRequest>,
-  setWashRequests: React.Dispatch<React.SetStateAction<WashRequest[]>>
-): Promise<boolean> {
+export async function cancelWashRequest(id: string): Promise<boolean> {
   try {
-    // Map our data model to Supabase model
-    const updateData: any = {};
-    
-    if (data.location) {
-      updateData.location_id = data.location.id;
-    }
-    
-    if (data.preferredDates?.start) {
-      updateData.preferred_date_start = data.preferredDates.start.toISOString();
-    }
-    
-    if (data.preferredDates?.end) {
-      updateData.preferred_date_end = data.preferredDates.end.toISOString();
-    }
-    
-    if (data.technician !== undefined) {
-      updateData.technician_id = data.technician;
-    }
-    
-    if (data.price !== undefined) {
-      updateData.price = data.price;
-    }
-    
-    if (data.notes !== undefined) {
-      updateData.notes = data.notes;
-    }
-    
-    if (data.status !== undefined) {
-      updateData.status = data.status;
-    }
-    
-    updateData.updated_at = new Date().toISOString();
-
-    // Update in Supabase
     const { error } = await supabase
       .from('wash_requests')
-      .update(updateData)
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
       .eq('id', id);
 
     if (error) {
-      console.error("Error updating wash request in Supabase:", error);
-      toast.error("Failed to update wash request");
+      console.error("Error cancelling wash request:", error);
+      toast.error("Failed to cancel wash request");
       return false;
     }
-
-    // Update local state
-    setWashRequests(prev => prev.map(washRequest =>
-      washRequest.id === id
-        ? { ...washRequest, ...data, updatedAt: new Date() }
-        : washRequest
-    ));
-
-    toast.success("Wash request updated successfully!");
+    
+    toast.success("Wash request cancelled successfully!");
     return true;
   } catch (error) {
-    console.error("Error updating wash request:", error);
-    toast.error("Failed to update wash request");
+    console.error("Error cancelling wash request:", error);
+    toast.error("Failed to cancel wash request");
     return false;
-  }
-}
-
-export async function removeWashRequest(
-  id: string,
-  setWashRequests: React.Dispatch<React.SetStateAction<WashRequest[]>>
-) {
-  try {
-    // Delete from Supabase
-    const { error } = await supabase
-      .from('wash_requests')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error("Error removing wash request from Supabase:", error);
-      toast.error("Failed to remove wash request");
-      return;
-    }
-
-    // Update local state
-    setWashRequests(prev => prev.filter(washRequest => washRequest.id !== id));
-    toast.success("Wash request removed successfully!");
-  } catch (error) {
-    console.error("Error removing wash request:", error);
-    toast.error("Failed to remove wash request");
   }
 }
