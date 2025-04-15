@@ -37,6 +37,14 @@ export type WashRequest = {
   updatedAt: Date;
 };
 
+// New type to track the wash status for each vehicle
+export type VehicleWashStatus = {
+  vehicleId: string;
+  completed: boolean;
+  postWashPhoto?: string;
+  notes?: string;
+};
+
 export type SupabaseVehicle = {
   id: string;
   user_id: string;

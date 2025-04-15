@@ -10,6 +10,7 @@ import { JobRequestsTabs } from "@/components/technician/JobRequestsTabs";
 import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { VehicleWashProgressDialog } from "@/components/technician/VehicleWashProgressDialog";
 
 const TechnicianHome = () => {
   const { user } = useAuth();
@@ -17,6 +18,7 @@ const TechnicianHome = () => {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDebugMode, setIsDebugMode] = useState(false);
+  const [activeWashId, setActiveWashId] = useState<string | null>(null);
   
   // Safely filter wash requests (defensive programming)
   const pendingRequests = Array.isArray(washRequests) 
@@ -33,6 +35,10 @@ const TechnicianHome = () => {
   
   const selectedRequest = selectedRequestId && Array.isArray(washRequests)
     ? washRequests.find(req => req.id === selectedRequestId) 
+    : null;
+
+  const activeWashRequest = activeWashId && Array.isArray(washRequests)
+    ? washRequests.find(req => req.id === activeWashId)
     : null;
   
   const handleAcceptRequest = async (requestId: string) => {
@@ -68,6 +74,9 @@ const TechnicianHome = () => {
       if (result) {
         toast.success("Wash started successfully");
         refreshData(); // Refresh data after starting a wash
+        
+        // Open the wash progress dialog
+        setActiveWashId(requestId);
       } else {
         toast.error("Failed to start wash");
       }
@@ -90,6 +99,11 @@ const TechnicianHome = () => {
       if (result) {
         toast.success("Wash completed successfully");
         refreshData(); // Refresh data after completing a wash
+        
+        // Clear any active wash dialog
+        if (activeWashId === requestId) {
+          setActiveWashId(null);
+        }
       } else {
         toast.error("Failed to complete wash");
       }
@@ -99,6 +113,12 @@ const TechnicianHome = () => {
     } finally {
       setIsUpdating(false);
       setSelectedRequestId(null);
+    }
+  };
+
+  const handleWashProgressComplete = async () => {
+    if (activeWashId) {
+      await handleCompleteWash(activeWashId);
     }
   };
   
@@ -168,6 +188,7 @@ const TechnicianHome = () => {
         )}
       </div>
       
+      {/* Request Detail Dialog */}
       <RequestDetailDialog
         open={!!selectedRequestId}
         onOpenChange={(open) => !open && setSelectedRequestId(null)}
@@ -178,6 +199,18 @@ const TechnicianHome = () => {
         onStartWash={handleStartWash}
         onCompleteWash={handleCompleteWash}
       />
+      
+      {/* Wash Progress Dialog */}
+      {activeWashRequest && (
+        <VehicleWashProgressDialog
+          washRequest={activeWashRequest}
+          open={!!activeWashId}
+          onOpenChange={(open) => {
+            if (!open) setActiveWashId(null);
+          }}
+          onComplete={handleWashProgressComplete}
+        />
+      )}
     </AppLayout>
   );
 };
