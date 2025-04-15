@@ -62,26 +62,22 @@ export function useLoadWashRequests(userId: string | undefined) {
         // Map Supabase data to our WashRequest type
         const transformedWashRequests: WashRequest[] = requestsData.map(washRequest => {
           // Find the location for this request
-          const locationData = locationsData.find(loc => loc.id === washRequest.location_id) || {
-            id: washRequest.location_id,
-            name: "Unknown Location",
-            address: "",
-            city: "",
-            state: "",
-            zip_code: ""
-          };
+          const locationData = locationsData.find(loc => loc.id === washRequest.location_id);
           
+          // Create a location object with proper type safety
           const location: WashLocation = {
-            id: locationData.id,
-            name: locationData.name,
-            address: locationData.address,
-            city: locationData.city,
-            state: locationData.state,
-            zipCode: locationData.zip_code,
-            coordinates: locationData.latitude && locationData.longitude ? {
-              latitude: locationData.latitude,
-              longitude: locationData.longitude
-            } : undefined
+            id: locationData?.id || washRequest.location_id,
+            name: locationData?.name || "Unknown Location",
+            address: locationData?.address || "",
+            city: locationData?.city || "",
+            state: locationData?.state || "",
+            zipCode: locationData?.zip_code || "",
+            coordinates: locationData?.latitude !== undefined && locationData?.longitude !== undefined 
+              ? {
+                  latitude: locationData.latitude,
+                  longitude: locationData.longitude
+                } 
+              : undefined
           };
 
           // Get vehicle IDs for this request
