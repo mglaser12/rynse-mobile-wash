@@ -14,6 +14,7 @@ export type Vehicle = {
   image?: string;
   vinNumber?: string;
   dateAdded: Date;
+  organizationId?: string; // Added organization ID field
 };
 
 export type WashStatus = 

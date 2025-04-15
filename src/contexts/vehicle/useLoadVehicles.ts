@@ -42,7 +42,8 @@ export function useLoadVehicles(userId: string | undefined): UseLoadVehiclesResu
           type: vehicle.type || '',
           vinNumber: vehicle.vin_number,
           image: vehicle.image_url,
-          dateAdded: new Date(vehicle.created_at)
+          dateAdded: new Date(vehicle.created_at),
+          organizationId: vehicle.organization_id
         }));
 
         setVehicles(transformedVehicles);

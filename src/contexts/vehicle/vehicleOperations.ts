@@ -20,7 +20,7 @@ const base64ToBlob = (base64: string) => {
 };
 
 export async function addVehicle(
-  user: { id: string } | null, 
+  user: { id: string; organizationId?: string } | null, 
   vehicleData: Omit<Vehicle, "id" | "dateAdded">
 ): Promise<Vehicle | null> {
   if (!user) {
@@ -29,7 +29,7 @@ export async function addVehicle(
   }
 
   try {
-    const { customerId, make, model, year, licensePlate, color, type, vinNumber, image } = vehicleData;
+    const { customerId, make, model, year, licensePlate, color, type, vinNumber, image, organizationId } = vehicleData;
     
     // Convert base64 image to file and upload to storage if present
     let imageUrl = null;
@@ -55,6 +55,9 @@ export async function addVehicle(
       imageUrl = image;
     }
 
+    // Use the organization ID from the user if not explicitly provided
+    const vehicleOrgId = organizationId || user.organizationId;
+
     // Insert new vehicle in Supabase
     const { data, error } = await supabase
       .from('vehicles')
@@ -67,7 +70,8 @@ export async function addVehicle(
         color,
         type,
         vin_number: vinNumber,
-        image_url: imageUrl
+        image_url: imageUrl,
+        organization_id: vehicleOrgId
       })
       .select('*')
       .single();
@@ -90,7 +94,8 @@ export async function addVehicle(
       type: data.type || '',
       vinNumber: data.vin_number,
       image: data.image_url,
-      dateAdded: new Date(data.created_at)
+      dateAdded: new Date(data.created_at),
+      organizationId: data.organization_id
     };
     
     toast.success("Vehicle added successfully!");
@@ -138,6 +143,7 @@ export async function updateVehicle(
       color: data.color,
       type: data.type,
       vin_number: data.vinNumber,
+      organization_id: data.organizationId,
       updated_at: new Date()
     };
     
