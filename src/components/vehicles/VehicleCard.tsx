@@ -38,7 +38,7 @@ export function VehicleCard({ vehicle, onClick, selected = false, selectionMode 
               </h4>
               {selectionMode && (
                 <div className="mr-1" onClick={(e) => e.stopPropagation()}>
-                  <Checkbox checked={selected} readOnly />
+                  <Checkbox checked={selected} />
                 </div>
               )}
             </div>
