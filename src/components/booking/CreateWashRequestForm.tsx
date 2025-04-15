@@ -1,8 +1,7 @@
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef } from "react";
 import { Separator } from "@/components/ui/separator";
 import { useVehicles } from "@/contexts/VehicleContext";
-import { useWashRequests } from "@/contexts/WashContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { VehicleSelectionSection } from "./VehicleSelectionSection";
 import { DateSelectionSection } from "./DateSelectionSection";
@@ -21,7 +20,6 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
   const { vehicles } = useVehicles();
   const isMobile = useIsMobile();
   const formRef = useRef<HTMLDivElement>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   const { 
     isLoading,
@@ -37,30 +35,6 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
     handleSubmit
   } = useWashRequestForm(onSuccess);
 
-  // Function to scroll to the next section
-  const scrollToSection = (sectionIndex: number) => {
-    if (!formRef.current) return;
-    
-    const sections = formRef.current.querySelectorAll(".form-section");
-    if (sectionIndex < sections.length) {
-      const section = sections[sectionIndex];
-      
-      // Use scrollIntoView for all platforms
-      section.scrollIntoView({ behavior: "smooth", block: "start" });
-      
-      // Additional handling for ScrollArea component
-      if (scrollAreaRef.current) {
-        setTimeout(() => {
-          const sectionTop = section.getBoundingClientRect().top;
-          const containerTop = scrollAreaRef.current?.getBoundingClientRect().top || 0;
-          const scrollPosition = scrollAreaRef.current.scrollTop + (sectionTop - containerTop);
-          
-          scrollAreaRef.current.scrollTop = scrollPosition;
-        }, 50); // Small delay to ensure DOM is updated
-      }
-    }
-  };
-
   return (
     <div className="space-y-6 overflow-hidden flex flex-col h-full max-h-[80vh]">
       <div>
@@ -72,8 +46,7 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
       
       <ScrollArea 
         className="flex-1 pr-4 -mr-4 overflow-y-auto" 
-        scrollHideDelay={0} 
-        ref={scrollAreaRef}
+        scrollHideDelay={0}
       >
         <div ref={formRef} className="pb-4">
           <form onSubmit={handleSubmit}>
@@ -85,7 +58,6 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
                   selectedVehicleIds={selectedVehicleIds}
                   onSelectVehicle={handleVehicleSelection}
                   onCancel={onCancel}
-                  onContinue={() => scrollToSection(1)}
                 />
               </div>
 
@@ -98,7 +70,6 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
                   endDate={endDate}
                   onStartDateChange={setStartDate}
                   onEndDateChange={setEndDate}
-                  onContinue={() => scrollToSection(2)}
                 />
               </div>
               
@@ -109,7 +80,6 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
                 <NotesSection 
                   notes={notes}
                   onNotesChange={setNotes}
-                  onContinue={() => scrollToSection(3)}
                 />
               </div>
               
@@ -133,3 +103,4 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
     </div>
   );
 }
+

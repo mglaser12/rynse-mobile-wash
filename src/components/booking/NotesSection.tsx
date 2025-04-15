@@ -2,17 +2,14 @@
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface NotesSectionProps {
   notes: string;
   onNotesChange: (notes: string) => void;
-  onContinue?: () => void;
 }
 
-export function NotesSection({ notes, onNotesChange, onContinue }: NotesSectionProps) {
+export function NotesSection({ notes, onNotesChange }: NotesSectionProps) {
   const isMobile = useIsMobile();
   
   return (
@@ -27,17 +24,7 @@ export function NotesSection({ notes, onNotesChange, onContinue }: NotesSectionP
           rows={3}
         />
       </div>
-      
-      {onContinue && (
-        <Button 
-          type="button" 
-          className="w-full" 
-          onClick={onContinue}
-        >
-          Continue to Summary
-          <ArrowRight className="h-4 w-4 ml-2" />
-        </Button>
-      )}
     </div>
   );
 }
+

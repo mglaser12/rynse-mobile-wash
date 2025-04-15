@@ -1,9 +1,8 @@
 
 import React from "react";
 import { Label } from "@/components/ui/label";
-import { Calendar, ArrowRight } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { DateRangePicker } from "./DateRangePicker";
-import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DateSelectionSectionProps {
@@ -11,7 +10,6 @@ interface DateSelectionSectionProps {
   endDate: Date | undefined;
   onStartDateChange: (date: Date | undefined) => void;
   onEndDateChange: (date: Date | undefined) => void;
-  onContinue?: () => void;
   allowRange?: boolean;
 }
 
@@ -20,7 +18,6 @@ export function DateSelectionSection({
   endDate,
   onStartDateChange,
   onEndDateChange,
-  onContinue,
   allowRange = true
 }: DateSelectionSectionProps) {
   const isMobile = useIsMobile();
@@ -41,19 +38,7 @@ export function DateSelectionSection({
       <p className="text-xs text-muted-foreground">
         Select a single date or a range of dates for your wash.
       </p>
-      
-      {startDate && onContinue && (
-        <div className="mt-4">
-          <Button 
-            type="button" 
-            className="w-full" 
-            onClick={onContinue}
-          >
-            Continue to Notes
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
+
