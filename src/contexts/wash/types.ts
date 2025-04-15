@@ -9,6 +9,7 @@ export interface WashContextType {
   removeWashRequest: (id: string) => Promise<void>;
   getWashRequestById: (id: string) => WashRequest | undefined;
   cancelWashRequest: (id: string) => Promise<boolean>;
+  refreshData: () => void;  // Add refreshData function to the interface
 }
 
 export interface CreateWashRequestData {

@@ -19,7 +19,11 @@ export function useWash() {
 
 export function WashProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const { washRequests: loadedWashRequests, isLoading: isLoadingWashRequests } = useLoadWashRequests(
+  const { 
+    washRequests: loadedWashRequests, 
+    isLoading: isLoadingWashRequests,
+    refreshData 
+  } = useLoadWashRequests(
     user?.id, 
     user?.role
   );
@@ -84,7 +88,8 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
     cancelWashRequest: handleCancelWashRequest,
     updateWashRequest: handleUpdateWashRequest,
     removeWashRequest: handleRemoveWashRequest,
-    getWashRequestById
+    getWashRequestById,
+    refreshData // Expose the refreshData function
   };
 
   return (
