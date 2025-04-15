@@ -69,7 +69,7 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
             
             {/* Location Selection */}
             <LocationSelectionSection 
-              locations={locations}
+              locations={Array.isArray(locations) ? locations : []}
               selectedLocation={selectedLocation}
               onSelectLocation={setSelectedLocation}
             />
