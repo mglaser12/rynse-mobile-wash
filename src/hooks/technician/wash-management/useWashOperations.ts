@@ -1,38 +1,33 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { useWashRequests } from "@/contexts/WashContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { WashRequest } from "@/models/types";
+import { useCallback } from "react";
 import { toast } from "sonner";
 
-export function useWashManagement() {
-  const { user } = useAuth();
-  const { washRequests = [], isLoading, updateWashRequest, refreshData } = useWashRequests();
-  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [activeWashId, setActiveWashId] = useState<string | null>(null);
-  
-  // Load data function to force refresh
-  const loadData = useCallback(async () => {
-    console.log("Forcing data refresh");
-    try {
-      await refreshData();
-    } catch (error) {
-      console.error("Error refreshing data:", error);
-    }
-  }, [refreshData]);
-  
-  // Make sure we have the latest data on mount
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+interface UseWashOperationsProps {
+  user: any;
+  updateWashRequest: Function;
+  loadData: () => Promise<void>;
+  setIsUpdating: (isUpdating: boolean) => void;
+  setSelectedRequestId: (id: string | null) => void;
+  setActiveWashId: (id: string | null) => void;
+  activeWashId: string | null;
+}
+
+export function useWashOperations({
+  user,
+  updateWashRequest,
+  loadData,
+  setIsUpdating,
+  setSelectedRequestId,
+  setActiveWashId,
+  activeWashId
+}: UseWashOperationsProps) {
   
   // Handle accepting a job request
   const handleAcceptRequest = async (requestId: string) => {
     if (!user?.id) {
       console.error("Cannot accept request - user ID is undefined");
       toast.error("User authentication error");
-      return;
+      return false;
     }
     
     setIsUpdating(true);
@@ -158,7 +153,7 @@ export function useWashManagement() {
   const handleReopenWash = useCallback((requestId: string) => {
     console.log(`Reopening wash for request ${requestId}`);
     setActiveWashId(requestId);
-  }, []);
+  }, [setActiveWashId]);
   
   // Handle completing a wash
   const handleCompleteWash = async (requestId: string) => {
@@ -200,18 +195,9 @@ export function useWashManagement() {
   // View job details
   const handleViewJobDetails = useCallback((requestId: string) => {
     setSelectedRequestId(requestId);
-  }, []);
+  }, [setSelectedRequestId]);
 
   return {
-    user,
-    washRequests,
-    isLoading,
-    isUpdating,
-    selectedRequestId,
-    setSelectedRequestId,
-    activeWashId,
-    setActiveWashId,
-    loadData,
     handleAcceptRequest,
     handleScheduleJob,
     handleStartWash,

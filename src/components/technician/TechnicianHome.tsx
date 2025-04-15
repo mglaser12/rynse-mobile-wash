@@ -8,9 +8,9 @@ import { TodaySchedule } from "@/components/technician/TodaySchedule";
 import { JobRequestsTabs } from "@/components/technician/JobRequestsTabs";
 import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
 import { Button } from "@/components/ui/button";
-import { VehicleWashProgressDialog } from "@/components/technician/VehicleWashProgressDialog";
+import { VehicleWashProgressDialog } from "@/components/technician/wash-progress/VehicleWashProgressDialog";
 import { DebugPanel } from "@/components/technician/DebugPanel";
-import { useWashManagement } from "@/hooks/technician/useWashManagement";
+import { useWashManagement } from "@/hooks/technician/wash-management";
 
 const TechnicianHome = () => {
   const { 

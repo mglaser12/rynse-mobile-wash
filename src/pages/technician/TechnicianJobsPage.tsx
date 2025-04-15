@@ -2,7 +2,7 @@
 import React from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Loader2 } from "lucide-react";
-import { useWashManagement } from "@/hooks/technician/useWashManagement";
+import { useWashManagement } from "@/hooks/technician/wash-management";
 import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
 import { JobCalendarView } from "@/components/technician/JobCalendarView";
 import { VehicleWashProgressDialog } from "@/components/technician/wash-progress/VehicleWashProgressDialog";

@@ -5,7 +5,7 @@ import { WashRequest } from "@/models/types";
 import { FileText, Loader2 } from "lucide-react";
 import { JobHistory } from "@/components/technician/JobHistory";
 import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
-import { useWashManagement } from "@/hooks/technician/useWashManagement";
+import { useWashManagement } from "@/hooks/technician/wash-management";
 import { CompletedWashDetailDialog } from "@/components/technician/CompletedWashDetailDialog";
 
 const TechnicianHistoryPage = () => {
