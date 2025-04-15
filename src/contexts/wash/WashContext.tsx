@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, useCallback, useRef } from "react";
 import { WashRequest } from "@/models/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -88,19 +87,28 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
     const now = Date.now();
     
     // Always allow forced refreshes
-    if (!force) {
-      // Throttle refresh calls to prevent flooding
-      if (now - lastUpdateTimestampRef.current < 3000) { // 3 second throttle
-        console.log("Refresh throttled - too soon after last update");
-        
-        // Mark that we need a refresh as soon as throttling allows
-        forceRefreshRef.current = true;
-        return;
+    if (force) {
+      console.log("FORCE REFRESHING DATA");
+      lastUpdateTimestampRef.current = now;
+      try {
+        await refreshData();
+      } catch (error) {
+        console.error("Error force refreshing data:", error);
       }
+      return;
+    }
+    
+    // Throttle refresh calls to prevent flooding
+    if (now - lastUpdateTimestampRef.current < 3000) { // 3 second throttle
+      console.log("Refresh throttled - too soon after last update");
+      
+      // Mark that we need a refresh as soon as throttling allows
+      forceRefreshRef.current = true;
+      return;
     }
     
     lastUpdateTimestampRef.current = now;
-    console.log(force ? "Forcing data refresh" : "Safely refreshing data");
+    console.log("Safely refreshing data");
     
     try {
       await refreshData();
@@ -134,21 +142,6 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
     
-    // Special handling for status changes to "confirmed" (job acceptance)
-    // Skip throttling for job acceptance to ensure UI responsiveness
-    const isJobAcceptance = data.status === "confirmed" && data.technician;
-    
-    // Check throttling for non-job-acceptance updates
-    if (!isJobAcceptance) {
-      // Throttle updates to prevent rapid consecutive calls
-      const now = Date.now();
-      if (now - lastUpdateTimestampRef.current < 3000) { // 3 second throttle
-        console.log("Update throttled - too soon after last update");
-        return false;
-      }
-    }
-    
-    lastUpdateTimestampRef.current = Date.now();
     setIsUpdating(true);
     
     // Keep a copy of the current state for potential rollback
@@ -170,12 +163,17 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       if (success) {
         console.log("Update was successful");
         
-        // For job acceptance, force refresh after a short delay for UI consistency
-        if (isJobAcceptance) {
+        // Always do a force refresh after database update for job acceptance
+        if (data.status === "confirmed" && data.technician) {
+          console.log("Job acceptance detected - forcing refresh");
           setTimeout(() => {
-            console.log("Forcing refresh after job acceptance");
             safeRefreshData(true);
-          }, 800);
+          }, 1000);  
+        } else {
+          // For other updates, do a regular refresh
+          setTimeout(() => {
+            safeRefreshData();
+          }, 2000);
         }
         
         return true;
@@ -183,23 +181,27 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
         console.log("Update failed, reverting to previous state");
         // If the update failed, revert to the previous state
         setWashRequests(previousState);
+        
+        // Force refresh to get the true state from server
+        setTimeout(() => {
+          safeRefreshData(true);
+        }, 1000);
+        
         return false;
       }
     } catch (error) {
       console.error("Error in handleUpdateWashRequest:", error);
       // If there was an error, revert to the previous state
       setWashRequests(previousState);
+      
+      // Force refresh to get the true state from server
+      setTimeout(() => {
+        safeRefreshData(true);
+      }, 1000);
+      
       return false;
     } finally {
       setIsUpdating(false);
-      
-      // Refresh data after a delay to avoid immediate loops
-      // Skip this for job acceptance since we already refresh above
-      if (!isJobAcceptance) {
-        setTimeout(() => {
-          safeRefreshData();
-        }, 2000);
-      }
     }
   }, [washRequests, safeRefreshData, isUpdating]);
 

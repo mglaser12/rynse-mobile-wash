@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useWashRequests } from "@/contexts/WashContext";
@@ -31,14 +30,16 @@ const TechnicianHome = () => {
   
   // Force a refresh of wash requests data when the component mounts
   const loadData = useCallback(async () => {
+    console.log("Forcing data refresh");
     try {
-      await refreshData();
+      await refreshData(true); // Force refresh
     } catch (error) {
       console.error("Error refreshing data:", error);
     }
   }, [refreshData]);
   
   useEffect(() => {
+    console.log("TechnicianHome mounted - loading initial data");
     loadData();
   }, [loadData]);
   
@@ -64,20 +65,17 @@ const TechnicianHome = () => {
     : null;
   
   const handleAcceptRequest = async (requestId: string) => {
+    if (!user?.id) {
+      console.error("Cannot accept request - user ID is undefined");
+      toast.error("User authentication error");
+      return;
+    }
+    
     setIsUpdating(true);
+    console.log(`Accepting request ${requestId} as technician ${user?.id}`);
+    
     try {
-      console.log(`Accepting request ${requestId} as technician ${user?.id}`);
-      
-      // First update local state immediately for better UX
-      setLocalStateRequests(prev => 
-        prev.map(req => 
-          req.id === requestId 
-            ? { ...req, status: "confirmed", technician: user?.id } 
-            : req
-        )
-      );
-      
-      // Then update the database
+      // Direct database update with minimal complexity
       const result = await updateWashRequest(requestId, {
         status: "confirmed",
         technician: user?.id,
@@ -86,23 +84,22 @@ const TechnicianHome = () => {
       if (result) {
         toast.success("Request accepted successfully");
         
-        // Force refresh after a successful update
+        // Force refresh after a successful update to get the latest data
         await loadData();
         
-        // Close the dialog after a small delay to show the success message
+        // Close the dialog after success
         setTimeout(() => {
           setSelectedRequestId(null);
         }, 1000);
       } else {
         toast.error("Failed to accept request");
-        // Revert local state if update failed
-        setLocalStateRequests(washRequests);
+        // Force refresh to ensure we have the current state
+        await loadData();
       }
     } catch (error) {
       console.error("Error accepting request:", error);
       toast.error("An error occurred while accepting the request");
-      // Revert local state if there was an error
-      setLocalStateRequests(washRequests);
+      await loadData(); // Refresh data to get current state
     } finally {
       setIsUpdating(false);
     }
@@ -118,16 +115,18 @@ const TechnicianHome = () => {
       
       if (result) {
         toast.success("Wash started successfully");
-        await refreshData(); // Force refresh data after starting a wash
+        await loadData(); // Force refresh data after starting a wash
         
         // Open the wash progress dialog
         setActiveWashId(requestId);
       } else {
         toast.error("Failed to start wash");
+        await loadData(); // Refresh to get current state
       }
     } catch (error) {
       console.error("Error starting wash:", error);
       toast.error("An error occurred while starting the wash");
+      await loadData();
     } finally {
       setIsUpdating(false);
       setSelectedRequestId(null);
@@ -144,7 +143,7 @@ const TechnicianHome = () => {
       
       if (result) {
         toast.success("Wash completed successfully");
-        await refreshData(); // Force refresh data after completing a wash
+        await loadData(); // Force refresh data after completing a wash
         
         // Clear any active wash dialog
         if (activeWashId === requestId) {
@@ -152,10 +151,12 @@ const TechnicianHome = () => {
         }
       } else {
         toast.error("Failed to complete wash");
+        await loadData();
       }
     } catch (error) {
       console.error("Error completing wash:", error);
       toast.error("An error occurred while completing the wash");
+      await loadData();
     } finally {
       setIsUpdating(false);
       setSelectedRequestId(null);

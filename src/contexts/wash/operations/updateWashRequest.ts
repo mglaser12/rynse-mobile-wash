@@ -16,7 +16,7 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
   // Special handling for job acceptance (technician claiming a job)
   if (data.status === 'confirmed' && data.technician) {
     console.log(`Technician ${data.technician} is trying to accept job ${id}`);
-    return acceptJob(id, data.technician);
+    return await acceptJob(id, data.technician);
   }
   
   // Handle all other status changes
@@ -63,33 +63,50 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
   }
 }
 
-// Simplified job acceptance function - no complex verification
+// Extremely basic job acceptance function - focus on updating the database
 async function acceptJob(requestId: string, technicianId: string): Promise<boolean> {
   try {
-    console.log(`Accepting job ${requestId} for technician ${technicianId}`);
+    console.log(`DIRECT DB UPDATE: Accepting job ${requestId} for technician ${technicianId}`);
     
-    // Perform a simple, direct update without conditions
-    const { error } = await supabase
+    // Construct update payload
+    const updatePayload = {
+      technician_id: technicianId,
+      status: 'confirmed',
+      updated_at: new Date().toISOString()
+    };
+
+    console.log("Sending update payload to database:", updatePayload);
+    
+    // Direct database update with no conditions
+    const { data, error } = await supabase
       .from('wash_requests')
-      .update({
-        technician_id: technicianId,
-        status: 'confirmed',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', requestId);
+      .update(updatePayload)
+      .eq('id', requestId)
+      .select();
+    
+    // Log the complete response for debugging
+    console.log("Database response - data:", data);
+    console.log("Database response - error:", error);
     
     if (error) {
-      console.error("Error accepting job:", error);
-      toast.error("Failed to accept job");
+      console.error("CRITICAL ERROR updating job:", error);
+      toast.error("Database error: " + error.message);
       return false;
     }
     
-    console.log("Job accepted successfully");
+    if (!data || data.length === 0) {
+      console.error("No data returned from update operation");
+      toast.error("Update may have failed - no confirmation received");
+      return false;
+    }
+    
+    // Success!
+    console.log("DATABASE UPDATE CONFIRMED:", data);
     toast.success("Job accepted successfully!");
     return true;
     
   } catch (error) {
-    console.error("Error in job acceptance process:", error);
+    console.error("CRITICAL ERROR in job acceptance process:", error);
     toast.error("An unexpected error occurred");
     return false;
   }
