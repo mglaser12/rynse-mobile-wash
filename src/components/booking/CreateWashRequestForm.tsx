@@ -1,5 +1,5 @@
 
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { useVehicles } from "@/contexts/VehicleContext";
 import { useWashRequests } from "@/contexts/WashContext";
@@ -21,6 +21,7 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
   const { vehicles } = useVehicles();
   const isMobile = useIsMobile();
   const formRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   const { 
     isLoading,
@@ -38,12 +39,23 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
 
   // Function to scroll to the next section
   const scrollToSection = (sectionIndex: number) => {
-    if (!formRef.current || !isMobile) return;
+    if (!formRef.current) return;
     
     const sections = formRef.current.querySelectorAll(".form-section");
     if (sectionIndex < sections.length) {
       const section = sections[sectionIndex];
+      
+      // Use scrollIntoView for all platforms
       section.scrollIntoView({ behavior: "smooth", block: "start" });
+      
+      // For mobile, we need additional handling to account for the ScrollArea component
+      if (isMobile && scrollAreaRef.current) {
+        const sectionTop = section.getBoundingClientRect().top;
+        const containerTop = scrollAreaRef.current.getBoundingClientRect().top;
+        const scrollPosition = sectionTop - containerTop;
+        
+        scrollAreaRef.current.scrollTop = scrollPosition;
+      }
     }
   };
 
@@ -56,7 +68,11 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
         </p>
       </div>
       
-      <ScrollArea className="flex-1 pr-4 -mr-4">
+      <ScrollArea 
+        className="flex-1 pr-4 -mr-4" 
+        scrollHideDelay={0} 
+        ref={scrollAreaRef}
+      >
         <div ref={formRef}>
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
@@ -84,13 +100,18 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
                 />
               </div>
               
+              <Separator />
+              
               {/* Additional Notes */}
               <div className="form-section">
                 <NotesSection 
                   notes={notes}
                   onNotesChange={setNotes}
+                  onContinue={() => scrollToSection(3)}
                 />
               </div>
+              
+              <Separator />
               
               {/* Price Summary */}
               <div className="form-section">

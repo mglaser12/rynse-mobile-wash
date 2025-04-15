@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Car, Check } from "lucide-react";
+import { Car, Check, ArrowRight } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Vehicle } from "@/models/types";
 import { VehicleSelectionTab } from "./VehicleSelectionTab";
@@ -64,8 +64,8 @@ export function VehicleSelectionSection({
           className="w-full" 
           onClick={onContinue}
         >
-          <Check className="h-4 w-4 mr-2" />
-          Continue with {selectedVehicleIds.length} vehicle{selectedVehicleIds.length !== 1 ? 's' : ''}
+          Continue to Date Selection
+          <ArrowRight className="h-4 w-4 ml-2" />
         </Button>
       )}
     </div>

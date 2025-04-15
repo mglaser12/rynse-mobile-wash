@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "lucide-react";
+import { Calendar, ArrowRight } from "lucide-react";
 import { DateRangePicker } from "./DateRangePicker";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -49,7 +49,8 @@ export function DateSelectionSection({
             className="w-full" 
             onClick={onContinue}
           >
-            Continue
+            Continue to Notes
+            <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>
       )}
