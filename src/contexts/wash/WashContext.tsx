@@ -73,7 +73,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
           )
         );
         // Force refresh data to ensure everything is in sync
-        await safeRefreshData(true);
+        await safeRefreshData();
       }
       return success;
     } catch (error) {
@@ -82,21 +82,9 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Safe refresh data with throttling
-  const safeRefreshData = useCallback(async (force: boolean = false) => {
+  // Safe refresh data with throttling - updatedt to not use force parameter
+  const safeRefreshData = useCallback(async () => {
     const now = Date.now();
-    
-    // Always allow forced refreshes
-    if (force) {
-      console.log("FORCE REFRESHING DATA");
-      lastUpdateTimestampRef.current = now;
-      try {
-        await refreshData();
-      } catch (error) {
-        console.error("Error force refreshing data:", error);
-      }
-      return;
-    }
     
     // Throttle refresh calls to prevent flooding
     if (now - lastUpdateTimestampRef.current < 3000) { // 3 second throttle
@@ -124,7 +112,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
         const now = Date.now();
         if (now - lastUpdateTimestampRef.current >= 3000) {
           console.log("Executing pending refresh");
-          safeRefreshData(true);
+          safeRefreshData();
         }
       }
     };
@@ -163,11 +151,11 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       if (success) {
         console.log("Update was successful");
         
-        // Always do a force refresh after database update for job acceptance
+        // Always do a refresh after database update for job acceptance
         if (data.status === "confirmed" && data.technician) {
           console.log("Job acceptance detected - forcing refresh");
           setTimeout(() => {
-            safeRefreshData(true);
+            safeRefreshData();
           }, 1000);  
         } else {
           // For other updates, do a regular refresh
@@ -184,7 +172,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
         
         // Force refresh to get the true state from server
         setTimeout(() => {
-          safeRefreshData(true);
+          safeRefreshData();
         }, 1000);
         
         return false;
@@ -196,7 +184,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       
       // Force refresh to get the true state from server
       setTimeout(() => {
-        safeRefreshData(true);
+        safeRefreshData();
       }, 1000);
       
       return false;

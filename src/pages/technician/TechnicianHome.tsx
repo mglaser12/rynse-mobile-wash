@@ -33,7 +33,8 @@ const TechnicianHome = () => {
   const loadData = useCallback(async () => {
     console.log("Forcing data refresh");
     try {
-      await refreshData(true); // Fixed: Pass true as argument
+      // Fix: Call refreshData without arguments
+      await refreshData();
     } catch (error) {
       console.error("Error refreshing data:", error);
     }
@@ -201,7 +202,7 @@ const TechnicianHome = () => {
                 </pre>
                 <button 
                   className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"
-                  onClick={() => loadData()}
+                  onClick={loadData}
                 >
                   Force Refresh
                 </button>
