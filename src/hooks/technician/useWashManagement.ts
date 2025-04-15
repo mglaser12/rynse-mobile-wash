@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useWashRequests } from "@/contexts/WashContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,7 +10,6 @@ export function useWashManagement() {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [activeWashId, setActiveWashId] = useState<string | null>(null);
-  const [localStateRequests, setLocalStateRequests] = useState<WashRequest[]>([]);
   
   // Load data function to force refresh
   const loadData = useCallback(async () => {
@@ -22,6 +20,11 @@ export function useWashManagement() {
       console.error("Error refreshing data:", error);
     }
   }, [refreshData]);
+  
+  // Make sure we have the latest data on mount
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
   
   // Handle accepting a job request
   const handleAcceptRequest = async (requestId: string) => {
@@ -192,8 +195,6 @@ export function useWashManagement() {
   return {
     user,
     washRequests,
-    localStateRequests,
-    setLocalStateRequests,
     isLoading,
     isUpdating,
     selectedRequestId,

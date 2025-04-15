@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WashRequest } from "@/models/types";
 import { Loader2, Calendar, FileText } from "lucide-react";
@@ -11,7 +11,7 @@ import { useWashManagement } from "@/hooks/technician/useWashManagement";
 const TechnicianHistoryPage = () => {
   const { 
     user,
-    localStateRequests,
+    washRequests,
     isLoading,
     isUpdating,
     selectedRequestId,
@@ -24,14 +24,20 @@ const TechnicianHistoryPage = () => {
     loadData
   } = useWashManagement();
 
+  // Initialize component on mount
+  useEffect(() => {
+    // Force refresh data when component mounts
+    loadData();
+  }, [loadData]);
+
   // Get completed requests
-  const completedRequests = Array.isArray(localStateRequests)
-    ? localStateRequests.filter(req => req.status === "completed" && req.technician === user?.id)
+  const completedRequests = Array.isArray(washRequests)
+    ? washRequests.filter(req => req.status === "completed" && req.technician === user?.id)
     : [];
 
   // Get selected request
-  const selectedRequest = selectedRequestId && Array.isArray(localStateRequests)
-    ? localStateRequests.find(req => req.id === selectedRequestId) 
+  const selectedRequest = selectedRequestId && Array.isArray(washRequests)
+    ? washRequests.find(req => req.id === selectedRequestId) 
     : null;
 
   return (
