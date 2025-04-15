@@ -20,7 +20,7 @@ export function useWashManagement() {
     setActiveWashId 
   } = useWashStateManagement();
   
-  // Extract data loading operations
+  // Extract data loading operations - ensure refreshData returns a Promise
   const { loadData } = useDataLoading(refreshData);
   
   // Extract wash operations into a separate hook

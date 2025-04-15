@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useWashRequests } from "@/contexts/WashContext";
@@ -10,7 +9,7 @@ import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog
 import { Button } from "@/components/ui/button";
 import { VehicleWashProgressDialog } from "@/components/technician/wash-progress/VehicleWashProgressDialog";
 import { DebugPanel } from "@/components/technician/DebugPanel";
-import { useWashManagement } from "@/hooks/technician/useWashManagement";
+import { useWashManagement } from "@/hooks/technician/wash-management";
 
 const TechnicianHome = () => {
   const { 
@@ -31,13 +30,11 @@ const TechnicianHome = () => {
   } = useWashManagement();
   const [isDebugMode, setIsDebugMode] = useState(false);
   
-  // Force a refresh of wash requests data when the component mounts
   useEffect(() => {
     console.log("TechnicianHome mounted - loading initial data");
     loadData();
   }, [loadData]);
   
-  // Safely filter wash requests (defensive programming)
   const pendingRequests = Array.isArray(washRequests) 
     ? washRequests.filter(req => req.status === "pending")
     : [];
@@ -58,7 +55,6 @@ const TechnicianHome = () => {
     ? washRequests.find(req => req.id === activeWashId)
     : null;
   
-  // Toggle debug mode
   const toggleDebugMode = () => {
     setIsDebugMode(!isDebugMode);
   };
@@ -74,7 +70,6 @@ const TechnicianHome = () => {
           </div>
         ) : (
           <>
-            {/* Debug information about requests */}
             {isDebugMode && (
               <DebugPanel
                 pendingRequests={pendingRequests}
@@ -88,7 +83,6 @@ const TechnicianHome = () => {
               />
             )}
             
-            {/* Main content */}
             <TodaySchedule
               inProgressRequests={inProgressRequests}
               assignedRequests={assignedRequests}
@@ -105,7 +99,6 @@ const TechnicianHome = () => {
               onStartWash={handleStartWash}
             />
             
-            {/* Debug toggle button */}
             <div className="mt-8 flex justify-center">
               <Button
                 variant="outline"
@@ -120,7 +113,6 @@ const TechnicianHome = () => {
         )}
       </div>
       
-      {/* Request Detail Dialog */}
       <RequestDetailDialog
         open={!!selectedRequestId}
         onOpenChange={(open) => !open && setSelectedRequestId(null)}
@@ -132,7 +124,6 @@ const TechnicianHome = () => {
         onCompleteWash={handleCompleteWash}
       />
       
-      {/* Wash Progress Dialog */}
       {activeWashRequest && (
         <VehicleWashProgressDialog
           washRequest={activeWashRequest}
