@@ -27,7 +27,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
 
   // Update local state when loaded wash requests change
   useEffect(() => {
-    setWashRequests(loadedWashRequests || []);
+    setWashRequests(Array.isArray(loadedWashRequests) ? loadedWashRequests : []);
   }, [loadedWashRequests]);
 
   // Update local state when loaded locations change

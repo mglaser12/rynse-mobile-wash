@@ -32,12 +32,12 @@ export function useLoadLocations() {
         // Map Supabase data to our WashLocation type
         const transformedLocations: WashLocation[] = data.map(location => ({
           id: location.id,
-          name: location.name,
-          address: location.address,
-          city: location.city,
-          state: location.state,
-          zipCode: location.zip_code,
-          coordinates: location.latitude && location.longitude ? {
+          name: location.name || "Unknown Location",
+          address: location.address || "",
+          city: location.city || "",
+          state: location.state || "",
+          zipCode: location.zip_code || "",
+          coordinates: location.latitude !== undefined && location.longitude !== undefined ? {
             latitude: location.latitude,
             longitude: location.longitude
           } : undefined

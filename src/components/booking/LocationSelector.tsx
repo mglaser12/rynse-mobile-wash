@@ -14,7 +14,11 @@ interface LocationSelectorProps {
   onSelectLocation: (location: WashLocation) => void;
 }
 
-export function LocationSelector({ locations, selectedLocation, onSelectLocation }: LocationSelectorProps) {
+export function LocationSelector({ 
+  locations = [], // Provide default empty array
+  selectedLocation, 
+  onSelectLocation 
+}: LocationSelectorProps) {
   const [open, setOpen] = useState(false);
   const [safeLocations, setSafeLocations] = useState<WashLocation[]>([]);
   
@@ -40,35 +44,33 @@ export function LocationSelector({ locations, selectedLocation, onSelectLocation
         <Command>
           <CommandInput placeholder="Search locations..." />
           <CommandEmpty>No location found.</CommandEmpty>
-          {safeLocations.length > 0 && (
+          <CommandGroup>
             <ScrollArea className="max-h-[300px]">
-              <CommandGroup>
-                {safeLocations.map((location) => (
-                  <CommandItem
-                    key={location.id}
-                    value={location.name}
-                    onSelect={() => {
-                      onSelectLocation(location);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        selectedLocation?.id === location.id ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <div>
-                      <div>{location.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {location.address}, {location.city}, {location.state} {location.zipCode}
-                      </div>
+              {safeLocations.map((location) => (
+                <CommandItem
+                  key={location.id}
+                  value={location.name}
+                  onSelect={() => {
+                    onSelectLocation(location);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selectedLocation?.id === location.id ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  <div>
+                    <div>{location.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {location.address}, {location.city}, {location.state} {location.zipCode}
                     </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+                  </div>
+                </CommandItem>
+              ))}
             </ScrollArea>
-          )}
+          </CommandGroup>
         </Command>
       </PopoverContent>
     </Popover>
