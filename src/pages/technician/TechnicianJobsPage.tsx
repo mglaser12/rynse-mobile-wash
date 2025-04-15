@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WashRequest } from "@/models/types";
@@ -36,9 +37,9 @@ const TechnicianJobsPage = () => {
       <header className="bg-white p-4 border-b sticky top-0 z-10">
         <div className="flex items-center">
           <img 
-            src="/lovable-uploads/5e29517a-c169-4798-98fa-075394612b76.png" 
-            alt="Rynse Logo" 
-            className="h-8 mr-3" 
+            src="/lovable-uploads/f034f09f-f251-4e4d-b07a-c3513d3a4e04.png" 
+            alt="Rynse Icon" 
+            className="h-8 mr-3 rounded-full" 
           />
           <div>
             <h1 className="text-2xl font-bold">Job Calendar</h1>

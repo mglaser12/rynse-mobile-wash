@@ -22,9 +22,9 @@ export const TechnicianHeader = ({ userName }: TechnicianHeaderProps) => {
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <img 
-            src="/lovable-uploads/5e29517a-c169-4798-98fa-075394612b76.png" 
-            alt="Rynse Logo" 
-            className="h-8 mr-3" 
+            src="/lovable-uploads/f034f09f-f251-4e4d-b07a-c3513d3a4e04.png" 
+            alt="Rynse Icon" 
+            className="h-8 mr-3 rounded-full" 
           />
           <div className="flex flex-col">
             <h1 className="text-xl font-bold">Technician Dashboard</h1>
