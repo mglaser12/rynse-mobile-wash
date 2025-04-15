@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useWashRequests } from "@/contexts/WashContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,10 +39,13 @@ export function useWashManagement() {
     console.log(`Accepting request ${requestId} as technician ${user?.id}`);
     
     try {
+      // First, ensure the technician ID is set correctly
+      console.log("Confirming request with technician ID:", user.id);
+      
       // Direct database update with minimal complexity
       const result = await updateWashRequest(requestId, {
         status: "confirmed",
-        technician: user?.id,
+        technician: user.id,
       });
       
       if (result) {
@@ -81,13 +85,13 @@ export function useWashManagement() {
     }
     
     setIsUpdating(true);
-    console.log(`Scheduling job ${requestId} for ${scheduledDate.toISOString()}`);
+    console.log(`Scheduling job ${requestId} for ${scheduledDate.toISOString()} with technician ${user.id}`);
     
     try {
       // Update the request with the scheduled date and technician
       const result = await updateWashRequest(requestId, {
         status: "confirmed",
-        technician: user?.id,
+        technician: user.id,
         preferredDates: {
           start: scheduledDate,
           end: undefined

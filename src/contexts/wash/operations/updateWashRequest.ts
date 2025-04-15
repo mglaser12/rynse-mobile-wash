@@ -16,6 +16,10 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
   // Special handling for job acceptance (technician claiming a job)
   if (data.status === 'confirmed' && data.technician) {
     console.log(`Technician ${data.technician} is trying to accept job ${id}`);
+    
+    // Debugging: Log full details of the acceptance request
+    console.log("Full acceptance data:", JSON.stringify(data, null, 2));
+    
     return await acceptJob(id, data.technician, data.preferredDates);
   }
   
@@ -78,14 +82,21 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
   }
 }
 
-// Simplified job acceptance function with direct database update
+// Enhanced job acceptance function with better logging and error handling
 async function acceptJob(
   requestId: string, 
   technicianId: string, 
   preferredDates?: { start?: Date, end?: Date }
 ): Promise<boolean> {
   try {
-    console.log(`DIRECT DB UPDATE: Accepting job ${requestId} for technician ${technicianId}`);
+    console.log(`ACCEPTING JOB: Request ID ${requestId} for technician ${technicianId}`);
+    
+    // Check if the technician ID is valid
+    if (!technicianId || technicianId === "undefined") {
+      console.error("ERROR: Invalid technician ID provided:", technicianId);
+      toast.error("Invalid technician ID");
+      return false;
+    }
     
     // Simple update payload
     const updatePayload: any = {
@@ -108,7 +119,7 @@ async function acceptJob(
       }
     }
 
-    console.log("Sending update payload to database:", updatePayload);
+    console.log("Sending job acceptance payload to database:", updatePayload);
     
     // Direct database update
     const { data, error } = await supabase
@@ -134,7 +145,7 @@ async function acceptJob(
     }
     
     // Success!
-    console.log("DATABASE UPDATE CONFIRMED:", data);
+    console.log("JOB ACCEPTANCE CONFIRMED:", data);
     toast.success("Job accepted successfully!");
     return true;
     
