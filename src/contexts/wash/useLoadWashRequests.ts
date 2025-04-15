@@ -28,111 +28,62 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
 
         console.log("Attempting to load wash requests for user:", userId, "with role:", userRole);
 
-        // Check Supabase connection
-        const { data: connectionTest, error: connectionError } = await supabase.from('profiles').select('count').limit(1);
-        if (connectionError) {
-          console.error("Supabase connection test failed:", connectionError);
-          toast.error("Database connection failed. Please try again later.");
-          setWashRequests([]);
-          setIsLoading(false);
-          return;
-        }
-        console.log("Supabase connection test successful");
-
-        // First, check if the user exists in the profiles table
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, role')
-          .eq('id', userId)
-          .single();
-
-        if (profileError) {
-          console.error("Error verifying user profile:", profileError);
-          toast.error("Failed to verify user profile");
-          setWashRequests([]);
-          setIsLoading(false);
-          return;
-        } else {
-          console.log("User profile found:", profileData);
-        }
-
-        // Determine role from either parameter or profile data
-        const effectiveRole = userRole || profileData?.role;
-        console.log("Effective role for query:", effectiveRole);
-        
-        // First check for total requests in the system for debugging
-        console.log("Checking all wash requests in the system without filters");
-        const { data: directAllRequests, error: directAllError } = await supabase
-          .from('wash_requests')
-          .select('id, status, technician_id, user_id, preferred_date_start');
-          
-        console.log("Direct database check - All wash requests:", directAllRequests);
-        if (directAllError) {
-          console.error("Error in direct database check:", directAllError);
-        }
-        
         let requestsData: any[] = [];
         
         // For technicians, we show all pending requests and their own assigned requests
-        if (effectiveRole === 'technician') {
+        if (userRole === 'technician') {
           console.log("Loading requests for technician - showing all pending and assigned requests");
           
-          // Attempt direct access to pending requests without RLS
-          console.log("Attempting direct access to pending requests");
-          const directPendingCheck = await supabase
+          // Fetch wash requests with associated vehicles
+          const { data, error } = await supabase
             .from('wash_requests')
-            .select('id')
-            .eq('status', 'pending');
-            
-          console.log("Direct pending check:", directPendingCheck.data, directPendingCheck.error);
+            .select(`
+              *,
+              wash_request_vehicles (
+                vehicle_id,
+                vehicles (
+                  id,
+                  make,
+                  model,
+                  year,
+                  color,
+                  type,
+                  license_plate
+                )
+              )
+            `)
+            .or(`technician_id.eq.${userId},status.eq.pending`);
           
-          // Use separate queries for pending and assigned requests
-          console.log("Attempting to fetch ALL pending requests regardless of technician");
-          const pendingQuery = await supabase
-            .from('wash_requests')
-            .select('*, wash_request_vehicles(vehicle_id)')
-            .eq('status', 'pending');
-            
-          console.log("Pending query result:", pendingQuery.data?.length || 0, "records");
-          console.log("Pending query error:", pendingQuery.error);
-          
-          if (pendingQuery.error) {
-            console.error("Failed to fetch pending requests:", pendingQuery.error);
+          if (error) {
+            console.error("Error loading wash requests:", error);
+            toast.error("Failed to load wash requests");
+            setWashRequests([]);
+            setIsLoading(false);
+            return;
           }
           
-          console.log("Attempting to fetch requests assigned to this technician");
-          const assignedQuery = await supabase
-            .from('wash_requests')
-            .select('*, wash_request_vehicles(vehicle_id)')
-            .eq('technician_id', userId);
-            
-          console.log("Assigned query result:", assignedQuery.data?.length || 0, "records");
-          console.log("Assigned query error:", assignedQuery.error);
-          
-          // Combine results from both queries
-          const pendingData = pendingQuery.data || [];
-          const assignedData = assignedQuery.data || [];
-          
-          console.log("Raw pending data:", pendingData);
-          console.log("Raw assigned data:", assignedData);
-          
-          // Combine and deduplicate
-          const combinedData = [...pendingData, ...assignedData];
-          
-          // Remove duplicates based on id
-          const uniqueData = Array.from(
-            new Map(combinedData.map(item => [item.id, item])).values()
-          );
-          
-          console.log("Combined and deduplicated data:", uniqueData);
-          requestsData = uniqueData;
+          requestsData = data || [];
         } else {
           // For customers/fleet managers, only show their own requests
           console.log("Loading requests for customer - showing only their own requests");
           
           const { data, error } = await supabase
             .from('wash_requests')
-            .select('*, wash_request_vehicles(vehicle_id)')
+            .select(`
+              *,
+              wash_request_vehicles (
+                vehicle_id,
+                vehicles (
+                  id,
+                  make,
+                  model,
+                  year,
+                  color,
+                  type,
+                  license_plate
+                )
+              )
+            `)
             .eq('user_id', userId);
             
           if (error) {
