@@ -83,10 +83,13 @@ async function handleJobAcceptance(id: string, updateData: Record<string, any>):
   }
   
   // Use a direct update with strict conditions to ensure atomicity
+  // FIX: The issue is with the match() function and null check - use eq() instead
   const { data, error } = await supabase
     .from('wash_requests')
     .update(updateData)
-    .match({ id: id, status: 'pending', technician_id: null })
+    .eq('id', id)
+    .eq('status', 'pending')
+    .is('technician_id', null)  // Use is(null) instead of eq(null) for null check
     .select();
   
   if (error) {
