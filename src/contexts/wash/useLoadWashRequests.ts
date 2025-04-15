@@ -13,10 +13,13 @@ export function useLoadWashRequests(userId: string | undefined) {
       setIsLoading(true);
       try {
         if (!userId) {
+          console.log("No user ID provided to useLoadWashRequests");
           setWashRequests([]);
           setIsLoading(false);
           return;
         }
+
+        console.log("Attempting to load wash requests for user:", userId);
 
         const { data: requestsData, error: requestsError } = await supabase
           .from('wash_requests')
@@ -31,7 +34,10 @@ export function useLoadWashRequests(userId: string | undefined) {
           return;
         }
 
+        console.log("Wash requests raw data:", requestsData);
+
         if (!requestsData || !Array.isArray(requestsData) || requestsData.length === 0) {
+          console.log("No wash requests found for user", userId);
           setWashRequests([]);
           setIsLoading(false);
           return;
@@ -61,6 +67,7 @@ export function useLoadWashRequests(userId: string | undefined) {
           };
         });
 
+        console.log("Transformed wash requests:", transformedWashRequests);
         setWashRequests(transformedWashRequests);
       } catch (error) {
         console.error("Error in loadWashRequests:", error);
