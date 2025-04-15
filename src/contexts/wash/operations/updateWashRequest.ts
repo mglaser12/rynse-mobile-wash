@@ -49,7 +49,7 @@ export async function updateWashRequest(
     const isJobAcceptance = data.status === 'confirmed' && data.technician;
     
     if (isJobAcceptance) {
-      return await handleJobAcceptance(id, updateData);
+      return await handleJobAcceptance(id, updateData, data.technician!);
     } else {
       return await handleRegularUpdate(id, updateData, data);
     }
@@ -61,7 +61,7 @@ export async function updateWashRequest(
 }
 
 // Function to handle job acceptance with special considerations
-async function handleJobAcceptance(id: string, updateData: Record<string, any>): Promise<boolean> {
+async function handleJobAcceptance(id: string, updateData: Record<string, any>, technicianId: string): Promise<boolean> {
   try {
     // First, directly fetch the current state of the request
     // This ensures we have the latest data before trying to update
@@ -84,41 +84,39 @@ async function handleJobAcceptance(id: string, updateData: Record<string, any>):
       return false;
     }
     
-    // Simple update approach - more reliable than using conditional updates
-    // First set the technician - this is the atomic operation to "claim" the job
-    const { data: updateData1, error: updateError1 } = await supabase
+    // Use a different approach - direct update without conditions first
+    const { error } = await supabase
       .from('wash_requests')
-      .update({ technician_id: updateData.technician_id })
-      .eq('id', id)
-      .eq('status', 'pending')
-      .is('technician_id', null)
-      .select();
+      .update({
+        technician_id: technicianId,
+        status: 'confirmed',
+        updated_at: updateData.updated_at
+      })
+      .eq('id', id);
     
-    if (updateError1) {
-      console.error("Error setting technician:", updateError1);
-      toast.error("Failed to claim job");
+    if (error) {
+      console.error("Error accepting job:", error);
+      toast.error("Failed to accept job");
       return false;
     }
     
-    // Check if we successfully claimed the job
-    if (!updateData1 || updateData1.length === 0) {
-      console.error("No rows updated - job may have been claimed");
-      toast.error("Failed to claim job - someone may have claimed it first");
+    // Verify the update by checking if the technician was set correctly
+    const { data: verifyData, error: verifyError } = await supabase
+      .from('wash_requests')
+      .select('technician_id, status')
+      .eq('id', id)
+      .single();
+      
+    if (verifyError) {
+      console.error("Error verifying job acceptance:", verifyError);
+      toast.warning("Job status uncertain - please refresh");
       return false;
     }
     
-    // Now that we've claimed it, set the status to confirmed
-    const { error: updateError2 } = await supabase
-      .from('wash_requests')
-      .update({ status: 'confirmed', updated_at: updateData.updated_at })
-      .eq('id', id)
-      .eq('technician_id', updateData.technician_id);
-    
-    if (updateError2) {
-      console.error("Error updating status after claiming job:", updateError2);
-      // Even if this fails, we've claimed the job. Let's inform the user.
-      toast.warning("Job claimed but status update failed. Refresh to see changes.");
-      return true; // Return true since we claimed the job even if status update failed
+    if (verifyData.technician_id !== technicianId || verifyData.status !== 'confirmed') {
+      console.error("Failed to claim job - verification failed:", verifyData);
+      toast.error("Failed to claim job - someone else may have claimed it");
+      return false;
     }
     
     console.log("Job accepted successfully");
