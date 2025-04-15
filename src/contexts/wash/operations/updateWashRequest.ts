@@ -48,103 +48,100 @@ export async function updateWashRequest(
     // Special handling for job acceptance - try multiple times if needed
     const isJobAcceptance = data.status === 'confirmed' && data.technician;
     
-    // For job acceptance, try a different approach - insert into database directly for immediate confirmation
     if (isJobAcceptance) {
-      // First, let's check if someone else has already claimed this job
-      const { data: currentData, error: checkError } = await supabase
-        .from('wash_requests')
-        .select('status, technician_id')
-        .eq('id', id)
-        .single();
-        
-      if (checkError) {
-        console.error("Error checking current wash request state:", checkError);
-        toast.error("Could not verify job availability");
-        return false;
-      }
-      
-      // If already claimed or not in pending state, abort
-      if (currentData.status !== 'pending' || currentData.technician_id !== null) {
-        console.error("Job already claimed or not in pending state:", currentData);
-        toast.error("This job is no longer available");
-        return false;
-      }
-      
-      // Perform the update with a direct SQL insert for better atomicity
-      const { error } = await supabase
-        .from('wash_requests')
-        .update(updateData)
-        .eq('id', id)
-        .eq('status', 'pending')  // Only update if still in pending state
-        .is('technician_id', null);  // Only update if no technician assigned
-      
-      if (error) {
-        console.error("Error updating wash request:", error);
-        toast.error("Failed to accept job - someone may have claimed it first");
-        return false;
-      }
-      
-      // Verify the job was actually assigned by checking again
-      await new Promise(r => setTimeout(r, 500)); // Small delay for DB consistency
-      
-      const { data: verifiedData, error: verifyError } = await supabase
-        .from('wash_requests')
-        .select('status, technician_id')
-        .eq('id', id)
-        .single();
-        
-      if (verifyError) {
-        console.error("Error verifying job acceptance:", verifyError);
-        toast.error("Couldn't confirm job acceptance");
-        return false;
-      }
-      
-      if (verifiedData.technician_id === data.technician && verifiedData.status === 'confirmed') {
-        console.log("Job acceptance verified successfully");
-        toast.success("Job accepted successfully!");
-        return true;
-      } else {
-        console.error("Job acceptance failed - current state:", verifiedData);
-        toast.error("Failed to accept job - please try again");
-        return false;
-      }
+      return await handleJobAcceptance(id, updateData);
     } else {
-      // For non-job acceptance updates, use the standard update approach
-      const { error } = await supabase
-        .from('wash_requests')
-        .update(updateData)
-        .eq('id', id);
-      
-      if (error) {
-        console.error("Error updating wash request:", error);
-        toast.error("Failed to update wash request");
-        return false;
-      }
-      
-      // For status changes, verify the update
-      if (data.status) {
-        await new Promise(r => setTimeout(r, 300)); // Small delay for DB consistency
-        
-        const { data: verificationData, error: verificationError } = await supabase
-          .from('wash_requests')
-          .select('status')
-          .eq('id', id)
-          .single();
-          
-        if (verificationError || verificationData?.status !== data.status) {
-          console.error("Status update verification failed:", verificationError || "Status mismatch");
-          toast.error("Failed to update status");
-          return false;
-        }
-      }
-      
-      console.log("Wash request updated successfully");
-      toast.success("Wash request updated successfully");
-      return true;
+      return await handleRegularUpdate(id, updateData, data);
     }
   } catch (error) {
     console.error("Error updating wash request:", error);
     toast.error("Failed to update wash request");
     return false;
   }
+}
+
+// Function to handle job acceptance with special considerations
+async function handleJobAcceptance(id: string, updateData: Record<string, any>): Promise<boolean> {
+  // First, let's check if someone else has already claimed this job
+  const { data: currentData, error: checkError } = await supabase
+    .from('wash_requests')
+    .select('status, technician_id')
+    .eq('id', id)
+    .single();
+    
+  if (checkError) {
+    console.error("Error checking current wash request state:", checkError);
+    toast.error("Could not verify job availability");
+    return false;
+  }
+  
+  // If already claimed or not in pending state, abort
+  if (currentData.status !== 'pending' || currentData.technician_id !== null) {
+    console.error("Job already claimed or not in pending state:", currentData);
+    toast.error("This job is no longer available");
+    return false;
+  }
+  
+  // Use a direct update with strict conditions to ensure atomicity
+  const { data, error } = await supabase
+    .from('wash_requests')
+    .update(updateData)
+    .match({ id: id, status: 'pending', technician_id: null })
+    .select();
+  
+  if (error) {
+    console.error("Error accepting job:", error);
+    toast.error("Failed to accept job - someone may have claimed it first");
+    return false;
+  }
+  
+  if (!data || data.length === 0) {
+    console.error("No rows updated - job may have been claimed");
+    toast.error("Failed to accept job - someone may have claimed it first");
+    return false;
+  }
+  
+  console.log("Job accepted successfully:", data);
+  toast.success("Job accepted successfully!");
+  return true;
+}
+
+// Function to handle regular updates that are not job acceptances
+async function handleRegularUpdate(id: string, updateData: Record<string, any>, originalData: Partial<WashRequest>): Promise<boolean> {
+  // For non-job acceptance updates, use the standard update approach
+  const { data, error } = await supabase
+    .from('wash_requests')
+    .update(updateData)
+    .eq('id', id)
+    .select();
+  
+  if (error) {
+    console.error("Error updating wash request:", error);
+    toast.error("Failed to update wash request");
+    return false;
+  }
+  
+  if (!data || data.length === 0) {
+    console.error("No rows updated - request may not exist or you may not have permission");
+    toast.error("Failed to update - request may no longer be available");
+    return false;
+  }
+  
+  console.log("Wash request updated successfully:", data);
+  
+  // For status changes, verify the update explicitly
+  if (originalData.status) {
+    const updatedRecord = data[0];
+    if (updatedRecord.status !== originalData.status) {
+      console.error("Status was not updated as expected", {
+        expected: originalData.status,
+        actual: updatedRecord.status
+      });
+      toast.error("Failed to update status - please try again");
+      return false;
+    }
+  }
+  
+  toast.success("Wash request updated successfully");
+  return true;
 }
