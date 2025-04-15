@@ -2,42 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const VERIFICATION_TIMEOUT = 1500; // 1.5 seconds for database consistency checks
-
-// Helper function to verify job acceptance went through
-const verifyJobAcceptance = async (requestId: string, technicianId: string) => {
-  try {
-    // Wait a small delay to allow database replication
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Check if the job has actually been updated in the database
-    const { data, error } = await supabase
-      .from('wash_requests')
-      .select('technician_id, status')
-      .eq('id', requestId)
-      .single();
-
-    if (error) {
-      console.error("Error verifying job acceptance:", error);
-      return false;
-    }
-    
-    console.log("Job acceptance verification results:", data);
-    
-    // Compare technician_id and check status is now 'confirmed'
-    if (data.technician_id === technicianId && data.status === 'confirmed') {
-      console.log("Job acceptance verified successfully");
-      return true;
-    } else {
-      console.log("Failed to claim job - verification failed:", data);
-      return false;
-    }
-  } catch (error) {
-    console.error("Error in verifyJobAcceptance:", error);
-    return false;
-  }
-};
-
 // Main function to update a wash request
 export async function updateWashRequest(id: string, data: any): Promise<boolean> {
   console.log(`Updating wash request ${id} with data:`, data);
@@ -53,7 +17,7 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
     return handleJobAcceptance(id, data.technician);
   }
   
-  // Handle other update types
+  // Handle status changes like starting or completing a wash
   try {
     const updateData: any = {
       updated_at: new Date().toISOString()
@@ -96,78 +60,84 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
   }
 }
 
-// Specialized function for job acceptance with verification
+// Specialized function for job acceptance with improved reliability
 async function handleJobAcceptance(requestId: string, technicianId: string): Promise<boolean> {
   try {
     console.log(`Handling job acceptance for request ${requestId} by technician ${technicianId}`);
     
-    // First, attempt to claim the job (set technician_id and change status)
+    // First check if the job is still available
+    const { data: currentJobStatus, error: checkError } = await supabase
+      .from('wash_requests')
+      .select('status, technician_id')
+      .eq('id', requestId)
+      .single();
+    
+    if (checkError) {
+      console.error("Error checking job status:", checkError);
+      toast.error("Failed to check job status");
+      return false;
+    }
+    
+    // If job is already taken or not pending, return false
+    if (currentJobStatus.status !== 'pending' || currentJobStatus.technician_id !== null) {
+      console.log("Job is no longer available:", currentJobStatus);
+      toast.error("This job is no longer available");
+      return false;
+    }
+    
+    // Prepare the update data
     const updateData = {
       updated_at: new Date().toISOString(),
       technician_id: technicianId,
       status: 'confirmed'
     };
     
-    // Fixed: Use a better update query that doesn't check existing technician_id
-    // which was causing race conditions
-    const { error } = await supabase
+    console.log("Attempting to claim job with data:", updateData);
+    
+    // Use a transaction to ensure atomicity of the update
+    // Attempt to update the job status to confirmed and assign the technician
+    const { error: updateError } = await supabase
       .from('wash_requests')
       .update(updateData)
       .eq('id', requestId)
-      .eq('status', 'pending'); // Only update if still pending
+      .eq('status', 'pending')
+      .is('technician_id', null);
       
-    if (error) {
-      console.error("Error in job acceptance transaction:", error);
-      toast.error("Failed to accept job. Please try again.");
+    if (updateError) {
+      console.error("Error updating job status:", updateError);
+      toast.error("Failed to accept job");
       return false;
     }
     
-    // Additional direct fetch to see if our update worked
-    const { data: updatedData } = await supabase
+    // Verify the update was successful
+    const { data: verificationData, error: verificationError } = await supabase
       .from('wash_requests')
       .select('technician_id, status')
       .eq('id', requestId)
       .single();
       
-    if (updatedData?.technician_id === technicianId) {
-      console.log("Job claimed successfully in first check:", updatedData);
-      toast.success("Job accepted successfully!");
-      return true;
-    }
-    
-    // If we couldn't verify immediate success, try the original verification process
-    let verified = false;
-    let verificationAttempts = 0;
-    const maxVerificationAttempts = 3;
-    
-    while (!verified && verificationAttempts < maxVerificationAttempts) {
-      verificationAttempts++;
-      console.log(`Verification attempt ${verificationAttempts}...`);
-      
-      verified = await verifyJobAcceptance(requestId, technicianId);
-      
-      if (verified) {
-        console.log("Job acceptance verified!");
-        toast.success("Job accepted successfully!");
-        return true;
-      }
-      
-      // Wait before trying again
-      if (!verified && verificationAttempts < maxVerificationAttempts) {
-        await new Promise(resolve => setTimeout(resolve, VERIFICATION_TIMEOUT / maxVerificationAttempts));
-      }
-    }
-    
-    if (!verified) {
-      console.error("Failed to verify job acceptance after multiple attempts.");
-      toast.error("This job may have been claimed by another technician.");
+    if (verificationError) {
+      console.error("Error verifying job acceptance:", verificationError);
+      toast.error("Failed to verify job acceptance");
       return false;
     }
     
-    return false;
+    console.log("Job verification result:", verificationData);
+    
+    // Check that the technician ID matches and the status is confirmed
+    if (verificationData.technician_id === technicianId && verificationData.status === 'confirmed') {
+      console.log("Job accepted successfully!");
+      toast.success("Job accepted successfully!");
+      return true;
+    } else {
+      console.error("Job verification failed:", verificationData);
+      toast.error("Failed to accept job - it may have been claimed by another technician");
+      return false;
+    }
+    
   } catch (error) {
     console.error("Critical error in handleJobAcceptance:", error);
-    toast.error("An unexpected error occurred.");
+    toast.error("An unexpected error occurred");
     return false;
   }
 }
