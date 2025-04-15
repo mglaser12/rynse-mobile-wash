@@ -9,6 +9,8 @@ import { VehiclePageSkeleton } from "@/components/vehicles/VehiclePageSkeleton";
 import { DemoVehicleButton } from "@/components/vehicles/DemoVehicleButton";
 import { VehicleInfoSection } from "@/components/vehicles/VehicleInfoSection";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 const VehiclesPage = () => {
   const { vehicles, isLoading } = useVehicles();
@@ -35,9 +37,22 @@ const VehiclesPage = () => {
   return (
     <AppLayout>
       <header className="bg-white p-4 border-b sticky top-0 z-10">
-        <div className="flex flex-col">
-          <h1 className="text-xl font-bold">Your Vehicles</h1>
-          <p className="text-sm text-muted-foreground">Manage your vehicle details</p>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center">
+            <img 
+              src="/lovable-uploads/3d6deccc-d4a2-4bfb-9acc-18c6e46f5b73.png" 
+              alt="Rynse Logo" 
+              className="h-8 mr-3" 
+            />
+            <div>
+              <h1 className="text-xl font-bold">Your Vehicles</h1>
+              <p className="text-sm text-muted-foreground">Manage your vehicle details</p>
+            </div>
+          </div>
+          <Button onClick={handleAddVehicle} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Vehicle
+          </Button>
         </div>
       </header>
       

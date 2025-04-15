@@ -27,9 +27,16 @@ const ProfilePage = () => {
   return (
     <AppLayout>
       <header className="bg-white p-4 border-b sticky top-0 z-10">
-        <div className="flex flex-col">
-          <h1 className="text-xl font-bold">Profile</h1>
-          <p className="text-sm text-muted-foreground">Manage your account</p>
+        <div className="flex items-center">
+          <img 
+            src="/lovable-uploads/3d6deccc-d4a2-4bfb-9acc-18c6e46f5b73.png" 
+            alt="Rynse Logo" 
+            className="h-8 mr-3" 
+          />
+          <div>
+            <h1 className="text-xl font-bold">Profile</h1>
+            <p className="text-sm text-muted-foreground">Manage your account</p>
+          </div>
         </div>
       </header>
       

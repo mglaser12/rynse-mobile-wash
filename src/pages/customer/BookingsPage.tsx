@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
@@ -34,11 +35,18 @@ const BookingsPage = () => {
     <AppLayout>
       <header className="bg-white p-4 border-b sticky top-0 z-10">
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-bold">Your Bookings</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage your wash appointments
-            </p>
+          <div className="flex items-center">
+            <img 
+              src="/lovable-uploads/3d6deccc-d4a2-4bfb-9acc-18c6e46f5b73.png" 
+              alt="Rynse Logo" 
+              className="h-8 mr-3" 
+            />
+            <div>
+              <h1 className="text-xl font-bold">Your Bookings</h1>
+              <p className="text-sm text-muted-foreground">
+                Manage your wash appointments
+              </p>
+            </div>
           </div>
           <Button onClick={() => setShowNewBookingDialog(true)}>
             <PlusCircle className="h-4 w-4 mr-2" />
