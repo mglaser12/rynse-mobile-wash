@@ -370,7 +370,10 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      is_technician: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

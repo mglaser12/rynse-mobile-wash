@@ -37,11 +37,6 @@ export const VehicleWashForm = ({ vehicle, status, onStatusUpdate }: VehicleWash
   };
   
   const toggleComplete = () => {
-    if (!status.completed && !status.postWashPhoto) {
-      // If trying to mark as complete without a photo, show dialog
-      return;
-    }
-    
     onStatusUpdate({
       ...status,
       completed: !status.completed
@@ -99,37 +94,43 @@ export const VehicleWashForm = ({ vehicle, status, onStatusUpdate }: VehicleWash
             </div>
           </div>
           
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button 
-                variant={status.completed ? "default" : "outline"}
-                className={status.completed ? "bg-green-600 hover:bg-green-700" : ""}
-                disabled={status.completed}
-                onClick={status.postWashPhoto ? toggleComplete : undefined}
-              >
-                {status.completed ? (
-                  <>
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Completed
-                  </>
-                ) : (
-                  "Mark as Complete"
-                )}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Photo Required</AlertDialogTitle>
-                <AlertDialogDescription>
-                  You must take an after-wash photo of the vehicle before marking it as complete.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => setPhotoDialogOpen(true)}>Take Photo</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {status.postWashPhoto ? (
+            <Button 
+              variant={status.completed ? "default" : "outline"}
+              className={status.completed ? "bg-green-600 hover:bg-green-700" : ""}
+              disabled={status.completed}
+              onClick={toggleComplete}
+            >
+              {status.completed ? (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Completed
+                </>
+              ) : (
+                "Mark as Complete"
+              )}
+            </Button>
+          ) : (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline">
+                  Mark as Complete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Photo Required</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You must take an after-wash photo of the vehicle before marking it as complete.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => setPhotoDialogOpen(true)}>Take Photo</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </CardContent>
       </Card>
     </div>
