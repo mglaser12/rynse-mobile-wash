@@ -30,7 +30,7 @@ const CustomerHome = () => {
           </div>
           <Button onClick={() => setShowNewRequestDialog(true)}>
             <PlusCircle className="h-4 w-4 mr-2" />
-            New Wash
+            Schedule a Wash
           </Button>
         </div>
       </header>
@@ -47,7 +47,7 @@ const CustomerHome = () => {
               className="mt-3" 
               onClick={() => setShowNewRequestDialog(true)}
             >
-              Book a Wash
+              Schedule a Wash
             </Button>
           </CardContent>
         </Card>
@@ -118,7 +118,7 @@ const CustomerHome = () => {
               onClick={() => setShowNewRequestDialog(true)}
             >
               <span className="text-lg">+</span>
-              <span className="text-sm">New Wash</span>
+              <span className="text-sm">Schedule a Wash</span>
             </Button>
             <Button 
               variant="outline" 

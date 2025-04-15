@@ -43,7 +43,7 @@ const BookingsPage = () => {
           </div>
           <Button onClick={() => setShowNewBookingDialog(true)}>
             <PlusCircle className="h-4 w-4 mr-2" />
-            New Booking
+            Schedule a Wash
           </Button>
         </div>
       </header>
@@ -89,7 +89,7 @@ const BookingsPage = () => {
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">No active bookings</p>
                   <Button onClick={() => setShowNewBookingDialog(true)}>
-                    Book a Wash
+                    Schedule a Wash
                   </Button>
                 </div>
               )}
