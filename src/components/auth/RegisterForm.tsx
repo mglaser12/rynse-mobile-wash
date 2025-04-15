@@ -21,7 +21,7 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState<UserRole>("customer");
+  const [role, setRole] = useState<UserRole>("fleet_manager");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   
@@ -123,8 +123,8 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
               className="flex flex-col space-y-1"
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="customer" id="customer" />
-                <Label htmlFor="customer">Customer</Label>
+                <RadioGroupItem value="fleet_manager" id="fleet_manager" />
+                <Label htmlFor="fleet_manager">Fleet Manager</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="technician" id="technician" />

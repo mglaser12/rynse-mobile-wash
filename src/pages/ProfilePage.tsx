@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -43,7 +44,7 @@ const ProfilePage = () => {
           <h2 className="text-xl font-bold">{user?.name}</h2>
           <p className="text-sm text-muted-foreground">{user?.email}</p>
           <Badge className="mt-2" variant="outline">
-            {user?.role === "technician" ? "Wash Technician" : "Customer"}
+            {user?.role === "technician" ? "Wash Technician" : "Fleet Manager"}
           </Badge>
         </div>
         
