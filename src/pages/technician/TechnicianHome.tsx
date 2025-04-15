@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useWashRequests } from "@/contexts/WashContext";
@@ -32,7 +33,7 @@ const TechnicianHome = () => {
   const loadData = useCallback(async () => {
     console.log("Forcing data refresh");
     try {
-      await refreshData(true); // Force refresh
+      await refreshData(true); // Fixed: Pass true as argument
     } catch (error) {
       console.error("Error refreshing data:", error);
     }
@@ -200,7 +201,7 @@ const TechnicianHome = () => {
                 </pre>
                 <button 
                   className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"
-                  onClick={loadData}
+                  onClick={() => loadData()}
                 >
                   Force Refresh
                 </button>

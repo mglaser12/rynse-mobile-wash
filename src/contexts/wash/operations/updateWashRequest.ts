@@ -63,12 +63,12 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
   }
 }
 
-// Extremely basic job acceptance function - focus on updating the database
+// Simplified job acceptance function with direct database update
 async function acceptJob(requestId: string, technicianId: string): Promise<boolean> {
   try {
     console.log(`DIRECT DB UPDATE: Accepting job ${requestId} for technician ${technicianId}`);
     
-    // Construct update payload
+    // Simple update payload
     const updatePayload = {
       technician_id: technicianId,
       status: 'confirmed',
@@ -77,7 +77,7 @@ async function acceptJob(requestId: string, technicianId: string): Promise<boole
 
     console.log("Sending update payload to database:", updatePayload);
     
-    // Direct database update with no conditions
+    // Direct database update
     const { data, error } = await supabase
       .from('wash_requests')
       .update(updatePayload)
@@ -89,7 +89,7 @@ async function acceptJob(requestId: string, technicianId: string): Promise<boole
     console.log("Database response - error:", error);
     
     if (error) {
-      console.error("CRITICAL ERROR updating job:", error);
+      console.error("Error updating job:", error);
       toast.error("Database error: " + error.message);
       return false;
     }
