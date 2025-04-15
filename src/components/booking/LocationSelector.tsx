@@ -15,7 +15,7 @@ interface LocationSelectorProps {
 }
 
 export function LocationSelector({ 
-  locations = [], // Provide default empty array
+  locations = [], 
   selectedLocation, 
   onSelectLocation 
 }: LocationSelectorProps) {
@@ -24,7 +24,11 @@ export function LocationSelector({
   
   // Ensure locations is always an array with a useEffect to properly handle async data
   useEffect(() => {
-    setSafeLocations(Array.isArray(locations) ? locations : []);
+    if (!locations) {
+      setSafeLocations([]);
+    } else {
+      setSafeLocations(Array.isArray(locations) ? locations : []);
+    }
   }, [locations]);
 
   return (
@@ -44,33 +48,35 @@ export function LocationSelector({
         <Command>
           <CommandInput placeholder="Search locations..." />
           <CommandEmpty>No location found.</CommandEmpty>
-          <CommandGroup className="overflow-hidden">
-            <ScrollArea className="max-h-[300px]">
-              {safeLocations.map((location) => (
-                <CommandItem
-                  key={location.id}
-                  value={location.name}
-                  onSelect={() => {
-                    onSelectLocation(location);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedLocation?.id === location.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  <div>
-                    <div>{location.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {location.address}, {location.city}, {location.state} {location.zipCode}
+          {safeLocations.length > 0 && (
+            <CommandGroup className="overflow-hidden">
+              <ScrollArea className="max-h-[300px]">
+                {safeLocations.map((location) => (
+                  <CommandItem
+                    key={location.id}
+                    value={location.name}
+                    onSelect={() => {
+                      onSelectLocation(location);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedLocation?.id === location.id ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    <div>
+                      <div>{location.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {location.address}, {location.city}, {location.state} {location.zipCode}
+                      </div>
                     </div>
-                  </div>
-                </CommandItem>
-              ))}
-            </ScrollArea>
-          </CommandGroup>
+                  </CommandItem>
+                ))}
+              </ScrollArea>
+            </CommandGroup>
+          )}
         </Command>
       </PopoverContent>
     </Popover>

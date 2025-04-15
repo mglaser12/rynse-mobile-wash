@@ -23,6 +23,7 @@ export function useLoadLocations() {
           return;
         }
 
+        // Ensure data is an array before proceeding
         if (!data || !Array.isArray(data)) {
           console.error("Unexpected data format from Supabase:", data);
           setLocations([]);

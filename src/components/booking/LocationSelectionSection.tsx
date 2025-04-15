@@ -12,10 +12,13 @@ interface LocationSelectionSectionProps {
 }
 
 export function LocationSelectionSection({
-  locations,
+  locations = [], // Provide default empty array
   selectedLocation,
   onSelectLocation
 }: LocationSelectionSectionProps) {
+  // Ensure we always pass an array to LocationSelector
+  const safeLocations = Array.isArray(locations) ? locations : [];
+  
   return (
     <div className="space-y-2">
       <Label className="flex items-center">
@@ -23,7 +26,7 @@ export function LocationSelectionSection({
         Wash Location
       </Label>
       <LocationSelector
-        locations={locations || []}
+        locations={safeLocations}
         selectedLocation={selectedLocation}
         onSelectLocation={onSelectLocation}
       />

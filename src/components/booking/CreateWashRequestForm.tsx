@@ -37,6 +37,9 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
     handleSubmit
   } = useWashRequestForm(onSuccess);
 
+  // Ensure locations is an array to prevent iteration errors
+  const safeLocations = Array.isArray(locations) ? locations : [];
+
   return (
     <div className="space-y-6 overflow-hidden flex flex-col h-full">
       <div>
@@ -69,7 +72,7 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
             
             {/* Location Selection */}
             <LocationSelectionSection 
-              locations={Array.isArray(locations) ? locations : []}
+              locations={safeLocations}
               selectedLocation={selectedLocation}
               onSelectLocation={setSelectedLocation}
             />
