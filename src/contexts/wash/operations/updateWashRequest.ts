@@ -2,6 +2,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Define constants for Supabase API URL and key
+// We'll use the same values from our Supabase client configuration
+const SUPABASE_URL = "https://ebzruvonvlowdglrmduf.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVienJ1dm9udmxvd2RnbHJtZHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2NzAzNTEsImV4cCI6MjA2MDI0NjM1MX0.1Hdcd2TyWfmGo6-1xIif2XoF8a14v7iHRRk7Tlw7DC0";
+
 // Main function to update a wash request
 export async function updateWashRequest(id: string, data: any): Promise<boolean> {
   console.log(`Updating wash request ${id} with data:`, data);
@@ -95,11 +100,11 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
       console.log("No data returned, trying direct PATCH call...");
       
       // Try a direct PATCH request using the REST API
-      const directResponse = await fetch(`${supabase.supabaseUrl}/rest/v1/wash_requests?id=eq.${id}`, {
+      const directResponse = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests?id=eq.${id}`, {
         method: 'PATCH',
         headers: {
-          'apikey': supabase.supabaseKey,
-          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
           'Prefer': 'return=representation'
         },
@@ -183,11 +188,11 @@ async function acceptJob(
     // Try direct PATCH request first
     try {
       console.log("Trying direct PATCH request first...");
-      const directResponse = await fetch(`${supabase.supabaseUrl}/rest/v1/wash_requests?id=eq.${requestId}`, {
+      const directResponse = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests?id=eq.${requestId}`, {
         method: 'PATCH',
         headers: {
-          'apikey': supabase.supabaseKey,
-          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
