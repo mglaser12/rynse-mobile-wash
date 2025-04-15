@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useVehicles } from "@/contexts/VehicleContext";
 import { VehicleCard } from "./VehicleCard";
@@ -53,19 +52,18 @@ export function VehicleList({
         </Button>
       </div>
       
-      <ScrollArea className="max-h-[400px]">
+      {/* Remove ScrollArea and let parent handle scrolling */}
+      <div className="space-y-3">
         {vehicles.length > 0 ? (
-          <div className="space-y-3 pr-2">
-            {vehicles.map((vehicle) => (
-              <VehicleCard
-                key={vehicle.id}
-                vehicle={vehicle}
-                selected={selectedVehicleIds.includes(vehicle.id)}
-                selectionMode={selectionMode}
-                onClick={() => onSelectVehicle(vehicle.id)}
-              />
-            ))}
-          </div>
+          vehicles.map((vehicle) => (
+            <VehicleCard
+              key={vehicle.id}
+              vehicle={vehicle}
+              selected={selectedVehicleIds.includes(vehicle.id)}
+              selectionMode={selectionMode}
+              onClick={() => onSelectVehicle(vehicle.id)}
+            />
+          ))
         ) : (
           <div className="py-8 text-center">
             <h3 className="text-muted-foreground mb-2">No vehicles found</h3>
@@ -76,7 +74,7 @@ export function VehicleList({
             </Button>
           </div>
         )}
-      </ScrollArea>
+      </div>
     </div>
   );
 }

@@ -149,36 +149,39 @@ const VehiclesPage = () => {
         </div>
       </header>
       
-      <div className="car-wash-container animate-fade-in p-4">
-        <VehicleList 
-          onAddVehicle={handleAddVehicle} 
-          onSelectVehicle={handleSelectVehicle}
-        />
-        
-        {vehicles.length === 0 && (
-          <div className="mt-6">
-            <Button 
-              onClick={addDemoVehicles}
-              variant="outline"
-              className="w-full"
-              disabled={isAddingDemoVehicles}
-            >
-              {isAddingDemoVehicles ? "Adding Demo Vehicles..." : "Add 5 Demo Heavy Duty Vehicles"}
-            </Button>
+      {/* Use flex and flex-col to create a scrollable layout */}
+      <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden">
+        <div className="car-wash-container animate-fade-in p-4 flex-1 overflow-y-auto">
+          <VehicleList 
+            onAddVehicle={handleAddVehicle} 
+            onSelectVehicle={handleSelectVehicle}
+          />
+          
+          {vehicles.length === 0 && (
+            <div className="mt-6">
+              <Button 
+                onClick={addDemoVehicles}
+                variant="outline"
+                className="w-full"
+                disabled={isAddingDemoVehicles}
+              >
+                {isAddingDemoVehicles ? "Adding Demo Vehicles..." : "Add 5 Demo Heavy Duty Vehicles"}
+              </Button>
+            </div>
+          )}
+          
+          <Separator className="my-6" />
+          
+          <div className="text-sm text-muted-foreground mb-6">
+            <h3 className="font-medium text-foreground mb-2">About Vehicle Management</h3>
+            <p className="mb-2">
+              Add all your vehicles to easily schedule washes for them.
+              Our OCR technology will automatically detect vehicle information when you upload images.
+            </p>
+            <p>
+              You can update or remove vehicles at any time.
+            </p>
           </div>
-        )}
-        
-        <Separator className="my-6" />
-        
-        <div className="text-sm text-muted-foreground">
-          <h3 className="font-medium text-foreground mb-2">About Vehicle Management</h3>
-          <p className="mb-2">
-            Add all your vehicles to easily schedule washes for them.
-            Our OCR technology will automatically detect vehicle information when you upload images.
-          </p>
-          <p>
-            You can update or remove vehicles at any time.
-          </p>
         </div>
       </div>
 
