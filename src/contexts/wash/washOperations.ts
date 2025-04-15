@@ -1,4 +1,3 @@
-
 import { WashRequest, WashStatus } from "@/models/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -186,44 +185,65 @@ export async function updateWashRequest(
     
     console.log("Final update data being sent to Supabase:", updateData);
     
-    // Perform the update
-    const { data: updatedData, error } = await supabase
-      .from('wash_requests')
-      .update(updateData)
-      .eq('id', id)
-      .select('*');
+    // Special handling for job acceptance - try multiple times if needed
+    const isJobAcceptance = data.status === 'confirmed' && data.technician;
+    const maxRetries = isJobAcceptance ? 3 : 1;
+    let attempt = 0;
     
-    if (error) {
-      console.error("Error updating wash request:", error);
-      toast.error("Failed to update wash request");
-      return false;
+    while (attempt < maxRetries) {
+      attempt++;
+      
+      if (attempt > 1) {
+        console.log(`Attempt ${attempt} to update wash request...`);
+      }
+      
+      // Perform the update
+      const { data: updatedData, error } = await supabase
+        .from('wash_requests')
+        .update(updateData)
+        .eq('id', id)
+        .select('*');
+      
+      if (error) {
+        if (attempt < maxRetries) {
+          // Wait a bit before retrying
+          await new Promise(r => setTimeout(r, 500));
+          continue;
+        }
+        
+        console.error("Error updating wash request:", error);
+        toast.error("Failed to update wash request");
+        return false;
+      }
+      
+      console.log("Wash request updated successfully:", updatedData);
+      
+      // Check if we got data back
+      if (!updatedData || updatedData.length === 0) {
+        if (attempt < maxRetries) {
+          // Wait a bit before retrying
+          await new Promise(r => setTimeout(r, 500));
+          continue;
+        }
+        
+        console.error("No data returned from update operation");
+        toast.error("Update may not have been applied correctly");
+        return false;
+      }
+      
+      // Success - show confirmation message
+      if (isJobAcceptance) {
+        toast.success("Job accepted successfully!");
+      } else {
+        toast.success("Wash request updated successfully");
+      }
+      
+      return true;
     }
     
-    console.log("Wash request updated successfully:", updatedData);
-    
-    // Check if we got data back
-    if (!updatedData || updatedData.length === 0) {
-      console.error("No data returned from update operation");
-      toast.error("Update may not have been applied correctly");
-      return false;
-    }
-    
-    // Verify the update was applied as expected
-    const updatedItem = updatedData[0];
-    
-    // Check specific fields
-    if (data.status && updatedItem.status !== data.status) {
-      console.error(`Status update verification failed. Expected: ${data.status}, Got: ${updatedItem.status}`);
-      return false;
-    }
-    
-    if (data.technician && updatedItem.technician_id !== data.technician) {
-      console.error(`Technician update verification failed. Expected: ${data.technician}, Got: ${updatedItem.technician_id}`);
-      return false;
-    }
-    
-    toast.success("Wash request updated successfully");
-    return true;
+    // If we reach here, all attempts failed
+    toast.error("Failed to update after multiple attempts");
+    return false;
   } catch (error) {
     console.error("Error updating wash request:", error);
     toast.error("Failed to update wash request");

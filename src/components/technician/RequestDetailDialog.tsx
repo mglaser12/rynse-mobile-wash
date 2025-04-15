@@ -32,7 +32,7 @@ export const RequestDetailDialog = ({
   
   // Log information for debugging
   console.log("RequestDetailDialog - Current request status:", selectedRequest.status);
-  console.log("RequestDetailDialog - Current technician:", selectedRequest.technician);
+  console.log("RequestDetailDialog - Current technician:", selectedRequest.technician || "undefined");
   console.log("RequestDetailDialog - User ID:", userId);
   
   // Check if this technician is assigned to this request
@@ -78,6 +78,8 @@ export const RequestDetailDialog = ({
                 if (userId) {
                   console.log("Accepting job with technician ID:", userId);
                   onAcceptRequest(selectedRequest.id);
+                } else {
+                  console.error("Cannot accept job - user ID is undefined");
                 }
               }}
               disabled={isUpdating || !userId || isMockRequest}

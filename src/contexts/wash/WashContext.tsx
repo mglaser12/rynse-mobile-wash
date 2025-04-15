@@ -98,7 +98,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
     }
   }, [refreshData]);
 
-  // Update a wash request with improved throttling to prevent infinite loops
+  // Update a wash request with improved throttling and special handling for job acceptance
   const handleUpdateWashRequest = useCallback(async (id: string, data: Partial<WashRequest>) => {
     console.log(`WashContext: Updating request ${id} with:`, data);
     
@@ -128,6 +128,8 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
     const previousState = [...washRequests];
     
     try {
+      console.log("Proceeding with update for request:", id);
+      
       // First update local state for better UX
       setWashRequests(prev => 
         prev.map(request => 
@@ -140,6 +142,16 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       
       if (success) {
         console.log("Update was successful");
+        
+        // For job acceptance, do a refresh to ensure everything is in sync
+        if (isJobAcceptance) {
+          setTimeout(() => {
+            refreshData().catch(err => {
+              console.error("Error refreshing data after job acceptance:", err);
+            });
+          }, 1000);
+        }
+        
         return true;
       } else {
         console.log("Update failed, reverting to previous state");
@@ -156,11 +168,14 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       setIsUpdating(false);
       
       // Refresh data after a delay to avoid immediate loops
-      setTimeout(() => {
-        refreshData().catch(err => {
-          console.error("Error refreshing data after update:", err);
-        });
-      }, 2000);
+      // Skip this for job acceptance since we already refresh above
+      if (!isJobAcceptance) {
+        setTimeout(() => {
+          refreshData().catch(err => {
+            console.error("Error refreshing data after update:", err);
+          });
+        }, 2000);
+      }
     }
   }, [washRequests, refreshData, isUpdating]);
 
