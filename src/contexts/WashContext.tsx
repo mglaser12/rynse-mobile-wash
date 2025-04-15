@@ -5,7 +5,7 @@ export {
   WashProvider,
   useWash,
   useWashRequests
-} from './wash/WashContext';
+} from './wash';
 
 export type { 
   WashContextType,
