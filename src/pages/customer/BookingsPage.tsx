@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
@@ -135,7 +134,7 @@ const BookingsPage = () => {
       </div>
       
       <Dialog open={showNewBookingDialog} onOpenChange={setShowNewBookingDialog}>
-        <DialogContent className="w-full max-w-lg">
+        <DialogContent className="w-full max-w-lg py-6 max-h-[90vh] overflow-hidden flex flex-col">
           <CreateWashRequestForm 
             onSuccess={() => setShowNewBookingDialog(false)}
             onCancel={() => setShowNewBookingDialog(false)}

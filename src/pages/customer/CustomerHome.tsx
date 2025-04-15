@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -133,7 +134,7 @@ const CustomerHome = () => {
       </div>
       
       <Dialog open={showNewRequestDialog} onOpenChange={setShowNewRequestDialog}>
-        <DialogContent className="w-full max-w-lg">
+        <DialogContent className="w-full max-w-lg py-6 max-h-[90vh] overflow-hidden flex flex-col">
           <CreateWashRequestForm 
             onSuccess={() => setShowNewRequestDialog(false)}
             onCancel={() => setShowNewRequestDialog(false)}
