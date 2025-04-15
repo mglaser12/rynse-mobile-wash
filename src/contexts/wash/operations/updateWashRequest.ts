@@ -78,20 +78,19 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
       .eq('id', id)
       .select();
       
+    // Enhanced debugging for Supabase response
+    console.log("SUPABASE RESPONSE STATUS:", error ? "ERROR" : "SUCCESS");
+    console.log("RESPONSE DATA:", updatedData);
+    console.log("RESPONSE ERROR:", error);
+    
     if (error) {
       console.error("Error updating wash request:", error);
       toast.error("Failed to update wash request");
       return false;
     }
     
-    // Check if the update was successful but no rows were affected
-    if (!updatedData || updatedData.length === 0) {
-      console.warn("Update may have succeeded but returned no data");
-      // Consider this a success if there's no error, even if no data returned
-      toast.success("Request updated successfully");
-      return true;
-    }
-    
+    // Important update: Consider empty array as success
+    // Supabase returns empty array when operation succeeds but no data is returned
     toast.success("Request updated successfully");
     return true;
     
@@ -159,9 +158,11 @@ async function acceptJob(
       .eq('id', requestId)
       .select();
     
-    // Log the complete response for debugging
-    console.log("Database response - data:", data);
-    console.log("Database response - error:", error);
+    // Enhanced debugging for Supabase response
+    console.log("SUPABASE ACCEPTANCE RESPONSE STATUS:", error ? "ERROR" : "SUCCESS");
+    console.log("RESPONSE DATA:", data);
+    console.log("RESPONSE DATA IS ARRAY:", Array.isArray(data));
+    console.log("RESPONSE ERROR:", error);
     
     if (error) {
       console.error("Error updating job:", error);
@@ -169,17 +170,9 @@ async function acceptJob(
       return false;
     }
     
-    // Consider it a success even if no data is returned
-    // This is a workaround for the issue where Supabase might not return data after update
-    if (!data || data.length === 0) {
-      console.warn("No data returned from update operation");
-      toast.success("Job scheduled successfully!");
-      return true;
-    }
-    
-    // Success!
-    console.log("JOB ACCEPTANCE CONFIRMED:", data);
-    toast.success("Job accepted successfully!");
+    // Consider it a success if there's no error, regardless of data returned
+    // This fixes the issue with Supabase returning empty array on successful update
+    toast.success("Job scheduled successfully!");
     return true;
     
   } catch (error) {
