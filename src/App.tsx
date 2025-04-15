@@ -16,7 +16,6 @@ import TechnicianHome from "./pages/technician/TechnicianHome";
 import ProfilePage from "./pages/ProfilePage";
 import OrganizationPage from "./pages/admin/OrganizationPage";
 import NotFound from "./pages/NotFound";
-import { Badge } from "./components/ui/badge";
 
 const queryClient = new QueryClient();
 
@@ -160,17 +159,17 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
-        <VehicleProvider>
-          <WashProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
+          <VehicleProvider>
+            <WashProvider>
+              <Toaster />
+              <Sonner />
               <AppRoutes />
-            </BrowserRouter>
-          </WashProvider>
-        </VehicleProvider>
-      </AuthProvider>
+            </WashProvider>
+          </VehicleProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
