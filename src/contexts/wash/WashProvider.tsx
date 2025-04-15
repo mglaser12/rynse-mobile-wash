@@ -10,7 +10,7 @@ import {
   handleCancelWashRequest, 
   handleUpdateWashRequest,
   handleRemoveWashRequest 
-} from "./washActions";
+} from "./actions";
 
 // Create the context
 export const WashContext = createContext<WashContextType>({} as WashContextType);

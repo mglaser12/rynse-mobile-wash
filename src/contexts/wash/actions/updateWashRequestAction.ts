@@ -1,55 +1,8 @@
 import { WashRequest } from "@/models/types";
-import { toast } from "sonner";
 
-export function handleCreateWashRequest(
-  user: any,
-  washRequests: WashRequest[],
-  setWashRequests: React.Dispatch<React.SetStateAction<WashRequest[]>>,
-  createWashRequest: Function
-) {
-  return async (washRequestData: Omit<WashRequest, "id" | "status" | "createdAt" | "updatedAt">) => {
-    if (!user) return null;
-    
-    try {
-      const newWashRequest = await createWashRequest(user, washRequestData);
-      if (newWashRequest) {
-        setWashRequests(prev => [...prev, newWashRequest]);
-      }
-      return newWashRequest;
-    } catch (error) {
-      console.error("Error creating wash request:", error);
-      toast.error("Failed to create wash request");
-      return null;
-    }
-  };
-}
-
-export function handleCancelWashRequest(
-  washRequests: WashRequest[],
-  setWashRequests: React.Dispatch<React.SetStateAction<WashRequest[]>>,
-  cancelWashRequest: Function,
-  safeRefreshData: Function
-) {
-  return async (id: string) => {
-    try {
-      const success = await cancelWashRequest(id);
-      if (success) {
-        setWashRequests(prev => 
-          prev.map(request => 
-            request.id === id ? { ...request, status: "cancelled" } : request
-          )
-        );
-        // Force refresh data to ensure everything is in sync
-        await safeRefreshData();
-      }
-      return success;
-    } catch (error) {
-      console.error("Error cancelling wash request:", error);
-      return false;
-    }
-  };
-}
-
+/**
+ * Handles the update of a wash request
+ */
 export function handleUpdateWashRequest(
   washRequests: WashRequest[],
   setWashRequests: React.Dispatch<React.SetStateAction<WashRequest[]>>,
@@ -127,14 +80,5 @@ export function handleUpdateWashRequest(
     } finally {
       setIsUpdating(false);
     }
-  };
-}
-
-export function handleRemoveWashRequest(
-  setWashRequests: React.Dispatch<React.SetStateAction<WashRequest[]>>
-) {
-  return async (id: string) => {
-    console.log("Remove wash request", id);
-    setWashRequests(prev => prev.filter(request => request.id !== id));
   };
 }
