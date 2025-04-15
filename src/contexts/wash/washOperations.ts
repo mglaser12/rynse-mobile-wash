@@ -8,9 +8,13 @@ export async function createWashRequest(
   washRequestData: Omit<WashRequest, "id" | "status" | "createdAt" | "updatedAt">
 ): Promise<WashRequest | null> {
   if (!user) {
+    console.log("No user provided to createWashRequest");
     toast.error("You must be logged in to create a wash request");
     return null;
   }
+
+  console.log("Creating wash request for user:", user.id);
+  console.log("Wash request data:", washRequestData);
 
   try {
     const { customerId, vehicles, preferredDates, price, notes } = washRequestData;
@@ -24,6 +28,7 @@ export async function createWashRequest(
       .single();
       
     if (locationError) {
+      console.log("No location found, creating default location");
       // If we can't find a location, create a default one
       const { data: newLocation, error: createLocationError } = await supabase
         .from('wash_locations')
@@ -49,6 +54,8 @@ export async function createWashRequest(
       var locationId = locationData.id;
     }
     
+    console.log("Using location ID:", locationId);
+    
     // Insert new wash request in Supabase
     const { data, error } = await supabase
       .from('wash_requests')
@@ -70,11 +77,15 @@ export async function createWashRequest(
       return null;
     }
 
+    console.log("Wash request created:", data);
+
     // Create vehicle associations
     const vehicleInserts = vehicles.map(vehicleId => ({
       wash_request_id: data.id,
       vehicle_id: vehicleId
     }));
+
+    console.log("Creating vehicle associations:", vehicleInserts);
 
     const { error: vehicleError } = await supabase
       .from('wash_request_vehicles')
@@ -101,6 +112,7 @@ export async function createWashRequest(
       updatedAt: new Date(data.updated_at)
     };
     
+    console.log("Returning new wash request object:", newWashRequest);
     toast.success("Wash request created successfully!");
     return newWashRequest;
   } catch (error) {
