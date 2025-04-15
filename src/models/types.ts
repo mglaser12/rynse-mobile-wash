@@ -24,6 +24,7 @@ export type WashRequest = {
   id: string;
   customerId: string;
   vehicles: string[]; // Array of vehicle IDs
+  vehicleDetails?: any[]; // Array of vehicle objects with all details
   preferredDates: {
     start: Date;
     end?: Date;

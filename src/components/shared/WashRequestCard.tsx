@@ -17,8 +17,10 @@ interface WashRequestCardProps {
 export function WashRequestCard({ washRequest, onClick, actions }: WashRequestCardProps) {
   const { vehicles } = useVehicles();
   
-  // Find vehicles associated with this wash request
-  const requestVehicles = vehicles.filter(v => washRequest.vehicles.includes(v.id));
+  // Use either vehicleDetails from the request or find them in the vehicles context
+  const requestVehicles = washRequest.vehicleDetails && washRequest.vehicleDetails.length > 0
+    ? washRequest.vehicleDetails
+    : vehicles.filter(v => washRequest.vehicles.includes(v.id));
 
   const statusColors: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800",
@@ -77,7 +79,7 @@ export function WashRequestCard({ washRequest, onClick, actions }: WashRequestCa
             <Car className="h-4 w-4 text-muted-foreground mt-0.5" />
             <div>
               {requestVehicles.slice(0, 2).map((vehicle, index) => (
-                <span key={vehicle.id}>
+                <span key={vehicle.id || index}>
                   {vehicle.make} {vehicle.model}
                   {index < Math.min(requestVehicles.length, 2) - 1 && ", "}
                 </span>

@@ -34,22 +34,15 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
         if (userRole === 'technician') {
           console.log("Loading requests for technician - showing all pending and assigned requests");
           
-          // Fetch wash requests with associated vehicles
+          // Fetch wash requests with their associated vehicle data
           const { data, error } = await supabase
             .from('wash_requests')
             .select(`
               *,
-              wash_request_vehicles (
+              wash_request_vehicles!inner (
+                id,
                 vehicle_id,
-                vehicles (
-                  id,
-                  make,
-                  model,
-                  year,
-                  color,
-                  type,
-                  license_plate
-                )
+                vehicles (*)
               )
             `)
             .or(`technician_id.eq.${userId},status.eq.pending`);
@@ -71,17 +64,10 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
             .from('wash_requests')
             .select(`
               *,
-              wash_request_vehicles (
+              wash_request_vehicles!inner (
+                id,
                 vehicle_id,
-                vehicles (
-                  id,
-                  make,
-                  model,
-                  year,
-                  color,
-                  type,
-                  license_plate
-                )
+                vehicles (*)
               )
             `)
             .eq('user_id', userId);
@@ -108,15 +94,23 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
 
         // Map Supabase data to our WashRequest type
         const transformedWashRequests: WashRequest[] = requestsData.map(washRequest => {
-          // Get vehicle IDs for this request
+          // Extract vehicles data
           const vehicleIds = washRequest.wash_request_vehicles 
             ? washRequest.wash_request_vehicles.map((item: any) => item.vehicle_id)
             : [];
+
+          // Also extract full vehicle objects for reference
+          const vehicles = washRequest.wash_request_vehicles 
+            ? washRequest.wash_request_vehicles.map((item: any) => item.vehicles) 
+            : [];
+
+          console.log("Vehicle data for request:", washRequest.id, vehicles);
 
           return {
             id: washRequest.id,
             customerId: washRequest.user_id,
             vehicles: vehicleIds,
+            vehicleDetails: vehicles, // Add full vehicle details
             preferredDates: {
               start: new Date(washRequest.preferred_date_start),
               end: washRequest.preferred_date_end ? new Date(washRequest.preferred_date_end) : undefined
