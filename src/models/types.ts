@@ -35,6 +35,7 @@ export type WashRequest = {
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
+  organizationId?: string; // Added for organization visibility
 };
 
 // New type to track the wash status for each vehicle
@@ -43,6 +44,22 @@ export type VehicleWashStatus = {
   completed: boolean;
   postWashPhoto?: string;
   notes?: string;
+};
+
+export type Organization = {
+  id: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type UserProfile = {
+  id: string;
+  name: string;
+  email?: string;
+  role?: string;
+  organizationId?: string;
+  avatarUrl?: string;
 };
 
 export type SupabaseVehicle = {
@@ -71,6 +88,7 @@ export type SupabaseWashRequest = {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  organization_id?: string;
 };
 
 export type SupabaseWashRequestVehicle = {
@@ -78,4 +96,22 @@ export type SupabaseWashRequestVehicle = {
   wash_request_id: string;
   vehicle_id: string;
   created_at: string;
+};
+
+export type SupabaseProfile = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  role: string | null;
+  avatar_url: string | null;
+  organization_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SupabaseOrganization = {
+  id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
 };

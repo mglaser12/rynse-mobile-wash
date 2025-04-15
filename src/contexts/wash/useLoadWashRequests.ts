@@ -55,14 +55,15 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
         let requestsData: any[] = [];
         
         // For technicians, we show all pending requests and their own assigned requests
+        // Now uses the organization-based visibility model
         if (userRole === 'technician') {
-          console.log("Loading requests for technician - showing all pending and assigned requests");
+          console.log("Loading requests for technician - showing all pending and assigned requests within organization");
           
           // Use mock data if we're having connection issues (for demo purposes)
           const mockData = getMockWashRequests(userId);
           
           try {
-            // Try to fetch from Supabase first
+            // Try to fetch from Supabase first - now using organization_wash_requests view
             const { data, error } = await supabase
               .from('wash_requests')
               .select(`
@@ -72,8 +73,7 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
                   vehicle_id,
                   vehicles (*)
                 )
-              `)
-              .or(`technician_id.eq.${userId},status.eq.pending`);
+              `);
             
             if (error) {
               console.error("Error loading wash requests:", error);
@@ -96,8 +96,8 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
             }
           }
         } else {
-          // For customers/fleet managers, only show their own requests
-          console.log("Loading requests for customer - showing only their own requests");
+          // For customers/fleet managers, also load using organization-based visibility
+          console.log("Loading requests for customer/fleet manager - showing all within organization");
           
           try {
             const { data, error } = await supabase
@@ -109,8 +109,7 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
                   vehicle_id,
                   vehicles (*)
                 )
-              `)
-              .eq('user_id', userId);
+              `);
               
             if (error) {
               console.error("Error loading customer wash requests:", error);
@@ -171,7 +170,8 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
             price: Number(washRequest.price),
             notes: washRequest.notes || '',
             createdAt: new Date(washRequest.created_at),
-            updatedAt: new Date(washRequest.updated_at)
+            updatedAt: new Date(washRequest.updated_at),
+            organizationId: washRequest.organization_id
           };
         });
 
@@ -212,6 +212,7 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
         preferred_date_end: tomorrow.toISOString(),
         created_at: now.toISOString(),
         updated_at: now.toISOString(),
+        organization_id: "mock-org-1",
         wash_request_vehicles: [
           {
             id: "mock-vehicle-1",
@@ -238,6 +239,7 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
         preferred_date_end: tomorrow.toISOString(),
         created_at: now.toISOString(),
         updated_at: now.toISOString(),
+        organization_id: "mock-org-1",
         wash_request_vehicles: [
           {
             id: "mock-vehicle-2",

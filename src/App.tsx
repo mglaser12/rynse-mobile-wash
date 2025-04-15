@@ -14,6 +14,7 @@ import VehiclesPage from "./pages/customer/VehiclesPage";
 import BookingsPage from "./pages/customer/BookingsPage";
 import TechnicianHome from "./pages/technician/TechnicianHome";
 import ProfilePage from "./pages/ProfilePage";
+import OrganizationPage from "./pages/admin/OrganizationPage";
 import NotFound from "./pages/NotFound";
 import { Badge } from "./components/ui/badge";
 
@@ -41,7 +42,7 @@ const RoleRoute = ({
   allowedRole 
 }: { 
   children: React.ReactNode;
-  allowedRole: "customer" | "technician";
+  allowedRole: "customer" | "technician" | "admin";
 }) => {
   const { user, isLoading } = useAuth();
   
@@ -127,6 +128,16 @@ const AppRoutes = () => {
             <RoleRoute allowedRole="technician">
               <div>History Page (Coming Soon)</div>
             </RoleRoute>
+          </PrivateRoute>
+        } 
+      />
+      
+      {/* Admin Routes */}
+      <Route 
+        path="/admin/organizations" 
+        element={
+          <PrivateRoute>
+            <OrganizationPage />
           </PrivateRoute>
         } 
       />

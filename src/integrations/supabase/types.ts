@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -16,6 +37,7 @@ export type Database = {
           email: string | null
           id: string
           name: string | null
+          organization_id: string | null
           role: string | null
           updated_at: string
         }
@@ -25,6 +47,7 @@ export type Database = {
           email?: string | null
           id: string
           name?: string | null
+          organization_id?: string | null
           role?: string | null
           updated_at?: string
         }
@@ -34,10 +57,19 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string | null
+          organization_id?: string | null
           role?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vehicles: {
         Row: {
@@ -154,6 +186,13 @@ export type Database = {
             foreignKeyName: "wash_request_vehicles_wash_request_id_fkey"
             columns: ["wash_request_id"]
             isOneToOne: false
+            referencedRelation: "organization_wash_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wash_request_vehicles_wash_request_id_fkey"
+            columns: ["wash_request_id"]
+            isOneToOne: false
             referencedRelation: "wash_requests"
             referencedColumns: ["id"]
           },
@@ -211,7 +250,38 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      organization_wash_requests: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          location_id: string | null
+          notes: string | null
+          organization_id: string | null
+          preferred_date_end: string | null
+          preferred_date_start: string | null
+          price: number | null
+          status: string | null
+          technician_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wash_requests_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "wash_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never

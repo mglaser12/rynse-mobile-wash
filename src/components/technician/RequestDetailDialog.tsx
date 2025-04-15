@@ -4,7 +4,7 @@ import { WashRequest } from "@/models/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Loader2, Info } from "lucide-react";
+import { AlertTriangle, Loader2, Info, Building } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface RequestDetailDialogProps {
@@ -35,6 +35,9 @@ export const RequestDetailDialog = ({
   
   // Check if this is a mock request (for offline demo)
   const isMockRequest = selectedRequest.id.startsWith("mock-");
+  
+  // Check if this is a fleet manager created job
+  const isFleetManagerJob = selectedRequest.customerId !== userId;
   
   // Log detailed state for debugging
   console.log("RequestDetailDialog - Selected request:", {
@@ -78,11 +81,11 @@ export const RequestDetailDialog = ({
           )}
           
           {/* Fleet manager notice */}
-          {selectedRequest.customerId !== userId && selectedRequest.status === "pending" && !isMockRequest && (
+          {isFleetManagerJob && selectedRequest.status === "pending" && !isMockRequest && (
             <Alert>
-              <Info className="h-4 w-4 text-blue-500" />
+              <Building className="h-4 w-4 text-blue-500" />
               <AlertDescription className="text-sm">
-                This is a job created by a fleet manager. The vehicle(s) may be larger than usual.
+                This is a job created by someone in your organization. The vehicle(s) may require special handling.
               </AlertDescription>
             </Alert>
           )}
