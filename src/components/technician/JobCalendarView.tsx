@@ -75,7 +75,7 @@ export const JobCalendarView = ({ assignedRequests, onSelectJob }: JobCalendarVi
                     const { date } = props;
                     return (
                       <div className="relative w-full h-full">
-                        <div>{props.day}</div>
+                        {props.children}
                         {renderJobsForDay(date)}
                       </div>
                     );
