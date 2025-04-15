@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -92,7 +91,7 @@ const ProfilePage = () => {
               <button className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
                 <div className="flex items-center">
                   <HelpCircle className="h-5 w-5 mr-3 text-muted-foreground" />
-                  <span>About Shine Mobile Fleet</span>
+                  <span>About Rynse</span>
                 </div>
                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </button>
