@@ -45,6 +45,13 @@ export async function updateWashRequest(
     
     console.log("Final update data being sent to Supabase:", updateData);
     
+    // Special handling for mock data requests (demo mode)
+    if (id.startsWith('mock-')) {
+      console.log("Processing mock request in demo mode");
+      // For mock data, just pretend it worked
+      return true;
+    }
+    
     // Special handling for job acceptance - try multiple times if needed
     const isJobAcceptance = data.status === 'confirmed' && data.technician;
     
@@ -63,9 +70,6 @@ export async function updateWashRequest(
 // Function to handle job acceptance with special considerations
 async function handleJobAcceptance(id: string, updateData: Record<string, any>, technicianId: string): Promise<boolean> {
   try {
-    // We've had issues with standard Supabase update methods, so let's use a more direct approach
-    // using stored procedures and transactions. For now, we'll use a more direct RPC call
-    
     // First, do a direct check on the wash_request to verify it's available
     const { data: currentData, error: fetchError } = await supabase
       .from('wash_requests')
@@ -86,50 +90,46 @@ async function handleJobAcceptance(id: string, updateData: Record<string, any>, 
       return false;
     }
     
-    // Try a simpler direct update without all the filters
-    const { data, error } = await supabase
+    // Two-step update process:
+    // 1. First claim the job by setting technician_id
+    const { error: claimError } = await supabase
       .from('wash_requests')
-      .update({
+      .update({ technician_id: technicianId })
+      .eq('id', id)
+      .eq('status', 'pending')
+      .is('technician_id', null);
+      
+    if (claimError) {
+      console.error("Error claiming job:", claimError);
+      toast.error("Failed to claim job");
+      return false;
+    }
+    
+    // 2. Then update status to confirmed
+    const { data, error: updateError } = await supabase
+      .from('wash_requests')
+      .update({ 
         status: 'confirmed',
-        technician_id: technicianId,
         updated_at: updateData.updated_at
       })
       .eq('id', id)
+      .eq('technician_id', technicianId)
       .select();
       
-    if (error) {
-      console.error("Error with direct update:", error);
-      toast.error("Failed to accept job");
+    if (updateError) {
+      console.error("Error updating job status:", updateError);
+      toast.error("Job was claimed but status update failed");
       return false;
     }
 
     // Verify the update was successful
     if (!data || data.length === 0) {
-      console.error("No rows updated - request may not exist");
-      toast.error("Failed to accept job - request not found");
+      console.error("No rows updated - verification failed");
+      toast.error("Failed to update job status");
       return false;
     }
     
-    // Double-check the current state to make sure our update took effect
-    const { data: verifyData, error: verifyError } = await supabase
-      .from('wash_requests')
-      .select('technician_id, status')
-      .eq('id', id)
-      .single();
-      
-    if (verifyError) {
-      console.error("Error verifying job acceptance:", verifyError);
-      toast.warning("Job status uncertain - please refresh");
-      return true; // Still return true as we did get a successful response above
-    }
-    
-    if (verifyData.technician_id !== technicianId || verifyData.status !== 'confirmed') {
-      console.error("Failed to claim job - verification failed:", verifyData);
-      toast.error("Failed to claim job - please try again");
-      return false;
-    }
-    
-    console.log("Job accepted successfully:", verifyData);
+    console.log("Job accepted successfully:", data);
     toast.success("Job accepted successfully!");
     return true;
   } catch (error) {

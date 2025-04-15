@@ -1,10 +1,10 @@
 
 import React from "react";
 import { WashRequest } from "@/models/types";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface RequestDetailDialogProps {
@@ -60,6 +60,11 @@ export const RequestDetailDialog = ({
       <DialogContent className="w-full max-w-lg">
         <DialogHeader>
           <DialogTitle>Wash Request Details</DialogTitle>
+          {isMockRequest && (
+            <DialogDescription className="text-amber-500">
+              This is demo data shown for offline use
+            </DialogDescription>
+          )}
         </DialogHeader>
         
         <div className="space-y-4">
@@ -68,6 +73,16 @@ export const RequestDetailDialog = ({
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
                 This is demo data shown due to connection issues. Actions may not be saved.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {/* Fleet manager notice */}
+          {selectedRequest.customerId !== userId && selectedRequest.status === "pending" && !isMockRequest && (
+            <Alert>
+              <Info className="h-4 w-4 text-blue-500" />
+              <AlertDescription className="text-sm">
+                This is a job created by a fleet manager. The vehicle(s) may be larger than usual.
               </AlertDescription>
             </Alert>
           )}
@@ -86,7 +101,7 @@ export const RequestDetailDialog = ({
                   console.error("Cannot accept job - user ID is undefined");
                 }
               }}
-              disabled={isUpdating || !userId || isMockRequest}
+              disabled={isUpdating || !userId}
             >
               {isUpdating ? (
                 <>
@@ -103,7 +118,7 @@ export const RequestDetailDialog = ({
             <Button 
               className="w-full" 
               onClick={() => onStartWash(selectedRequest.id)}
-              disabled={isUpdating || isMockRequest}
+              disabled={isUpdating}
             >
               {isUpdating ? (
                 <>
@@ -120,7 +135,7 @@ export const RequestDetailDialog = ({
             <Button 
               className="w-full" 
               onClick={() => onCompleteWash(selectedRequest.id)}
-              disabled={isUpdating || isMockRequest}
+              disabled={isUpdating}
             >
               {isUpdating ? (
                 <>
