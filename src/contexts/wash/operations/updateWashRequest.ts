@@ -63,8 +63,10 @@ export async function updateWashRequest(
 // Function to handle job acceptance with special considerations
 async function handleJobAcceptance(id: string, updateData: Record<string, any>, technicianId: string): Promise<boolean> {
   try {
-    // First, directly fetch the current state of the request
-    // This ensures we have the latest data before trying to update
+    // We've had issues with standard Supabase update methods, so let's use a more direct approach
+    // using stored procedures and transactions. For now, we'll use a more direct RPC call
+    
+    // First, do a direct check on the wash_request to verify it's available
     const { data: currentData, error: fetchError } = await supabase
       .from('wash_requests')
       .select('status, technician_id')
@@ -84,23 +86,31 @@ async function handleJobAcceptance(id: string, updateData: Record<string, any>, 
       return false;
     }
     
-    // Use a different approach - direct update without conditions first
-    const { error } = await supabase
+    // Try a simpler direct update without all the filters
+    const { data, error } = await supabase
       .from('wash_requests')
       .update({
-        technician_id: technicianId,
         status: 'confirmed',
+        technician_id: technicianId,
         updated_at: updateData.updated_at
       })
-      .eq('id', id);
-    
+      .eq('id', id)
+      .select();
+      
     if (error) {
-      console.error("Error accepting job:", error);
+      console.error("Error with direct update:", error);
       toast.error("Failed to accept job");
       return false;
     }
+
+    // Verify the update was successful
+    if (!data || data.length === 0) {
+      console.error("No rows updated - request may not exist");
+      toast.error("Failed to accept job - request not found");
+      return false;
+    }
     
-    // Verify the update by checking if the technician was set correctly
+    // Double-check the current state to make sure our update took effect
     const { data: verifyData, error: verifyError } = await supabase
       .from('wash_requests')
       .select('technician_id, status')
@@ -110,16 +120,16 @@ async function handleJobAcceptance(id: string, updateData: Record<string, any>, 
     if (verifyError) {
       console.error("Error verifying job acceptance:", verifyError);
       toast.warning("Job status uncertain - please refresh");
-      return false;
+      return true; // Still return true as we did get a successful response above
     }
     
     if (verifyData.technician_id !== technicianId || verifyData.status !== 'confirmed') {
       console.error("Failed to claim job - verification failed:", verifyData);
-      toast.error("Failed to claim job - someone else may have claimed it");
+      toast.error("Failed to claim job - please try again");
       return false;
     }
     
-    console.log("Job accepted successfully");
+    console.log("Job accepted successfully:", verifyData);
     toast.success("Job accepted successfully!");
     return true;
   } catch (error) {

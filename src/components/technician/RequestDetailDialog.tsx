@@ -30,16 +30,20 @@ export const RequestDetailDialog = ({
 }: RequestDetailDialogProps) => {
   if (!selectedRequest) return null;
   
-  // Log information for debugging
-  console.log("RequestDetailDialog - Current request status:", selectedRequest.status);
-  console.log("RequestDetailDialog - Current technician:", selectedRequest.technician || "undefined");
-  console.log("RequestDetailDialog - User ID:", userId);
-  
   // Check if this technician is assigned to this request
   const isAssignedTechnician = userId && selectedRequest.technician === userId;
   
   // Check if this is a mock request (for offline demo)
   const isMockRequest = selectedRequest.id.startsWith("mock-");
+  
+  // Log detailed state for debugging
+  console.log("RequestDetailDialog - Selected request:", {
+    id: selectedRequest.id,
+    status: selectedRequest.status,
+    technicianId: selectedRequest.technician
+  });
+  console.log("RequestDetailDialog - Current user ID:", userId);
+  console.log("RequestDetailDialog - Is assigned technician:", isAssignedTechnician);
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
@@ -85,9 +89,13 @@ export const RequestDetailDialog = ({
               disabled={isUpdating || !userId || isMockRequest}
             >
               {isUpdating ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
-              {isMockRequest ? "Demo Mode - Accept Job" : "Accept Job"}
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Processing...
+                </>
+              ) : (
+                isMockRequest ? "Demo Mode - Accept Job" : "Accept Job"
+              )}
             </Button>
           )}
           
@@ -98,9 +106,13 @@ export const RequestDetailDialog = ({
               disabled={isUpdating || isMockRequest}
             >
               {isUpdating ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
-              {isMockRequest ? "Demo Mode - Start Wash" : "Start Wash"}
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Processing...
+                </>
+              ) : (
+                isMockRequest ? "Demo Mode - Start Wash" : "Start Wash"
+              )}
             </Button>
           )}
           
@@ -111,9 +123,13 @@ export const RequestDetailDialog = ({
               disabled={isUpdating || isMockRequest}
             >
               {isUpdating ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
-              {isMockRequest ? "Demo Mode - Complete Wash" : "Complete Wash"}
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Processing...
+                </>
+              ) : (
+                isMockRequest ? "Demo Mode - Complete Wash" : "Complete Wash"
+              )}
             </Button>
           )}
         </div>
