@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,7 +25,7 @@ interface CreateWashRequestFormProps {
 export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequestFormProps) {
   const { user } = useAuth();
   const { vehicles } = useVehicles();
-  const { createWashRequest, locations } = useWashRequests();
+  const { createWashRequest, locations = [] } = useWashRequests();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("select");
   const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>([]);
@@ -177,7 +176,7 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
                 Wash Location
               </Label>
               <LocationSelector
-                locations={locations}
+                locations={locations || []}
                 selectedLocation={selectedLocation}
                 onSelectLocation={setSelectedLocation}
               />
