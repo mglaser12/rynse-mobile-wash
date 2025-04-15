@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { VehicleWashProgressDialog } from "@/components/technician/VehicleWashProgressDialog";
 import { DebugPanel } from "@/components/technician/DebugPanel";
 import { useWashManagement } from "@/hooks/technician/useWashManagement";
-import { TechnicianTabs } from "@/components/technician/TechnicianTabs";
+import { JobRequestsTabs } from "@/components/technician/JobRequestsTabs";
 import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
 
 const TechnicianHome = () => {
@@ -29,8 +29,7 @@ const TechnicianHome = () => {
     handleScheduleJob,
     handleStartWash,
     handleCompleteWash,
-    handleWashProgressComplete,
-    handleViewJobDetails
+    handleWashProgressComplete
   } = useWashManagement();
   const [isDebugMode, setIsDebugMode] = useState(false);
   
@@ -58,10 +57,6 @@ const TechnicianHome = () => {
     
   const inProgressRequests = Array.isArray(localStateRequests) 
     ? localStateRequests.filter(req => req.status === "in_progress" && req.technician === user?.id)
-    : [];
-  
-  const completedRequests = Array.isArray(localStateRequests)
-    ? localStateRequests.filter(req => req.status === "completed" && req.technician === user?.id)
     : [];
   
   const selectedRequest = selectedRequestId && Array.isArray(localStateRequests)
@@ -111,15 +106,15 @@ const TechnicianHome = () => {
               onCompleteWash={handleCompleteWash}
             />
             
-            {/* Job tabs (current jobs and history) */}
-            <TechnicianTabs
-              pendingRequests={pendingRequests}
-              assignedRequests={assignedRequests}
-              completedRequests={completedRequests}
-              onRequestClick={setSelectedRequestId}
-              onStartWash={handleStartWash}
-              onViewJobDetails={handleViewJobDetails}
-            />
+            {/* Job requests section */}
+            <div className="mt-6">
+              <JobRequestsTabs
+                pendingRequests={pendingRequests}
+                assignedRequests={assignedRequests}
+                onRequestClick={setSelectedRequestId}
+                onStartWash={handleStartWash}
+              />
+            </div>
             
             {/* Debug toggle button */}
             <div className="mt-8 flex justify-center">
@@ -136,7 +131,7 @@ const TechnicianHome = () => {
         )}
       </div>
       
-      {/* Request Detail Dialog with Scheduling */}
+      {/* Request Detail Dialog */}
       <RequestDetailDialog
         open={!!selectedRequestId}
         onOpenChange={(open) => !open && setSelectedRequestId(null)}
