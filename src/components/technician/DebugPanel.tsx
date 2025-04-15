@@ -9,7 +9,7 @@ interface DebugPanelProps {
   washRequests: WashRequest[];
   userId?: string;
   userRole?: string;
-  localStateRequests: WashRequest[];
+  localStateRequests: WashRequest[]; // Keep for backwards compatibility
   onRefresh: () => void;
 }
 
@@ -23,6 +23,9 @@ export const DebugPanel = ({
   localStateRequests,
   onRefresh
 }: DebugPanelProps) => {
+  // Use localStateRequests if provided, otherwise fall back to washRequests
+  const requestsToDisplay = localStateRequests || washRequests;
+  
   return (
     <div className="bg-gray-100 p-4 mb-6 rounded-lg text-xs overflow-auto max-h-48">
       <h3 className="font-bold mb-2">Debug Information:</h3>
@@ -33,7 +36,7 @@ export const DebugPanel = ({
       <p>User ID: {userId}</p>
       <p>User Role: {userRole}</p>
       <pre className="mt-2 bg-gray-200 p-2 rounded overflow-auto">
-        {JSON.stringify(localStateRequests.map(r => ({id: r.id, status: r.status, technician: r.technician})), null, 2)}
+        {JSON.stringify(requestsToDisplay.map(r => ({id: r.id, status: r.status, technician: r.technician})), null, 2)}
       </pre>
       <button 
         className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"

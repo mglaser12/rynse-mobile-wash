@@ -16,8 +16,6 @@ const TechnicianHome = () => {
   const { 
     user,
     washRequests,
-    localStateRequests,
-    setLocalStateRequests,
     isLoading, 
     isUpdating,
     selectedRequestId,
@@ -33,13 +31,6 @@ const TechnicianHome = () => {
   } = useWashManagement();
   const [isDebugMode, setIsDebugMode] = useState(false);
   
-  // Update local state when washRequests change
-  useEffect(() => {
-    if (Array.isArray(washRequests)) {
-      setLocalStateRequests(washRequests);
-    }
-  }, [washRequests, setLocalStateRequests]);
-  
   // Force a refresh of wash requests data when the component mounts
   useEffect(() => {
     console.log("TechnicianHome mounted - loading initial data");
@@ -47,24 +38,24 @@ const TechnicianHome = () => {
   }, [loadData]);
   
   // Safely filter wash requests (defensive programming)
-  const pendingRequests = Array.isArray(localStateRequests) 
-    ? localStateRequests.filter(req => req.status === "pending")
+  const pendingRequests = Array.isArray(washRequests) 
+    ? washRequests.filter(req => req.status === "pending")
     : [];
     
-  const assignedRequests = Array.isArray(localStateRequests) 
-    ? localStateRequests.filter(req => req.status === "confirmed" && req.technician === user?.id)
+  const assignedRequests = Array.isArray(washRequests) 
+    ? washRequests.filter(req => req.status === "confirmed" && req.technician === user?.id)
     : [];
     
-  const inProgressRequests = Array.isArray(localStateRequests) 
-    ? localStateRequests.filter(req => req.status === "in_progress" && req.technician === user?.id)
+  const inProgressRequests = Array.isArray(washRequests) 
+    ? washRequests.filter(req => req.status === "in_progress" && req.technician === user?.id)
     : [];
   
-  const selectedRequest = selectedRequestId && Array.isArray(localStateRequests)
-    ? localStateRequests.find(req => req.id === selectedRequestId) 
+  const selectedRequest = selectedRequestId && Array.isArray(washRequests)
+    ? washRequests.find(req => req.id === selectedRequestId) 
     : null;
 
-  const activeWashRequest = activeWashId && Array.isArray(localStateRequests)
-    ? localStateRequests.find(req => req.id === activeWashId)
+  const activeWashRequest = activeWashId && Array.isArray(washRequests)
+    ? washRequests.find(req => req.id === activeWashId)
     : null;
   
   // Toggle debug mode
@@ -92,7 +83,7 @@ const TechnicianHome = () => {
                 washRequests={washRequests}
                 userId={user?.id}
                 userRole={user?.role}
-                localStateRequests={localStateRequests}
+                localStateRequests={washRequests}
                 onRefresh={loadData}
               />
             )}

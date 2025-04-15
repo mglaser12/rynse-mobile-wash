@@ -10,7 +10,7 @@ import { JobCalendarView } from "@/components/technician/JobCalendarView";
 const TechnicianJobsPage = () => {
   const { 
     user,
-    localStateRequests,
+    washRequests,
     isLoading,
     isUpdating,
     selectedRequestId,
@@ -23,13 +23,13 @@ const TechnicianJobsPage = () => {
   } = useWashManagement();
 
   // Get assigned requests
-  const assignedRequests = Array.isArray(localStateRequests) 
-    ? localStateRequests.filter(req => req.status === "confirmed" && req.technician === user?.id)
+  const assignedRequests = Array.isArray(washRequests) 
+    ? washRequests.filter(req => req.status === "confirmed" && req.technician === user?.id)
     : [];
 
   // Get selected request
-  const selectedRequest = selectedRequestId && Array.isArray(localStateRequests)
-    ? localStateRequests.find(req => req.id === selectedRequestId) 
+  const selectedRequest = selectedRequestId && Array.isArray(washRequests)
+    ? washRequests.find(req => req.id === selectedRequestId) 
     : null;
 
   return (
