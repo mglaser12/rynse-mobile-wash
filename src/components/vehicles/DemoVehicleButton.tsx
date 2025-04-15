@@ -31,7 +31,7 @@ export function DemoVehicleButton({ isVisible }: DemoVehicleButtonProps) {
           type: "Heavy Duty",
           color: "Yellow",
           licensePlate: "HD-1234",
-          image: "https://media.istockphoto.com/id/472090019/photo/bulldozer.jpg?s=612x612&w=0&k=20&c=qGhecq79TvLW3gSJbVm_kLZ8Z-qDYDvKlXDY-dDlEIg="
+          image: "https://s7d2.scene7.com/is/image/Caterpillar/C811938?$cc-g$"
         },
         {
           make: "Komatsu",
@@ -40,7 +40,7 @@ export function DemoVehicleButton({ isVisible }: DemoVehicleButtonProps) {
           type: "Heavy Duty",
           color: "Orange",
           licensePlate: "HD-5678",
-          image: "https://media.istockphoto.com/id/184332081/photo/orange-excavator-on-a-construction-site.jpg?s=612x612&w=0&k=20&c=Bn8LQ2rBRFvYkrpqfoKt2CAIkE642JLIv9XUk_bK5AQ="
+          image: "https://d3is49fvltuaded.cloudfront.net/appliedmachinery/komatsu-pc490lc-11-excavator-003--25448.jpg"
         },
         {
           make: "John Deere",
@@ -49,7 +49,7 @@ export function DemoVehicleButton({ isVisible }: DemoVehicleButtonProps) {
           type: "Heavy Duty",
           color: "Green",
           licensePlate: "HD-9012",
-          image: "https://media.istockphoto.com/id/157384437/photo/tractor-at-sunset.jpg?s=612x612&w=0&k=20&c=HGlLW1iGCAOc7pOGirru_g-L7azkEEw6tanixzMr4S4="
+          image: "https://rgtractor.com/wp-content/uploads/2021/12/johndeere-9r.jpg"
         },
         {
           make: "Volvo",
@@ -58,7 +58,7 @@ export function DemoVehicleButton({ isVisible }: DemoVehicleButtonProps) {
           type: "Heavy Duty",
           color: "Gray",
           licensePlate: "HD-3456",
-          image: "https://media.istockphoto.com/id/1329031407/photo/excavator-on-construction-site.jpg?s=612x612&w=0&k=20&c=SKpIyvYgZSbAh9rHMg-0SWoUlGpXdhX3OjZKkXRmWhA="
+          image: "https://www.volvoce.com/-/media/volvoce/global/products/excavators/crawler-excavators/segments/overview/volvo-crawler-excavator-ec750e-t2-walkaround-1280x860.jpg?v=MJHVJw&h=860&w=1280"
         },
         {
           make: "Liebherr",
@@ -67,7 +67,7 @@ export function DemoVehicleButton({ isVisible }: DemoVehicleButtonProps) {
           type: "Heavy Duty",
           color: "White",
           licensePlate: "HD-7890",
-          image: "https://media.istockphoto.com/id/480493427/photo/excavator.jpg?s=612x612&w=0&k=20&c=-mugP46Av9gR2LgjWlFXeMdKLxYrQkquvXpsIRCKwlw="
+          image: "https://www.liebherr.com/shared/media/mining/products/mobile-equipment/excavators/product-category/mining-excavators.jpg"
         }
       ];
 

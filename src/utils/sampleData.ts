@@ -11,7 +11,7 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     year: "2022",
     licensePlate: "ABC-1234",
     color: "White",
-    image: "https://images.unsplash.com/photo-1610307372171-5165eca0ab4c?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+    image: "https://www.ford.com/is/image/content/dam/vdm_ford/live/en_us/ford/nameplate/transitvanwagon/2023/collections/dm/22_FRD_TRN_55429_C7447012_Transit_Van_34FrontPassengerSide_16x9.png?croppathe=1_3:2&wid=900",
     dateAdded: new Date("2023-01-15"),
   },
   {
@@ -23,7 +23,7 @@ export const SAMPLE_VEHICLES: Vehicle[] = [
     year: "2021",
     licensePlate: "ABC-5678",
     color: "Blue",
-    image: "https://images.unsplash.com/photo-1604156429959-21c7962cf0f4?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+    image: "https://www.chevrolet.com/content/dam/chevrolet/na/us/english/index/vehicles/2021/trucks/silverado/01-images/colorizer/2021-silverado1500-colorizer-northsky-blue.jpg?imwidth=960",
     dateAdded: new Date("2023-05-20"),
   }
 ];
