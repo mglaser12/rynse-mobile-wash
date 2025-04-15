@@ -14,6 +14,7 @@ export function useLoadWashRequests(userId: string | undefined) {
       try {
         if (!userId) {
           setWashRequests([]);
+          setIsLoading(false);
           return;
         }
 
@@ -25,6 +26,14 @@ export function useLoadWashRequests(userId: string | undefined) {
         if (requestsError) {
           console.error("Error loading wash requests from Supabase:", requestsError);
           toast.error("Failed to load wash requests");
+          setWashRequests([]);
+          setIsLoading(false);
+          return;
+        }
+
+        if (!requestsData || !Array.isArray(requestsData) || requestsData.length === 0) {
+          setWashRequests([]);
+          setIsLoading(false);
           return;
         }
 
@@ -38,13 +47,30 @@ export function useLoadWashRequests(userId: string | undefined) {
         if (locationsError) {
           console.error("Error loading locations from Supabase:", locationsError);
           toast.error("Failed to load locations");
+          setWashRequests([]);
+          setIsLoading(false);
+          return;
+        }
+
+        if (!locationsData || !Array.isArray(locationsData)) {
+          console.error("Unexpected locations data format from Supabase");
+          setWashRequests([]);
+          setIsLoading(false);
           return;
         }
 
         // Map Supabase data to our WashRequest type
         const transformedWashRequests: WashRequest[] = requestsData.map(washRequest => {
           // Find the location for this request
-          const locationData = locationsData.find(loc => loc.id === washRequest.location_id);
+          const locationData = locationsData.find(loc => loc.id === washRequest.location_id) || {
+            id: washRequest.location_id,
+            name: "Unknown Location",
+            address: "",
+            city: "",
+            state: "",
+            zip_code: ""
+          };
+          
           const location: WashLocation = {
             id: locationData.id,
             name: locationData.name,
@@ -85,6 +111,7 @@ export function useLoadWashRequests(userId: string | undefined) {
       } catch (error) {
         console.error("Error in loadWashRequests:", error);
         toast.error("Failed to load wash requests");
+        setWashRequests([]);
       } finally {
         setIsLoading(false);
       }
