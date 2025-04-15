@@ -3,8 +3,9 @@ import React from "react";
 import { WashRequest } from "@/models/types";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
 import { Button } from "@/components/ui/button";
-import { Calendar, CheckCircle } from "lucide-react";
+import { Calendar, CheckCircle, RefreshCw } from "lucide-react";
 import { EmptySchedule } from "./EmptySchedule";
+import { useWashRequests } from "@/contexts/WashContext";
 
 interface TodayScheduleProps {
   inProgressRequests: WashRequest[];
@@ -21,6 +22,8 @@ export const TodaySchedule = ({
   onStartWash,
   onCompleteWash
 }: TodayScheduleProps) => {
+  const { refreshData } = useWashRequests();
+
   return (
     <div className="mb-6">
       <h2 className="text-lg font-medium flex items-center">
@@ -72,7 +75,9 @@ export const TodaySchedule = ({
           ))}
         </div>
       ) : (
-        <EmptySchedule />
+        <div className="mt-3">
+          <EmptySchedule />
+        </div>
       )}
     </div>
   );

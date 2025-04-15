@@ -4,6 +4,8 @@ import { WashRequest } from "@/models/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
 import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { useWashRequests } from "@/contexts/WashContext";
 
 interface JobRequestsTabsProps {
   pendingRequests: WashRequest[];
@@ -18,6 +20,8 @@ export const JobRequestsTabs = ({
   onRequestClick,
   onStartWash
 }: JobRequestsTabsProps) => {
+  const { refreshData } = useWashRequests();
+
   return (
     <>
       <h2 className="text-lg font-medium mb-3">Job Requests</h2>
@@ -38,7 +42,15 @@ export const JobRequestsTabs = ({
             ))
           ) : (
             <div className="text-center py-6">
-              <p className="text-muted-foreground">No available job requests</p>
+              <p className="text-muted-foreground mb-4">No available job requests</p>
+              <Button 
+                variant="outline" 
+                onClick={refreshData} 
+                className="flex items-center mx-auto"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh Jobs
+              </Button>
             </div>
           )}
         </TabsContent>
@@ -66,7 +78,15 @@ export const JobRequestsTabs = ({
             ))
           ) : (
             <div className="text-center py-6">
-              <p className="text-muted-foreground">No upcoming jobs</p>
+              <p className="text-muted-foreground mb-4">No upcoming jobs</p>
+              <Button 
+                variant="outline" 
+                onClick={refreshData} 
+                className="flex items-center mx-auto"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh Jobs
+              </Button>
             </div>
           )}
         </TabsContent>
