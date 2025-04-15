@@ -4,7 +4,7 @@ import { WashRequest } from "@/models/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { WashContextType } from "./types";
 import { useLoadWashRequests } from "./useLoadWashRequests";
-import { createWashRequest, cancelWashRequest } from "./washOperations";
+import { createWashRequest, cancelWashRequest, updateWashRequest } from "./washOperations";
 
 const WashContext = createContext<WashContextType>({} as WashContextType);
 
@@ -54,11 +54,17 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
     return success;
   };
 
-  // Implement missing methods required by WashContextType
+  // Update a wash request
   const handleUpdateWashRequest = async (id: string, data: Partial<WashRequest>) => {
-    // This is a placeholder implementation - in a real app, you'd call an API
-    console.log("Update wash request", id, data);
-    return true;
+    const success = await updateWashRequest(id, data);
+    if (success) {
+      setWashRequests(prev => 
+        prev.map(request => 
+          request.id === id ? { ...request, ...data } : request
+        )
+      );
+    }
+    return success;
   };
 
   const handleRemoveWashRequest = async (id: string) => {
