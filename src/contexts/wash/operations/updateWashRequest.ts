@@ -65,69 +65,53 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
     }
     
     console.log("Final update data being sent to Supabase:", updateData);
+
+    // Try direct REST API call first as it's more reliable
+    try {
+      console.log("Attempting direct PATCH to Supabase REST API...");
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'  // Use minimal for better performance
+        },
+        body: JSON.stringify(updateData)
+      });
+      
+      console.log("DIRECT API RESPONSE:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+      
+      if (response.ok) {
+        console.log("Direct API update successful!");
+        toast.success("Request updated successfully");
+        return true;
+      } else {
+        console.error("Direct API update failed:", await response.text());
+      }
+    } catch (directError) {
+      console.error("Error with direct API call:", directError);
+    }
     
-    // Log the full request that will be sent to Supabase
-    console.log("SENDING TO SUPABASE:", {
-      method: "PATCH",
-      endpoint: `/rest/v1/wash_requests?id=eq.${id}`,
-      headers: {
-        "Content-Type": "application/json",
-        "Prefer": "return=representation"
-      },
-      body: JSON.stringify(updateData)
-    });
-    
-    // Changed from update() to using upsert() as an alternative approach
-    const { data: updatedData, error } = await supabase
+    // Fall back to supabase client method if direct method fails
+    console.log("Trying Supabase client update method as fallback...");
+    const { error } = await supabase
       .from('wash_requests')
       .update(updateData)
-      .eq('id', id)
-      .select();
+      .eq('id', id);
       
-    // Enhanced debugging for Supabase response
-    console.log("SUPABASE RESPONSE STATUS:", error ? "ERROR" : "SUCCESS");
-    console.log("RESPONSE DATA:", updatedData);
-    console.log("RESPONSE ERROR:", error);
-    
     if (error) {
       console.error("Error updating wash request:", error);
       toast.error("Failed to update wash request");
       return false;
     }
     
-    // Try direct REST API call if the normal method didn't update
-    if (!updatedData || updatedData.length === 0) {
-      console.log("No data returned, trying direct PATCH call...");
-      
-      // Try a direct PATCH request using the REST API
-      const directResponse = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify(updateData)
-      });
-      
-      console.log("DIRECT API RESPONSE:", {
-        status: directResponse.status,
-        statusText: directResponse.statusText
-      });
-      
-      if (!directResponse.ok) {
-        console.error("Direct API call failed:", directResponse.statusText);
-        toast.error("Failed to update wash request");
-        return false;
-      }
-    }
-    
-    // Important update: Consider empty array as success
-    // Supabase returns empty array when operation succeeds but no data is returned
     toast.success("Request updated successfully");
     return true;
-    
   } catch (error) {
     console.error("Error updating wash request:", error);
     toast.error("Failed to update wash request");
@@ -174,34 +158,24 @@ async function acceptJob(
 
     console.log("Sending job acceptance payload to database:", updatePayload);
     
-    // Log the full request that will be sent to Supabase
-    console.log("SENDING JOB ACCEPTANCE TO SUPABASE:", {
-      method: "PATCH",
-      endpoint: `/rest/v1/wash_requests?id=eq.${requestId}`,
-      headers: {
-        "Content-Type": "application/json",
-        "Prefer": "return=representation"
-      },
-      body: JSON.stringify(updatePayload)
-    });
-    
-    // Try direct PATCH request first
+    // Try direct PATCH request first as it's more reliable
     try {
-      console.log("Trying direct PATCH request first...");
+      console.log("Trying direct PATCH request...");
       const directResponse = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests?id=eq.${requestId}`, {
         method: 'PATCH',
         headers: {
           'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
+          'Prefer': 'return=minimal'  // Use minimal for better performance
         },
         body: JSON.stringify(updatePayload)
       });
       
       console.log("DIRECT API RESPONSE:", {
         status: directResponse.status,
-        statusText: directResponse.statusText
+        statusText: directResponse.statusText,
+        ok: directResponse.ok
       });
       
       if (directResponse.ok) {
@@ -209,25 +183,19 @@ async function acceptJob(
         toast.success("Job scheduled successfully!");
         return true;
       } else {
-        console.error("Direct API update failed, falling back to client method");
+        const errorText = await directResponse.text();
+        console.error(`Direct API update failed: Status ${directResponse.status}`, errorText);
       }
     } catch (directError) {
       console.error("Error with direct API call:", directError);
-      console.log("Falling back to client method");
     }
     
     // Fall back to client method
-    const { data, error } = await supabase
+    console.log("Falling back to Supabase client method...");
+    const { error } = await supabase
       .from('wash_requests')
       .update(updatePayload)
-      .eq('id', requestId)
-      .select();
-    
-    // Enhanced debugging for Supabase response
-    console.log("SUPABASE ACCEPTANCE RESPONSE STATUS:", error ? "ERROR" : "SUCCESS");
-    console.log("RESPONSE DATA:", data);
-    console.log("RESPONSE DATA IS ARRAY:", Array.isArray(data));
-    console.log("RESPONSE ERROR:", error);
+      .eq('id', requestId);
     
     if (error) {
       console.error("Error updating job:", error);
@@ -235,8 +203,6 @@ async function acceptJob(
       return false;
     }
     
-    // Consider it a success if there's no error, regardless of data returned
-    // This fixes the issue with Supabase returning empty array on successful update
     toast.success("Job scheduled successfully!");
     return true;
     
