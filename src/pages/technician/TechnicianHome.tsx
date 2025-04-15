@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useWashRequests } from "@/contexts/WashContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { VehicleWashProgressDialog } from "@/components/technician/VehicleWashProgressDialog";
+import { WashRequest } from "@/models/types";
 
 const TechnicianHome = () => {
   const { user } = useAuth();
@@ -19,7 +20,7 @@ const TechnicianHome = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDebugMode, setIsDebugMode] = useState(false);
   const [activeWashId, setActiveWashId] = useState<string | null>(null);
-  const [localStateRequests, setLocalStateRequests] = useState<typeof washRequests>([]);
+  const [localStateRequests, setLocalStateRequests] = useState<WashRequest[]>([]);
   
   // Update local state when washRequests change
   useEffect(() => {
@@ -29,17 +30,17 @@ const TechnicianHome = () => {
   }, [washRequests]);
   
   // Force a refresh of wash requests data when the component mounts
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        await refreshData();
-      } catch (error) {
-        console.error("Error refreshing data:", error);
-      }
-    };
-    
-    loadData();
+  const loadData = useCallback(async () => {
+    try {
+      await refreshData();
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    }
   }, [refreshData]);
+  
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
   
   // Safely filter wash requests (defensive programming)
   const pendingRequests = Array.isArray(localStateRequests) 
@@ -85,12 +86,12 @@ const TechnicianHome = () => {
       if (result) {
         toast.success("Request accepted successfully");
         
+        // Force refresh after a successful update
+        await loadData();
+        
         // Close the dialog after a small delay to show the success message
         setTimeout(() => {
           setSelectedRequestId(null);
-          
-          // Force refresh after a delay to ensure database has been updated
-          setTimeout(() => refreshData(), 500);
         }, 1000);
       } else {
         toast.error("Failed to accept request");
@@ -198,7 +199,7 @@ const TechnicianHome = () => {
                 </pre>
                 <button 
                   className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"
-                  onClick={refreshData}
+                  onClick={loadData}
                 >
                   Force Refresh
                 </button>

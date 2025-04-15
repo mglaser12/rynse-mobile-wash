@@ -1,4 +1,3 @@
-
 import { WashRequest, WashStatus } from "@/models/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -186,16 +185,12 @@ export async function updateWashRequest(
     
     console.log("Final update data being sent to Supabase:", updateData);
     
-    // Add a short delay before updating to ensure any previous operations have completed
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Perform the update with a stronger consistency level
+    // Perform the update
     const { data: updatedData, error } = await supabase
       .from('wash_requests')
       .update(updateData)
       .eq('id', id)
-      .select()
-      .maybeSingle();
+      .select();
     
     if (error) {
       console.error("Error updating wash request:", error);
@@ -205,24 +200,29 @@ export async function updateWashRequest(
     
     console.log("Wash request updated successfully:", updatedData);
     
-    // Verify if we got data back
-    if (!updatedData) {
-      console.warn("Update succeeded but no data was returned");
-      // Fetch the latest data to verify our update was successful
-      const { data: verificationData } = await supabase
-        .from('wash_requests')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
-        
-      console.log("Verification fetch after update:", verificationData);
+    // Explicitly verify the update succeeded
+    const { data: verificationData, error: verificationError } = await supabase
+      .from('wash_requests')
+      .select('*')
+      .eq('id', id)
+      .single();
       
-      if (verificationData && verificationData.status === data.status && 
-          ((data.technician && verificationData.technician_id === data.technician) || !data.technician)) {
-        console.log("Verification confirmed update was successful");
-      } else {
-        console.warn("Verification could not confirm update success");
-      }
+    if (verificationError) {
+      console.error("Error verifying update:", verificationError);
+      return false;
+    }
+    
+    console.log("Verification data after update:", verificationData);
+    
+    // Check if the update was applied correctly
+    if (data.status && verificationData.status !== data.status) {
+      console.error("Status was not updated correctly. Expected:", data.status, "Got:", verificationData.status);
+      return false;
+    }
+    
+    if (data.technician && verificationData.technician_id !== data.technician) {
+      console.error("Technician was not updated correctly. Expected:", data.technician, "Got:", verificationData.technician_id);
+      return false;
     }
     
     toast.success("Wash request updated successfully");

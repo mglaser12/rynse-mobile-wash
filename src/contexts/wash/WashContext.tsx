@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { WashRequest } from "@/models/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -59,6 +58,8 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
           request.id === id ? { ...request, status: "cancelled" } : request
         )
       );
+      // Force refresh data to ensure everything is in sync
+      await refreshData();
     }
     return success;
   };
@@ -66,6 +67,9 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
   // Update a wash request
   const handleUpdateWashRequest = async (id: string, data: Partial<WashRequest>) => {
     console.log(`WashContext: Updating request ${id} with:`, data);
+    
+    // Keep a copy of the current state for potential rollback
+    const previousState = [...washRequests];
     
     // First update local state for better UX
     const updatedLocalState = washRequests.map(request => 
@@ -75,19 +79,26 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
     console.log("Updated local state:", updatedLocalState);
     
     // Then update in database
-    const success = await updateWashRequest(id, data);
-    
-    if (success) {
-      console.log("Update was successful, refreshing data from server");
-      // Force refresh data from server after a short delay to ensure we have the latest state
-      setTimeout(() => refreshData(), 500);
-    } else {
-      console.log("Update failed, reverting to previous state");
-      // If the update failed, revert to the previous state
-      setWashRequests(washRequests);
+    try {
+      const success = await updateWashRequest(id, data);
+      
+      if (success) {
+        console.log("Update was successful, refreshing data from server");
+        // Force refresh data from server to ensure we have the latest state
+        await refreshData();
+        return true;
+      } else {
+        console.log("Update failed, reverting to previous state");
+        // If the update failed, revert to the previous state
+        setWashRequests(previousState);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error in handleUpdateWashRequest:", error);
+      // If there was an error, revert to the previous state
+      setWashRequests(previousState);
+      return false;
     }
-    
-    return success;
   };
 
   const handleRemoveWashRequest = async (id: string) => {
