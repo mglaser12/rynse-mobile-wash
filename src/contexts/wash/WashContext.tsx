@@ -19,7 +19,10 @@ export function useWash() {
 
 export function WashProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const { washRequests: loadedWashRequests, isLoading: isLoadingWashRequests } = useLoadWashRequests(user?.id);
+  const { washRequests: loadedWashRequests, isLoading: isLoadingWashRequests } = useLoadWashRequests(
+    user?.id, 
+    user?.role
+  );
   const [washRequests, setWashRequests] = useState<WashRequest[]>([]);
 
   // Update local state when loaded wash requests change

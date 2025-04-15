@@ -4,7 +4,7 @@ import { WashRequest, WashStatus } from "@/models/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export function useLoadWashRequests(userId: string | undefined) {
+export function useLoadWashRequests(userId: string | undefined, userRole?: string) {
   const [washRequests, setWashRequests] = useState<WashRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -19,12 +19,12 @@ export function useLoadWashRequests(userId: string | undefined) {
           return;
         }
 
-        console.log("Attempting to load wash requests for user:", userId);
+        console.log("Attempting to load wash requests for user:", userId, "with role:", userRole);
 
         // First, check if the user exists in the profiles table
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('id')
+          .select('id, role')
           .eq('id', userId)
           .single();
 
@@ -34,11 +34,23 @@ export function useLoadWashRequests(userId: string | undefined) {
           console.log("User profile found:", profileData);
         }
 
-        // Check for wash requests
-        const { data: requestsData, error: requestsError } = await supabase
+        // Base query
+        let query = supabase
           .from('wash_requests')
-          .select('*, wash_request_vehicles(vehicle_id)')
-          .eq('user_id', userId);
+          .select('*, wash_request_vehicles(vehicle_id)');
+        
+        // For technicians, we show all pending requests and their own assigned requests
+        if (userRole === 'technician' || profileData?.role === 'technician') {
+          query = query.or(`status.eq.pending,technician_id.eq.${userId}`);
+          console.log("Loading requests for technician - showing all pending and assigned requests");
+        } else {
+          // For customers/fleet managers, only show their own requests
+          query = query.eq('user_id', userId);
+          console.log("Loading requests for customer - showing only their own requests");
+        }
+
+        // Execute the query
+        const { data: requestsData, error: requestsError } = await query;
 
         if (requestsError) {
           console.error("Error loading wash requests from Supabase:", requestsError);
@@ -118,7 +130,7 @@ export function useLoadWashRequests(userId: string | undefined) {
     };
 
     loadWashRequests();
-  }, [userId]);
+  }, [userId, userRole]);
 
   return { washRequests, setWashRequests, isLoading };
 }
