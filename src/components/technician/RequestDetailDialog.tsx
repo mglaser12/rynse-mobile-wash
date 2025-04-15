@@ -18,6 +18,7 @@ interface RequestDetailDialogProps {
   onStartWash: (id: string) => void;
   onCompleteWash: (id: string) => void;
   onScheduleJob?: (requestId: string, scheduledDate: Date) => Promise<boolean>;
+  readOnly?: boolean; // Added readOnly prop as optional
 }
 
 export const RequestDetailDialog = ({
@@ -29,7 +30,8 @@ export const RequestDetailDialog = ({
   onAcceptRequest,
   onStartWash,
   onCompleteWash,
-  onScheduleJob
+  onScheduleJob,
+  readOnly = false // Default to false for backward compatibility
 }: RequestDetailDialogProps) => {
   const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
 
@@ -72,7 +74,9 @@ export const RequestDetailDialog = ({
       }}>
         <DialogContent className="w-full max-w-lg">
           <DialogHeader>
-            <DialogTitle>Wash Request Details</DialogTitle>
+            <DialogTitle>
+              {readOnly ? "Job Details" : "Wash Request Details"}
+            </DialogTitle>
             {isMockRequest && (
               <DialogDescription className="text-amber-500">
                 This is demo data shown for offline use
@@ -91,7 +95,7 @@ export const RequestDetailDialog = ({
             )}
             
             {/* Fleet manager notice */}
-            {isFleetManagerJob && selectedRequest.status === "pending" && !isMockRequest && (
+            {isFleetManagerJob && selectedRequest.status === "pending" && !isMockRequest && !readOnly && (
               <Alert>
                 <Building className="h-4 w-4 text-blue-500" />
                 <AlertDescription className="text-sm">
@@ -102,72 +106,77 @@ export const RequestDetailDialog = ({
             
             <WashRequestCard washRequest={selectedRequest} />
             
-            {/* Actions based on status */}
-            {selectedRequest.status === "pending" && (
-              <Button 
-                className="w-full" 
-                onClick={handleAcceptJob}
-                disabled={isUpdating || !userId}
-              >
-                {isUpdating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    {onScheduleJob ? (
+            {/* Only show action buttons if not in readOnly mode */}
+            {!readOnly && (
+              <>
+                {/* Actions based on status */}
+                {selectedRequest.status === "pending" && (
+                  <Button 
+                    className="w-full" 
+                    onClick={handleAcceptJob}
+                    disabled={isUpdating || !userId}
+                  >
+                    {isUpdating ? (
                       <>
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Accept & Schedule Job
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Processing...
                       </>
                     ) : (
-                      isMockRequest ? "Demo Mode - Accept Job" : "Accept Job"
+                      <>
+                        {onScheduleJob ? (
+                          <>
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Accept & Schedule Job
+                          </>
+                        ) : (
+                          isMockRequest ? "Demo Mode - Accept Job" : "Accept Job"
+                        )}
+                      </>
                     )}
-                  </>
+                  </Button>
                 )}
-              </Button>
-            )}
-            
-            {selectedRequest.status === "confirmed" && isAssignedTechnician && (
-              <Button 
-                className="w-full" 
-                onClick={() => onStartWash(selectedRequest.id)}
-                disabled={isUpdating}
-              >
-                {isUpdating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Processing...
-                  </>
-                ) : (
-                  isMockRequest ? "Demo Mode - Start Wash" : "Start Wash"
+                
+                {selectedRequest.status === "confirmed" && isAssignedTechnician && (
+                  <Button 
+                    className="w-full" 
+                    onClick={() => onStartWash(selectedRequest.id)}
+                    disabled={isUpdating}
+                  >
+                    {isUpdating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Processing...
+                      </>
+                    ) : (
+                      isMockRequest ? "Demo Mode - Start Wash" : "Start Wash"
+                    )}
+                  </Button>
                 )}
-              </Button>
-            )}
-            
-            {selectedRequest.status === "in_progress" && isAssignedTechnician && (
-              <Button 
-                className="w-full" 
-                onClick={() => onCompleteWash(selectedRequest.id)}
-                disabled={isUpdating}
-              >
-                {isUpdating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Processing...
-                  </>
-                ) : (
-                  isMockRequest ? "Demo Mode - Complete Wash" : "Complete Wash"
+                
+                {selectedRequest.status === "in_progress" && isAssignedTechnician && (
+                  <Button 
+                    className="w-full" 
+                    onClick={() => onCompleteWash(selectedRequest.id)}
+                    disabled={isUpdating}
+                  >
+                    {isUpdating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Processing...
+                      </>
+                    ) : (
+                      isMockRequest ? "Demo Mode - Complete Wash" : "Complete Wash"
+                    )}
+                  </Button>
                 )}
-              </Button>
+              </>
             )}
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Job Scheduler Dialog */}
-      {selectedRequest && onScheduleJob && (
+      {selectedRequest && onScheduleJob && !readOnly && (
         <JobScheduler
           washRequest={selectedRequest}
           open={isSchedulerOpen}
