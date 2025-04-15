@@ -1,12 +1,11 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { WashRequest } from "@/models/types";
 import { Loader2 } from "lucide-react";
 import { useWashManagement } from "@/hooks/technician/useWashManagement";
 import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
 import { JobCalendarView } from "@/components/technician/JobCalendarView";
-import { VehicleWashProgressDialog } from "@/components/technician/VehicleWashProgressDialog";
+import { VehicleWashProgressDialog } from "@/components/technician/wash-progress/VehicleWashProgressDialog";
 
 const TechnicianJobsPage = () => {
   const { 
@@ -77,7 +76,7 @@ const TechnicianJobsPage = () => {
         )}
       </div>
 
-      {/* Request Detail Dialog with Scheduling */}
+      {/* Request Detail Dialog */}
       <RequestDetailDialog
         open={!!selectedRequestId}
         onOpenChange={(open) => !open && setSelectedRequestId(null)}

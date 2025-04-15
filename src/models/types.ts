@@ -1,3 +1,4 @@
+
 // Add the UserRole type to the existing types
 export type UserRole = "fleet_manager" | "technician" | "admin";
 
@@ -40,6 +41,14 @@ export type WashRequest = {
   updatedAt: Date;
   organizationId?: string; // Organization ID field
   vehicleWashStatuses?: VehicleWashStatus[]; // Added reference to vehicle wash statuses
+  location?: { // Add location property
+    name: string;
+    address?: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
+  };
 };
 
 // New type to track the wash status for each vehicle
