@@ -38,13 +38,13 @@ const TechnicianHistoryPage = () => {
     <AppLayout>
       <div className="car-wash-container animate-fade-in p-4">
         <div className="flex items-center gap-2 mb-6">
-          <FileText className="h-6 w-6 text-brand-primary" />
+          <FileText className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold">Job History</h1>
         </div>
         
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
           <JobHistory 
