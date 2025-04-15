@@ -19,6 +19,13 @@ export function useLoadLocations() {
         if (error) {
           console.error("Error loading locations from Supabase:", error);
           toast.error("Failed to load locations");
+          setLocations([]);
+          return;
+        }
+
+        if (!data || !Array.isArray(data)) {
+          console.error("Unexpected data format from Supabase:", data);
+          setLocations([]);
           return;
         }
 
@@ -40,6 +47,7 @@ export function useLoadLocations() {
       } catch (error) {
         console.error("Error in loadLocations:", error);
         toast.error("Failed to load locations");
+        setLocations([]);
       } finally {
         setIsLoading(false);
       }
@@ -48,5 +56,5 @@ export function useLoadLocations() {
     loadLocations();
   }, []);
 
-  return { locations, isLoading: isLoading };
+  return { locations, isLoading };
 }

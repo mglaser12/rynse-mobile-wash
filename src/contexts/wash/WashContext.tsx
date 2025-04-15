@@ -27,13 +27,13 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
 
   // Update local state when loaded wash requests change
   useEffect(() => {
-    setWashRequests(loadedWashRequests);
+    setWashRequests(loadedWashRequests || []);
   }, [loadedWashRequests]);
 
   // Update local state when loaded locations change
   useEffect(() => {
-    // Ensure locations is always an array
-    setLocations(loadedLocations || []);
+    // Always ensure locations is a valid array
+    setLocations(Array.isArray(loadedLocations) ? loadedLocations : []);
   }, [loadedLocations]);
 
   // Create a new wash request

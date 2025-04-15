@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { WashLocation } from "@/models/types";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
@@ -16,9 +16,12 @@ interface LocationSelectorProps {
 
 export function LocationSelector({ locations, selectedLocation, onSelectLocation }: LocationSelectorProps) {
   const [open, setOpen] = useState(false);
-
-  // Make sure locations is always an array, even if it's undefined
-  const safeLocations = Array.isArray(locations) ? locations : [];
+  const [safeLocations, setSafeLocations] = useState<WashLocation[]>([]);
+  
+  // Ensure locations is always an array with a useEffect to properly handle async data
+  useEffect(() => {
+    setSafeLocations(Array.isArray(locations) ? locations : []);
+  }, [locations]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -37,33 +40,35 @@ export function LocationSelector({ locations, selectedLocation, onSelectLocation
         <Command>
           <CommandInput placeholder="Search locations..." />
           <CommandEmpty>No location found.</CommandEmpty>
-          <ScrollArea className="max-h-[300px]">
-            <CommandGroup>
-              {safeLocations.map((location) => (
-                <CommandItem
-                  key={location.id}
-                  value={location.name}
-                  onSelect={() => {
-                    onSelectLocation(location);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedLocation?.id === location.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  <div>
-                    <div>{location.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {location.address}, {location.city}, {location.state} {location.zipCode}
+          {safeLocations.length > 0 && (
+            <ScrollArea className="max-h-[300px]">
+              <CommandGroup>
+                {safeLocations.map((location) => (
+                  <CommandItem
+                    key={location.id}
+                    value={location.name}
+                    onSelect={() => {
+                      onSelectLocation(location);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedLocation?.id === location.id ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    <div>
+                      <div>{location.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {location.address}, {location.city}, {location.state} {location.zipCode}
+                      </div>
                     </div>
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </ScrollArea>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </ScrollArea>
+          )}
         </Command>
       </PopoverContent>
     </Popover>
