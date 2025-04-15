@@ -1,60 +1,54 @@
 
-import React, { createContext, useContext } from "react";
-import { useAuth } from "../AuthContext";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { WashContextType } from "./types";
 import { useLoadWashRequests } from "./useLoadWashRequests";
 import { useLoadLocations } from "./useLoadLocations";
-import { createWashRequest, updateWashRequest, removeWashRequest } from "./washOperations";
-import { WashContextType, CreateWashRequestData } from "./types";
-import { WashRequest } from "@/models/types";
+import { createWashRequest as createWashOp, updateWashRequest as updateWashOp, removeWashRequest as removeWashOp, cancelWashRequest as cancelWashOp } from "./washOperations";
+import { WashLocation, WashRequest } from "@/models/types";
 
 const WashContext = createContext<WashContextType>({} as WashContextType);
 
-export function useWash() {
-  return useContext(WashContext);
-}
-
-// Create an alias for backward compatibility with existing components
-export const useWashRequests = useWash;
+export const useWashRequests = () => useContext(WashContext);
+export const useWash = useWashRequests; // Alias for backward compatibility
 
 export function WashProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-  const { washRequests, setWashRequests, isLoading: requestsLoading } = useLoadWashRequests(user?.id);
-  const { locations, isLoading: locationsLoading } = useLoadLocations();
-  
-  const isLoading = requestsLoading || locationsLoading;
+  const { washRequests, isLoading: isLoadingRequests } = useLoadWashRequests();
+  const { locations, isLoading: isLoadingLocations } = useLoadLocations();
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Create a new wash request
-  const handleCreateWashRequest = async (requestData: CreateWashRequestData) => {
-    return createWashRequest(user?.id, requestData, setWashRequests);
+  // Update loading state based on both loading states
+  useEffect(() => {
+    setIsLoading(isLoadingRequests || isLoadingLocations);
+  }, [isLoadingRequests, isLoadingLocations]);
+
+  const createWashRequest = async (requestData: any) => {
+    const newRequest = await createWashOp(requestData);
+    return newRequest;
   };
 
-  // Update an existing wash request
-  const handleUpdateWashRequest = async (id: string, data: Partial<WashRequest>) => {
-    return updateWashRequest(id, data, setWashRequests);
+  const updateWashRequest = async (id: string, data: Partial<WashRequest>) => {
+    return await updateWashOp(id, data);
   };
 
-  // Cancel a wash request (convenience function)
-  const cancelWashRequest = async (id: string) => {
-    return handleUpdateWashRequest(id, { status: "cancelled" });
+  const removeWashRequest = async (id: string) => {
+    await removeWashOp(id);
   };
 
-  // Remove a wash request
-  const handleRemoveWashRequest = async (id: string) => {
-    return removeWashRequest(id, setWashRequests);
-  };
-
-  // Get a wash request by ID
   const getWashRequestById = (id: string) => {
-    return washRequests.find(washRequest => washRequest.id === id);
+    return washRequests.find(request => request.id === id);
   };
 
-  const value = {
+  const cancelWashRequest = async (id: string) => {
+    return await cancelWashOp(id);
+  };
+
+  const value: WashContextType = {
     washRequests,
     locations,
     isLoading,
-    createWashRequest: handleCreateWashRequest,
-    updateWashRequest: handleUpdateWashRequest,
-    removeWashRequest: handleRemoveWashRequest,
+    createWashRequest,
+    updateWashRequest,
+    removeWashRequest,
     getWashRequestById,
     cancelWashRequest,
   };
@@ -65,3 +59,5 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
     </WashContext.Provider>
   );
 }
+
+export type { WashContextType } from "./types";
