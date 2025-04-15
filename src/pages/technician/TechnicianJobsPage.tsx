@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { useWashManagement } from "@/hooks/technician/useWashManagement";
 import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
 import { JobCalendarView } from "@/components/technician/JobCalendarView";
+import { VehicleWashProgressDialog } from "@/components/technician/VehicleWashProgressDialog";
 
 const TechnicianJobsPage = () => {
   const { 
@@ -15,10 +16,14 @@ const TechnicianJobsPage = () => {
     isUpdating,
     selectedRequestId,
     setSelectedRequestId,
+    activeWashId,
+    setActiveWashId,
     handleAcceptRequest,
     handleScheduleJob,
     handleStartWash,
+    handleReopenWash,
     handleCompleteWash,
+    handleWashProgressComplete,
     loadData
   } = useWashManagement();
 
@@ -27,9 +32,18 @@ const TechnicianJobsPage = () => {
     ? washRequests.filter(req => req.status === "confirmed" && req.technician === user?.id)
     : [];
 
+  const inProgressRequests = Array.isArray(washRequests)
+    ? washRequests.filter(req => req.status === "in_progress" && req.technician === user?.id)
+    : [];
+
   // Get selected request with proper null checking
   const selectedRequest = selectedRequestId && Array.isArray(washRequests)
     ? washRequests.find(req => req.id === selectedRequestId) 
+    : null;
+
+  // Get active wash request for the progress dialog
+  const activeWashRequest = activeWashId && Array.isArray(washRequests)
+    ? washRequests.find(req => req.id === activeWashId)
     : null;
 
   return (
@@ -55,8 +69,10 @@ const TechnicianJobsPage = () => {
           </div>
         ) : (
           <JobCalendarView 
-            assignedRequests={assignedRequests} 
-            onSelectJob={setSelectedRequestId} 
+            assignedRequests={assignedRequests}
+            inProgressRequests={inProgressRequests}
+            onSelectJob={setSelectedRequestId}
+            onReopenWash={handleReopenWash}
           />
         )}
       </div>
@@ -73,6 +89,18 @@ const TechnicianJobsPage = () => {
         onCompleteWash={handleCompleteWash}
         onScheduleJob={handleScheduleJob}
       />
+
+      {/* Wash Progress Dialog */}
+      {activeWashRequest && (
+        <VehicleWashProgressDialog
+          washRequest={activeWashRequest}
+          open={!!activeWashId}
+          onOpenChange={(open) => {
+            if (!open) setActiveWashId(null);
+          }}
+          onComplete={handleWashProgressComplete}
+        />
+      )}
     </AppLayout>
   );
 };

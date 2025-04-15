@@ -154,6 +154,12 @@ export function useWashManagement() {
     }
   };
   
+  // Handle reopening an in-progress wash
+  const handleReopenWash = useCallback((requestId: string) => {
+    console.log(`Reopening wash for request ${requestId}`);
+    setActiveWashId(requestId);
+  }, []);
+  
   // Handle completing a wash
   const handleCompleteWash = async (requestId: string) => {
     setIsUpdating(true);
@@ -209,6 +215,7 @@ export function useWashManagement() {
     handleAcceptRequest,
     handleScheduleJob,
     handleStartWash,
+    handleReopenWash,
     handleCompleteWash,
     handleWashProgressComplete,
     handleViewJobDetails

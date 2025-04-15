@@ -7,6 +7,7 @@ import { TechnicianHeader } from "@/components/technician/TechnicianHeader";
 import { TodaySchedule } from "@/components/technician/TodaySchedule";
 import { JobRequestsTabs } from "@/components/technician/JobRequestsTabs";
 import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
+import { Button } from "@/components/ui/button";
 import { VehicleWashProgressDialog } from "@/components/technician/VehicleWashProgressDialog";
 import { DebugPanel } from "@/components/technician/DebugPanel";
 import { useWashManagement } from "@/hooks/technician/useWashManagement";
@@ -23,8 +24,8 @@ const TechnicianHome = () => {
     setActiveWashId,
     loadData,
     handleAcceptRequest,
-    handleScheduleJob,
     handleStartWash,
+    handleReopenWash,
     handleCompleteWash,
     handleWashProgressComplete
   } = useWashManagement();
@@ -56,6 +57,11 @@ const TechnicianHome = () => {
   const activeWashRequest = activeWashId && Array.isArray(washRequests)
     ? washRequests.find(req => req.id === activeWashId)
     : null;
+  
+  // Toggle debug mode
+  const toggleDebugMode = () => {
+    setIsDebugMode(!isDebugMode);
+  };
 
   return (
     <AppLayout>
@@ -82,23 +88,33 @@ const TechnicianHome = () => {
               />
             )}
             
-            {/* Today's schedule */}
+            {/* Main content */}
             <TodaySchedule
               inProgressRequests={inProgressRequests}
               assignedRequests={assignedRequests}
               onRequestClick={setSelectedRequestId}
               onStartWash={handleStartWash}
+              onReopenWash={handleReopenWash}
               onCompleteWash={handleCompleteWash}
             />
             
-            {/* Job requests section */}
-            <div className="mt-6">
-              <JobRequestsTabs
-                pendingRequests={pendingRequests}
-                assignedRequests={assignedRequests}
-                onRequestClick={setSelectedRequestId}
-                onStartWash={handleStartWash}
-              />
+            <JobRequestsTabs
+              pendingRequests={pendingRequests}
+              assignedRequests={assignedRequests}
+              onRequestClick={setSelectedRequestId}
+              onStartWash={handleStartWash}
+            />
+            
+            {/* Debug toggle button */}
+            <div className="mt-8 flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleDebugMode}
+                className="text-xs"
+              >
+                {isDebugMode ? "Hide Debug Info" : "Show Debug Info"}
+              </Button>
             </div>
           </>
         )}
@@ -114,7 +130,6 @@ const TechnicianHome = () => {
         onAcceptRequest={handleAcceptRequest}
         onStartWash={handleStartWash}
         onCompleteWash={handleCompleteWash}
-        onScheduleJob={handleScheduleJob}
       />
       
       {/* Wash Progress Dialog */}
