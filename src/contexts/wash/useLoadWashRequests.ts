@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { WashRequest, WashStatus } from "@/models/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -8,21 +8,35 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
   const [washRequests, setWashRequests] = useState<WashRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
+  const isLoadingRef = useRef(false);
 
   // Function to force refresh data
-  const refreshData = () => {
+  const refreshData = useCallback(async () => {
+    if (isLoadingRef.current) {
+      console.log("Already loading data, skipping refresh");
+      return;
+    }
+    
     console.log("Manually refreshing wash request data");
     setLastRefreshed(new Date());
-  };
+  }, []);
 
   useEffect(() => {
     const loadWashRequests = async () => {
+      if (isLoadingRef.current) {
+        console.log("Already loading wash requests, skipping duplicate load");
+        return;
+      }
+      
+      isLoadingRef.current = true;
       setIsLoading(true);
+      
       try {
         if (!userId) {
           console.log("No user ID provided to useLoadWashRequests");
           setWashRequests([]);
           setIsLoading(false);
+          isLoadingRef.current = false;
           return;
         }
 
@@ -52,6 +66,7 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
             toast.error("Failed to load wash requests");
             setWashRequests([]);
             setIsLoading(false);
+            isLoadingRef.current = false;
             return;
           }
           
@@ -77,6 +92,7 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
             toast.error("Failed to load wash requests");
             setWashRequests([]);
             setIsLoading(false);
+            isLoadingRef.current = false;
             return;
           }
           
@@ -89,6 +105,7 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
           console.log("No wash requests found for user", userId);
           setWashRequests([]);
           setIsLoading(false);
+          isLoadingRef.current = false;
           return;
         }
 
@@ -132,6 +149,7 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
         setWashRequests([]);
       } finally {
         setIsLoading(false);
+        isLoadingRef.current = false;
       }
     };
 

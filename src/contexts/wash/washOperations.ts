@@ -1,3 +1,4 @@
+
 import { WashRequest, WashStatus } from "@/models/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

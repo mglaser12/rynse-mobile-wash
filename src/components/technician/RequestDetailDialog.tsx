@@ -28,7 +28,7 @@ export const RequestDetailDialog = ({
   onCompleteWash
 }: RequestDetailDialogProps) => {
   if (!selectedRequest) return null;
-
+  
   // Log information for debugging
   console.log("RequestDetailDialog - Current request status:", selectedRequest.status);
   console.log("RequestDetailDialog - Current technician:", selectedRequest.technician);
@@ -91,13 +91,6 @@ export const RequestDetailDialog = ({
               Complete Wash
             </Button>
           )}
-
-          {/* Debug info */}
-          <div className="mt-4 text-xs text-muted-foreground">
-            <p>Status: {selectedRequest.status}</p>
-            <p>Technician: {selectedRequest.technician || 'None'}</p>
-            <p>Assigned to you: {isAssignedTechnician ? 'Yes' : 'No'}</p>
-          </div>
         </div>
       </DialogContent>
     </Dialog>

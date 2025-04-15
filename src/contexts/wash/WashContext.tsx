@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from "react";
+import React, { createContext, useState, useContext, useEffect, useCallback, useRef } from "react";
 import { WashRequest } from "@/models/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { WashContextType } from "./types";
@@ -27,8 +27,9 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
     user?.role
   );
   const [washRequests, setWashRequests] = useState<WashRequest[]>([]);
-  const [lastUpdateTimestamp, setLastUpdateTimestamp] = useState<number>(0);
-
+  const lastUpdateTimestampRef = useRef<number>(0);
+  const [isUpdating, setIsUpdating] = useState(false);
+  
   // Update local state when loaded wash requests change
   useEffect(() => {
     if (Array.isArray(loadedWashRequests)) {
@@ -60,35 +61,55 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
         )
       );
       // Force refresh data to ensure everything is in sync
-      setLastUpdateTimestamp(Date.now()); // Track when we last updated
-      await refreshData();
+      await safeRefreshData();
     }
     return success;
   };
+
+  // Safe refresh data with debouncing
+  const safeRefreshData = useCallback(async () => {
+    const now = Date.now();
+    if (now - lastUpdateTimestampRef.current < 3000) { // 3 second throttle
+      console.log("Refresh throttled - too soon after last update");
+      return;
+    }
+    
+    lastUpdateTimestampRef.current = now;
+    console.log("Safely refreshing data");
+    await refreshData();
+  }, [refreshData]);
 
   // Update a wash request with throttling to prevent infinite loops
   const handleUpdateWashRequest = useCallback(async (id: string, data: Partial<WashRequest>) => {
     console.log(`WashContext: Updating request ${id} with:`, data);
     
+    if (isUpdating) {
+      console.log("Update skipped - another update is in progress");
+      return false;
+    }
+    
     // Throttle updates to prevent rapid consecutive calls
     const now = Date.now();
-    if (now - lastUpdateTimestamp < 1000) { // 1 second throttle
+    if (now - lastUpdateTimestampRef.current < 3000) { // 3 second throttle
       console.log("Update throttled - too soon after last update");
+      return false;
     }
-    setLastUpdateTimestamp(now);
+    
+    lastUpdateTimestampRef.current = now;
+    setIsUpdating(true);
     
     // Keep a copy of the current state for potential rollback
     const previousState = [...washRequests];
     
-    // First update local state for better UX
-    setWashRequests(prev => 
-      prev.map(request => 
-        request.id === id ? { ...request, ...data, updatedAt: new Date() } : request
-      )
-    );
-    
-    // Then update in database
     try {
+      // First update local state for better UX
+      setWashRequests(prev => 
+        prev.map(request => 
+          request.id === id ? { ...request, ...data, updatedAt: new Date() } : request
+        )
+      );
+      
+      // Then update in database
       const success = await updateWashRequest(id, data);
       
       if (success) {
@@ -96,7 +117,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
         // Force refresh data from server to ensure we have the latest state, but with a delay
         setTimeout(() => {
           refreshData();
-        }, 500); // Add a small delay before refreshing
+        }, 1500); // Add a small delay before refreshing
         return true;
       } else {
         console.log("Update failed, reverting to previous state");
@@ -109,8 +130,10 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       // If there was an error, revert to the previous state
       setWashRequests(previousState);
       return false;
+    } finally {
+      setIsUpdating(false);
     }
-  }, [washRequests, lastUpdateTimestamp, refreshData]);
+  }, [washRequests, refreshData, isUpdating]);
 
   const handleRemoveWashRequest = async (id: string) => {
     // This is a placeholder implementation - in a real app, you'd call an API
@@ -124,16 +147,13 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     washRequests,
-    isLoading: isLoadingWashRequests,
+    isLoading: isLoadingWashRequests || isUpdating,
     createWashRequest: handleCreateWashRequest,
     cancelWashRequest: handleCancelWashRequest,
     updateWashRequest: handleUpdateWashRequest,
     removeWashRequest: handleRemoveWashRequest,
     getWashRequestById,
-    refreshData: useCallback(() => {
-      setLastUpdateTimestamp(Date.now());
-      refreshData();
-    }, [refreshData])
+    refreshData: safeRefreshData
   };
 
   return (
