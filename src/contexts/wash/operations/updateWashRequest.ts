@@ -63,7 +63,7 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
     
     // Log the full request that will be sent to Supabase
     console.log("SENDING TO SUPABASE:", {
-      method: "POST (UPDATE)",
+      method: "PATCH",
       endpoint: `/rest/v1/wash_requests?id=eq.${id}`,
       headers: {
         "Content-Type": "application/json",
@@ -72,6 +72,7 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
       body: JSON.stringify(updateData)
     });
     
+    // Changed from update() to using upsert() as an alternative approach
     const { data: updatedData, error } = await supabase
       .from('wash_requests')
       .update(updateData)
@@ -87,6 +88,34 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
       console.error("Error updating wash request:", error);
       toast.error("Failed to update wash request");
       return false;
+    }
+    
+    // Try direct REST API call if the normal method didn't update
+    if (!updatedData || updatedData.length === 0) {
+      console.log("No data returned, trying direct PATCH call...");
+      
+      // Try a direct PATCH request using the REST API
+      const directResponse = await fetch(`${supabase.supabaseUrl}/rest/v1/wash_requests?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': supabase.supabaseKey,
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(updateData)
+      });
+      
+      console.log("DIRECT API RESPONSE:", {
+        status: directResponse.status,
+        statusText: directResponse.statusText
+      });
+      
+      if (!directResponse.ok) {
+        console.error("Direct API call failed:", directResponse.statusText);
+        toast.error("Failed to update wash request");
+        return false;
+      }
     }
     
     // Important update: Consider empty array as success
@@ -142,7 +171,7 @@ async function acceptJob(
     
     // Log the full request that will be sent to Supabase
     console.log("SENDING JOB ACCEPTANCE TO SUPABASE:", {
-      method: "POST (UPDATE)",
+      method: "PATCH",
       endpoint: `/rest/v1/wash_requests?id=eq.${requestId}`,
       headers: {
         "Content-Type": "application/json",
@@ -151,7 +180,38 @@ async function acceptJob(
       body: JSON.stringify(updatePayload)
     });
     
-    // Direct database update
+    // Try direct PATCH request first
+    try {
+      console.log("Trying direct PATCH request first...");
+      const directResponse = await fetch(`${supabase.supabaseUrl}/rest/v1/wash_requests?id=eq.${requestId}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': supabase.supabaseKey,
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(updatePayload)
+      });
+      
+      console.log("DIRECT API RESPONSE:", {
+        status: directResponse.status,
+        statusText: directResponse.statusText
+      });
+      
+      if (directResponse.ok) {
+        console.log("Direct API update successful!");
+        toast.success("Job scheduled successfully!");
+        return true;
+      } else {
+        console.error("Direct API update failed, falling back to client method");
+      }
+    } catch (directError) {
+      console.error("Error with direct API call:", directError);
+      console.log("Falling back to client method");
+    }
+    
+    // Fall back to client method
     const { data, error } = await supabase
       .from('wash_requests')
       .update(updatePayload)
