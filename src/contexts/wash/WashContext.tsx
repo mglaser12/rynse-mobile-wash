@@ -31,12 +31,15 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
   const [washRequests, setWashRequests] = useState<WashRequest[]>([]);
   const lastUpdateTimestampRef = useRef<number>(0);
   const [isUpdating, setIsUpdating] = useState(false);
+  const forceRefreshRef = useRef<boolean>(false);
   
   // Update local state when loaded wash requests change
   useEffect(() => {
     if (Array.isArray(loadedWashRequests)) {
       console.log("Updating wash requests from loaded data:", loadedWashRequests);
       setWashRequests(loadedWashRequests);
+      // Reset force refresh flag when data is actually loaded
+      forceRefreshRef.current = false;
     } else {
       // If we get undefined or null, keep existing state
       console.log("Received non-array wash requests data:", loadedWashRequests);
@@ -71,7 +74,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
           )
         );
         // Force refresh data to ensure everything is in sync
-        await safeRefreshData();
+        await safeRefreshData(true);
       }
       return success;
     } catch (error) {
@@ -81,22 +84,46 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Safe refresh data with throttling
-  const safeRefreshData = useCallback(async () => {
+  const safeRefreshData = useCallback(async (force: boolean = false) => {
     const now = Date.now();
-    // Throttle refresh calls to prevent flooding
-    if (now - lastUpdateTimestampRef.current < 3000) { // 3 second throttle
-      console.log("Refresh throttled - too soon after last update");
-      return;
+    
+    // Always allow forced refreshes
+    if (!force) {
+      // Throttle refresh calls to prevent flooding
+      if (now - lastUpdateTimestampRef.current < 3000) { // 3 second throttle
+        console.log("Refresh throttled - too soon after last update");
+        
+        // Mark that we need a refresh as soon as throttling allows
+        forceRefreshRef.current = true;
+        return;
+      }
     }
     
     lastUpdateTimestampRef.current = now;
-    console.log("Safely refreshing data");
+    console.log(force ? "Forcing data refresh" : "Safely refreshing data");
+    
     try {
       await refreshData();
     } catch (error) {
       console.error("Error refreshing data:", error);
     }
   }, [refreshData]);
+  
+  // Set up a timer to handle deferred refreshes due to throttling
+  useEffect(() => {
+    const checkPendingRefresh = () => {
+      if (forceRefreshRef.current) {
+        const now = Date.now();
+        if (now - lastUpdateTimestampRef.current >= 3000) {
+          console.log("Executing pending refresh");
+          safeRefreshData(true);
+        }
+      }
+    };
+    
+    const timer = setInterval(checkPendingRefresh, 1000);
+    return () => clearInterval(timer);
+  }, [safeRefreshData]);
 
   // Update a wash request with improved throttling and special handling for job acceptance
   const handleUpdateWashRequest = useCallback(async (id: string, data: Partial<WashRequest>) => {
@@ -145,11 +172,12 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
         
         // For job acceptance, do a refresh to ensure everything is in sync
         if (isJobAcceptance) {
+          // Immediate refresh for job acceptance
           setTimeout(() => {
-            refreshData().catch(err => {
+            safeRefreshData(true).catch(err => {
               console.error("Error refreshing data after job acceptance:", err);
             });
-          }, 1000);
+          }, 500);  // Reduced delay for better UX
         }
         
         return true;
@@ -171,13 +199,13 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       // Skip this for job acceptance since we already refresh above
       if (!isJobAcceptance) {
         setTimeout(() => {
-          refreshData().catch(err => {
+          safeRefreshData().catch(err => {
             console.error("Error refreshing data after update:", err);
           });
         }, 2000);
       }
     }
-  }, [washRequests, refreshData, isUpdating]);
+  }, [washRequests, safeRefreshData, isUpdating]);
 
   const handleRemoveWashRequest = async (id: string) => {
     // This is a placeholder implementation - in a real app, you'd call an API
