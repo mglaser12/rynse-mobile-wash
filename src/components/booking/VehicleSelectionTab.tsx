@@ -1,62 +1,63 @@
 
-import React, { useState } from "react";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { VehicleList } from "../vehicles/VehicleList";
+import React from "react";
+import { Check, Car } from "lucide-react";
 import { Vehicle } from "@/models/types";
 
 interface VehicleSelectionTabProps {
-  vehicles: Vehicle[];
-  selectedVehicleIds: string[];
-  onSelectVehicle: (vehicleId: string) => void;
-  onAddVehicle: () => void;
+  vehicle: Vehicle;
+  isSelected: boolean;
+  onSelect: () => void;
 }
 
 export function VehicleSelectionTab({ 
-  vehicles, 
-  selectedVehicleIds, 
-  onSelectVehicle, 
-  onAddVehicle 
+  vehicle, 
+  isSelected, 
+  onSelect 
 }: VehicleSelectionTabProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  
-  const filteredVehicles = searchQuery.trim() === "" 
-    ? vehicles 
-    : vehicles.filter(vehicle => {
-        const searchLower = searchQuery.toLowerCase();
-        return (
-          vehicle.make.toLowerCase().includes(searchLower) ||
-          vehicle.model.toLowerCase().includes(searchLower) ||
-          vehicle.licensePlate?.toLowerCase().includes(searchLower) ||
-          vehicle.year.toString().includes(searchLower)
-        );
-      });
+  const vehicleInfo = [
+    { label: "Make", value: vehicle.make },
+    { label: "Model", value: vehicle.model },
+    { label: "Year", value: vehicle.year },
+    { label: "License Plate", value: vehicle.licensePlate || "N/A" }
+  ];
 
   return (
-    <>
-      <div className="mb-4 relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="Search vehicles..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
-        />
+    <div
+      className={`p-4 border rounded-md cursor-pointer transition-colors ${
+        isSelected
+          ? "border-primary bg-primary/5"
+          : "border-border hover:border-primary/50"
+      }`}
+      onClick={onSelect}
+    >
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-3">
+          {vehicle.image ? (
+            <img
+              src={vehicle.image}
+              alt={`${vehicle.make} ${vehicle.model}`}
+              className="w-12 h-12 rounded-md object-cover"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center">
+              <Car className="h-6 w-6 text-muted-foreground" />
+            </div>
+          )}
+          <div>
+            <h4 className="font-medium">
+              {vehicle.make} {vehicle.model}
+            </h4>
+            <p className="text-sm text-muted-foreground">
+              {vehicle.year} • {vehicle.color}
+            </p>
+          </div>
+        </div>
+        {isSelected && (
+          <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+            <Check className="h-3 w-3 text-primary-foreground" />
+          </div>
+        )}
       </div>
-      {filteredVehicles.length > 0 ? (
-        <VehicleList 
-          vehicles={filteredVehicles}
-          onSelectVehicle={onSelectVehicle}
-          onAddVehicle={onAddVehicle}
-          selectedVehicleIds={selectedVehicleIds}
-          selectionMode={true}
-        />
-      ) : (
-        <p className="text-center py-4 text-muted-foreground">
-          No vehicles match your search
-        </p>
-      )}
-    </>
+    </div>
   );
 }
