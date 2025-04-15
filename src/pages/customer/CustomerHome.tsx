@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,14 +25,17 @@ const CustomerHome = () => {
     <AppLayout>
       <header className="bg-white p-4 border-b sticky top-0 z-10">
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-bold">ABC Denver</h1>
-            <p className="text-sm text-muted-foreground">Welcome, {user?.name}</p>
+          <div className="flex items-center">
+            <img 
+              src="/lovable-uploads/3d6deccc-d4a2-4bfb-9acc-18c6e46f5b73.png" 
+              alt="Rynse Logo" 
+              className="h-8 mr-3" 
+            />
+            <div>
+              <h1 className="text-xl font-bold">ABC Denver</h1>
+              <p className="text-sm text-muted-foreground">Welcome, {user?.name}</p>
+            </div>
           </div>
-          <Button onClick={() => setShowNewRequestDialog(true)}>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Schedule a Wash
-          </Button>
         </div>
       </header>
       
@@ -106,30 +110,6 @@ const CustomerHome = () => {
             )}
           </TabsContent>
         </Tabs>
-        
-        <Separator className="my-6" />
-        
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <Button 
-              variant="outline" 
-              className="h-auto py-4 flex flex-col"
-              onClick={() => setShowNewRequestDialog(true)}
-            >
-              <span className="text-lg">+</span>
-              <span className="text-sm">Schedule a Wash</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-auto py-4 flex flex-col"
-              onClick={() => {}}
-            >
-              <Car className="h-5 w-5 mb-1" />
-              <span className="text-sm">My Vehicles</span>
-            </Button>
-          </div>
-        </div>
       </div>
       
       <Dialog open={showNewRequestDialog} onOpenChange={setShowNewRequestDialog}>
