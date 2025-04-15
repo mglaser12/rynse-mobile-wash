@@ -73,7 +73,7 @@ export const JobCalendarView = ({ assignedRequests, onSelectJob }: JobCalendarVi
                 components={{
                   DayContent: (props) => (
                     <div className="relative w-full h-full">
-                      {props.children}
+                      {props.day}
                       {renderJobsForDay(props.date)}
                     </div>
                   ),
