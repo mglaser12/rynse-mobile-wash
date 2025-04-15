@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { WashLocation, WashRequest } from "@/models/types";
-import { useAuth } from "../AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { WashContextType } from "./types";
 import { useLoadWashRequests } from "./useLoadWashRequests";
 import { useLoadLocations } from "./useLoadLocations";
@@ -10,6 +10,11 @@ import { createWashRequest, cancelWashRequest } from "./washOperations";
 const WashContext = createContext<WashContextType>({} as WashContextType);
 
 export function useWashRequests() {
+  return useContext(WashContext);
+}
+
+// Add a useWash alias for backward compatibility
+export function useWash() {
   return useContext(WashContext);
 }
 
@@ -48,12 +53,32 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
     return success;
   };
 
+  // Implement missing methods required by WashContextType
+  const handleUpdateWashRequest = async (id: string, data: Partial<WashRequest>) => {
+    // This is a placeholder implementation - in a real app, you'd call an API
+    console.log("Update wash request", id, data);
+    return true;
+  };
+
+  const handleRemoveWashRequest = async (id: string) => {
+    // This is a placeholder implementation - in a real app, you'd call an API
+    console.log("Remove wash request", id);
+    setWashRequests(prev => prev.filter(request => request.id !== id));
+  };
+
+  const getWashRequestById = (id: string) => {
+    return washRequests.find(request => request.id === id);
+  };
+
   const value = {
     washRequests,
     locations,
     isLoading: isLoadingWashRequests || isLoadingLocations,
     createWashRequest: handleCreateWashRequest,
-    cancelWashRequest: handleCancelWashRequest
+    cancelWashRequest: handleCancelWashRequest,
+    updateWashRequest: handleUpdateWashRequest,
+    removeWashRequest: handleRemoveWashRequest,
+    getWashRequestById
   };
 
   return (

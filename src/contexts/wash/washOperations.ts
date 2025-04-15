@@ -1,5 +1,5 @@
 
-import { WashRequest, WashLocation } from "@/models/types";
+import { WashRequest, WashLocation, WashStatus } from "@/models/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from 'uuid';
@@ -83,7 +83,7 @@ export async function createWashRequest(
         start: new Date(data.preferred_date_start),
         end: data.preferred_date_end ? new Date(data.preferred_date_end) : undefined
       },
-      status: data.status,
+      status: data.status as WashStatus,
       price: data.price,
       notes: data.notes || undefined,
       createdAt: new Date(data.created_at),
