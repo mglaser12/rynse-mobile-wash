@@ -31,7 +31,7 @@ export function DemoVehicleButton({ isVisible }: DemoVehicleButtonProps) {
           type: "Heavy Duty",
           color: "Yellow",
           licensePlate: "HD-1234",
-          image: "https://images.unsplash.com/photo-1597245623587-b4d0afe3d1bf?q=80&w=1000&auto=format&fit=crop"
+          image: "https://media.istockphoto.com/id/472090019/photo/bulldozer.jpg?s=612x612&w=0&k=20&c=qGhecq79TvLW3gSJbVm_kLZ8Z-qDYDvKlXDY-dDlEIg="
         },
         {
           make: "Komatsu",
@@ -40,7 +40,7 @@ export function DemoVehicleButton({ isVisible }: DemoVehicleButtonProps) {
           type: "Heavy Duty",
           color: "Orange",
           licensePlate: "HD-5678",
-          image: "https://images.unsplash.com/photo-1579951417567-9f20adfa2ce1?q=80&w=1000&auto=format&fit=crop"
+          image: "https://media.istockphoto.com/id/184332081/photo/orange-excavator-on-a-construction-site.jpg?s=612x612&w=0&k=20&c=Bn8LQ2rBRFvYkrpqfoKt2CAIkE642JLIv9XUk_bK5AQ="
         },
         {
           make: "John Deere",
@@ -49,7 +49,7 @@ export function DemoVehicleButton({ isVisible }: DemoVehicleButtonProps) {
           type: "Heavy Duty",
           color: "Green",
           licensePlate: "HD-9012",
-          image: "https://images.unsplash.com/photo-1579752341511-bf17a7c335cf?q=80&w=1000&auto=format&fit=crop"
+          image: "https://media.istockphoto.com/id/157384437/photo/tractor-at-sunset.jpg?s=612x612&w=0&k=20&c=HGlLW1iGCAOc7pOGirru_g-L7azkEEw6tanixzMr4S4="
         },
         {
           make: "Volvo",
@@ -58,7 +58,7 @@ export function DemoVehicleButton({ isVisible }: DemoVehicleButtonProps) {
           type: "Heavy Duty",
           color: "Gray",
           licensePlate: "HD-3456",
-          image: "https://images.unsplash.com/photo-1504289596546-6d1ac6b7bac8?q=80&w=1000&auto=format&fit=crop"
+          image: "https://media.istockphoto.com/id/1329031407/photo/excavator-on-construction-site.jpg?s=612x612&w=0&k=20&c=SKpIyvYgZSbAh9rHMg-0SWoUlGpXdhX3OjZKkXRmWhA="
         },
         {
           make: "Liebherr",
@@ -67,7 +67,7 @@ export function DemoVehicleButton({ isVisible }: DemoVehicleButtonProps) {
           type: "Heavy Duty",
           color: "White",
           licensePlate: "HD-7890",
-          image: "https://images.unsplash.com/photo-1626155399614-acdfbb43aa6e?q=80&w=1000&auto=format&fit=crop"
+          image: "https://media.istockphoto.com/id/480493427/photo/excavator.jpg?s=612x612&w=0&k=20&c=-mugP46Av9gR2LgjWlFXeMdKLxYrQkquvXpsIRCKwlw="
         }
       ];
 
