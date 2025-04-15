@@ -20,6 +20,16 @@ interface JobHistoryProps {
 }
 
 export const JobHistory = ({ completedJobs, onViewJobDetails }: JobHistoryProps) => {
+  // Function to get customer name based on ID
+  const getCustomerName = (customerId: string) => {
+    // Map the specific customer ID to the name
+    if (customerId === "d5aaa3a4-b5a0-4485-b579-b868e0dd1d32") {
+      return "ABC Denver";
+    }
+    // Default to customer ID if no mapping exists
+    return customerId;
+  };
+
   if (completedJobs.length === 0) {
     return (
       <Card>
@@ -58,7 +68,7 @@ export const JobHistory = ({ completedJobs, onViewJobDetails }: JobHistoryProps)
                   <TableCell>
                     {format(job.updatedAt, "MMM dd, yyyy")}
                   </TableCell>
-                  <TableCell>{job.customerId}</TableCell>
+                  <TableCell>{getCustomerName(job.customerId)}</TableCell>
                   <TableCell>{job.vehicles.length}</TableCell>
                   <TableCell>${job.price.toFixed(2)}</TableCell>
                   <TableCell className="text-right">
