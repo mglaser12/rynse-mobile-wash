@@ -1,11 +1,11 @@
 
 import React, { useState } from "react";
-import { Calendar } from "@/components/ui/calendar";
 import { WashRequest } from "@/models/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { format, isSameDay } from "date-fns";
+import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface JobCalendarViewProps {
   assignedRequests: WashRequest[];
@@ -13,41 +13,41 @@ interface JobCalendarViewProps {
 }
 
 export const JobCalendarView = ({ assignedRequests, onSelectJob }: JobCalendarViewProps) => {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   
-  // Create a map of dates with jobs
-  const jobDates = assignedRequests.reduce((acc, job) => {
-    const dateStr = format(job.preferredDates.start, "yyyy-MM-dd");
-    if (!acc[dateStr]) {
-      acc[dateStr] = [];
+  // Group jobs by date
+  const jobsByDate = assignedRequests.reduce((acc, job) => {
+    const dateKey = format(job.preferredDates.start, "yyyy-MM-dd");
+    if (!acc[dateKey]) {
+      acc[dateKey] = [];
     }
-    acc[dateStr].push(job);
+    acc[dateKey].push(job);
     return acc;
   }, {} as Record<string, WashRequest[]>);
   
-  // Function to render job count badges on calendar days
-  const renderJobsForDay = (day: Date) => {
-    const dateStr = format(day, "yyyy-MM-dd");
-    const jobs = jobDates[dateStr];
-    
-    if (!jobs || jobs.length === 0) {
-      return null;
+  // Get unique dates with jobs
+  const datesWithJobs = Object.keys(jobsByDate)
+    .map(dateStr => new Date(dateStr))
+    .sort((a, b) => a.getTime() - b.getTime());
+  
+  // Get jobs for current date
+  const currentDateJobs = jobsByDate[format(currentDate, "yyyy-MM-dd")] || [];
+  
+  // Navigate to previous/next date with jobs
+  const goToPreviousDate = () => {
+    const prevDates = datesWithJobs.filter(date => date < currentDate);
+    if (prevDates.length > 0) {
+      setCurrentDate(prevDates[prevDates.length - 1]);
     }
-    
-    return (
-      <div className="absolute bottom-0 right-0 transform translate-x-1/3 translate-y-1/3">
-        <Badge variant="secondary" className="h-5 w-5 rounded-full p-0 flex items-center justify-center">
-          {jobs.length}
-        </Badge>
-      </div>
-    );
   };
   
-  // Find jobs for the selected date
-  const selectedDateJobs = selectedDate 
-    ? jobDates[format(selectedDate, "yyyy-MM-dd")] || []
-    : [];
-    
+  const goToNextDate = () => {
+    const nextDates = datesWithJobs.filter(date => date > currentDate);
+    if (nextDates.length > 0) {
+      setCurrentDate(nextDates[0]);
+    }
+  };
+  
   // Get customer name based on ID
   const getCustomerName = (customerId: string) => {
     if (customerId === "d5aaa3a4-b5a0-4485-b579-b868e0dd1d32") {
@@ -55,76 +55,112 @@ export const JobCalendarView = ({ assignedRequests, onSelectJob }: JobCalendarVi
     }
     return customerId;
   };
+  
+  // Check if the current date has any jobs
+  const hasJobsToday = jobsByDate[format(new Date(), "yyyy-MM-dd")] !== undefined;
 
   return (
     <div className="space-y-8">
       <Card>
         <CardHeader>
-          <CardTitle>Monthly Schedule</CardTitle>
+          <CardTitle>Job Schedule</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row gap-8">
-            <div className="w-full md:w-1/2">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                className="rounded-md border"
-                components={{
-                  DayContent: ({ date, ...props }) => (
-                    <div className="relative w-full h-full">
-                      <div {...props} />
-                      {renderJobsForDay(date)}
-                    </div>
-                  )
-                }}
-              />
-            </div>
-
-            <div className="w-full md:w-1/2">
-              <h3 className="text-lg font-medium mb-4">
-                {selectedDate ? (
-                  <span className="flex items-center">
-                    <CalendarIcon className="h-5 w-5 mr-2" />
-                    Jobs for {format(selectedDate, "MMMM d, yyyy")}
-                  </span>
-                ) : (
-                  "Select a date to view jobs"
-                )}
-              </h3>
+          <div className="space-y-6">
+            {/* Date Navigation */}
+            <div className="flex items-center justify-between">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={goToPreviousDate}
+                disabled={!datesWithJobs.some(date => date < currentDate)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
               
-              {selectedDateJobs.length > 0 ? (
-                <div className="space-y-4">
-                  {selectedDateJobs.map((job) => (
-                    <Card 
-                      key={job.id} 
-                      className="cursor-pointer hover:bg-slate-50 transition-colors"
-                      onClick={() => onSelectJob(job.id)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium">{getCustomerName(job.customerId)}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {job.vehicles.length} vehicle{job.vehicles.length !== 1 ? 's' : ''}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium">${job.price.toFixed(2)}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {format(job.preferredDates.start, "h:mm a")}
-                            </p>
-                          </div>
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="h-5 w-5" />
+                <span className="font-medium">
+                  {format(currentDate, "MMMM d, yyyy")}
+                </span>
+                {isSameDay(currentDate, new Date()) && (
+                  <Badge variant="secondary">Today</Badge>
+                )}
+              </div>
+              
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={goToNextDate}
+                disabled={!datesWithJobs.some(date => date > currentDate)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {/* Job List */}
+            <div className="space-y-4">
+              {currentDateJobs.length > 0 ? (
+                currentDateJobs.map((job) => (
+                  <Card 
+                    key={job.id} 
+                    className="cursor-pointer hover:bg-slate-50 transition-colors"
+                    onClick={() => onSelectJob(job.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">{getCustomerName(job.customerId)}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {job.vehicles.length} vehicle{job.vehicles.length !== 1 ? 's' : ''}
+                          </p>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                        <div className="text-right">
+                          <p className="font-medium">${job.price.toFixed(2)}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {format(job.preferredDates.start, "h:mm a")}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  {selectedDate ? "No jobs scheduled for this day" : "Select a date to view scheduled jobs"}
+                  No jobs scheduled for this day
                 </div>
               )}
+            </div>
+            
+            {/* Quick Navigation to Today */}
+            {!isSameDay(currentDate, new Date()) && hasJobsToday && (
+              <div className="flex justify-center">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentDate(new Date())}
+                  className="flex items-center gap-2"
+                >
+                  <CalendarIcon className="h-4 w-4" />
+                  Go to Today's Jobs
+                </Button>
+              </div>
+            )}
+            
+            {/* Date List */}
+            <div className="flex flex-wrap gap-2 justify-center">
+              {datesWithJobs.map(date => (
+                <Badge 
+                  key={format(date, "yyyy-MM-dd")}
+                  variant={isSameDay(date, currentDate) ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => setCurrentDate(date)}
+                >
+                  {format(date, "MMM d")}
+                  <span className="ml-1 text-xs">
+                    ({jobsByDate[format(date, "yyyy-MM-dd")].length})
+                  </span>
+                </Badge>
+              ))}
             </div>
           </div>
         </CardContent>
