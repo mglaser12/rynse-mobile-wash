@@ -62,51 +62,73 @@ export async function updateWashRequest(
 
 // Function to handle job acceptance with special considerations
 async function handleJobAcceptance(id: string, updateData: Record<string, any>): Promise<boolean> {
-  // First, let's check if someone else has already claimed this job
-  const { data: currentData, error: checkError } = await supabase
-    .from('wash_requests')
-    .select('status, technician_id')
-    .eq('id', id)
-    .single();
+  try {
+    // First, directly fetch the current state of the request
+    // This ensures we have the latest data before trying to update
+    const { data: currentData, error: fetchError } = await supabase
+      .from('wash_requests')
+      .select('status, technician_id')
+      .eq('id', id)
+      .single();
+      
+    if (fetchError) {
+      console.error("Error fetching current wash request state:", fetchError);
+      toast.error("Could not verify job availability");
+      return false;
+    }
     
-  if (checkError) {
-    console.error("Error checking current wash request state:", checkError);
-    toast.error("Could not verify job availability");
+    // If already claimed or not in pending state, abort
+    if (currentData.status !== 'pending' || currentData.technician_id !== null) {
+      console.error("Job already claimed or not in pending state:", currentData);
+      toast.error("This job is no longer available");
+      return false;
+    }
+    
+    // Simple update approach - more reliable than using conditional updates
+    // First set the technician - this is the atomic operation to "claim" the job
+    const { data: updateData1, error: updateError1 } = await supabase
+      .from('wash_requests')
+      .update({ technician_id: updateData.technician_id })
+      .eq('id', id)
+      .eq('status', 'pending')
+      .is('technician_id', null)
+      .select();
+    
+    if (updateError1) {
+      console.error("Error setting technician:", updateError1);
+      toast.error("Failed to claim job");
+      return false;
+    }
+    
+    // Check if we successfully claimed the job
+    if (!updateData1 || updateData1.length === 0) {
+      console.error("No rows updated - job may have been claimed");
+      toast.error("Failed to claim job - someone may have claimed it first");
+      return false;
+    }
+    
+    // Now that we've claimed it, set the status to confirmed
+    const { error: updateError2 } = await supabase
+      .from('wash_requests')
+      .update({ status: 'confirmed', updated_at: updateData.updated_at })
+      .eq('id', id)
+      .eq('technician_id', updateData.technician_id);
+    
+    if (updateError2) {
+      console.error("Error updating status after claiming job:", updateError2);
+      // Even if this fails, we've claimed the job. Let's inform the user.
+      toast.warning("Job claimed but status update failed. Refresh to see changes.");
+      return true; // Return true since we claimed the job even if status update failed
+    }
+    
+    console.log("Job accepted successfully");
+    toast.success("Job accepted successfully!");
+    return true;
+  } catch (error) {
+    console.error("Error in job acceptance process:", error);
+    toast.error("Failed to process job acceptance");
     return false;
   }
-  
-  // If already claimed or not in pending state, abort
-  if (currentData.status !== 'pending' || currentData.technician_id !== null) {
-    console.error("Job already claimed or not in pending state:", currentData);
-    toast.error("This job is no longer available");
-    return false;
-  }
-  
-  // Use a direct update with strict conditions to ensure atomicity
-  // FIX: The issue is with the match() function and null check - use eq() instead
-  const { data, error } = await supabase
-    .from('wash_requests')
-    .update(updateData)
-    .eq('id', id)
-    .eq('status', 'pending')
-    .is('technician_id', null)  // Use is(null) instead of eq(null) for null check
-    .select();
-  
-  if (error) {
-    console.error("Error accepting job:", error);
-    toast.error("Failed to accept job - someone may have claimed it first");
-    return false;
-  }
-  
-  if (!data || data.length === 0) {
-    console.error("No rows updated - job may have been claimed");
-    toast.error("Failed to accept job - someone may have claimed it first");
-    return false;
-  }
-  
-  console.log("Job accepted successfully:", data);
-  toast.success("Job accepted successfully!");
-  return true;
 }
 
 // Function to handle regular updates that are not job acceptances
