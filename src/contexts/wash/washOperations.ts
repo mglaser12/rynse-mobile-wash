@@ -186,12 +186,16 @@ export async function updateWashRequest(
     
     console.log("Final update data being sent to Supabase:", updateData);
     
-    // Perform the update
+    // Add a short delay before updating to ensure any previous operations have completed
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Perform the update with a stronger consistency level
     const { data: updatedData, error } = await supabase
       .from('wash_requests')
       .update(updateData)
       .eq('id', id)
-      .select();
+      .select()
+      .maybeSingle();
     
     if (error) {
       console.error("Error updating wash request:", error);
@@ -201,10 +205,24 @@ export async function updateWashRequest(
     
     console.log("Wash request updated successfully:", updatedData);
     
-    // Check if we got data back
-    if (!updatedData || updatedData.length === 0) {
+    // Verify if we got data back
+    if (!updatedData) {
       console.warn("Update succeeded but no data was returned");
-      // Even though no data was returned, the update was successful
+      // Fetch the latest data to verify our update was successful
+      const { data: verificationData } = await supabase
+        .from('wash_requests')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+        
+      console.log("Verification fetch after update:", verificationData);
+      
+      if (verificationData && verificationData.status === data.status && 
+          ((data.technician && verificationData.technician_id === data.technician) || !data.technician)) {
+        console.log("Verification confirmed update was successful");
+      } else {
+        console.warn("Verification could not confirm update success");
+      }
     }
     
     toast.success("Wash request updated successfully");

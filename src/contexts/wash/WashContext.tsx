@@ -66,21 +66,27 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
   // Update a wash request
   const handleUpdateWashRequest = async (id: string, data: Partial<WashRequest>) => {
     console.log(`WashContext: Updating request ${id} with:`, data);
+    
+    // First update local state for better UX
+    const updatedLocalState = washRequests.map(request => 
+      request.id === id ? { ...request, ...data, updatedAt: new Date() } : request
+    );
+    setWashRequests(updatedLocalState);
+    console.log("Updated local state:", updatedLocalState);
+    
+    // Then update in database
     const success = await updateWashRequest(id, data);
     
     if (success) {
-      console.log("Update was successful, updating local state");
-      setWashRequests(prev => {
-        const updated = prev.map(request => 
-          request.id === id ? { ...request, ...data, updatedAt: new Date() } : request
-        );
-        console.log("Updated local state:", updated);
-        return updated;
-      });
-      
-      // Force refresh data from server to ensure we have the latest state
+      console.log("Update was successful, refreshing data from server");
+      // Force refresh data from server after a short delay to ensure we have the latest state
       setTimeout(() => refreshData(), 500);
+    } else {
+      console.log("Update failed, reverting to previous state");
+      // If the update failed, revert to the previous state
+      setWashRequests(washRequests);
     }
+    
     return success;
   };
 

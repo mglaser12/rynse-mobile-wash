@@ -19,31 +19,47 @@ const TechnicianHome = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDebugMode, setIsDebugMode] = useState(false);
   const [activeWashId, setActiveWashId] = useState<string | null>(null);
+  const [localStateRequests, setLocalStateRequests] = useState<typeof washRequests>([]);
+  
+  // Update local state when washRequests change
+  useEffect(() => {
+    if (Array.isArray(washRequests)) {
+      setLocalStateRequests(washRequests);
+    }
+  }, [washRequests]);
   
   // Force a refresh of wash requests data when the component mounts
   useEffect(() => {
-    refreshData();
-  }, []);
+    const loadData = async () => {
+      try {
+        await refreshData();
+      } catch (error) {
+        console.error("Error refreshing data:", error);
+      }
+    };
+    
+    loadData();
+  }, [refreshData]);
   
   // Safely filter wash requests (defensive programming)
-  const pendingRequests = Array.isArray(washRequests) 
-    ? washRequests.filter(req => req.status === "pending")
+  const pendingRequests = Array.isArray(localStateRequests) 
+    ? localStateRequests.filter(req => req.status === "pending")
     : [];
     
-  const assignedRequests = Array.isArray(washRequests) 
-    ? washRequests.filter(req => req.status === "confirmed" && req.technician === user?.id)
+  const assignedRequests = Array.isArray(localStateRequests) 
+    ? localStateRequests.filter(req => req.status === "confirmed" && req.technician === user?.id)
     : [];
     
-  const inProgressRequests = Array.isArray(washRequests) 
-    ? washRequests.filter(req => req.status === "in_progress" && req.technician === user?.id)
+  const inProgressRequests = Array.isArray(localStateRequests) 
+    ? localStateRequests.filter(req => req.status === "in_progress" && req.technician === user?.id)
     : [];
   
-  const selectedRequest = selectedRequestId && Array.isArray(washRequests)
-    ? washRequests.find(req => req.id === selectedRequestId) 
+  const selectedRequest = selectedRequestId && Array.isArray(localStateRequests)
+    ? localStateRequests.find(req => req.id === selectedRequestId) 
     : null;
 
-  const activeWashRequest = activeWashId && Array.isArray(washRequests)
-    ? washRequests.find(req => req.id === activeWashId)
+  const activeWashRequest = activeWashId && Array.isArray(localStateRequests)
+    ? localStateRequests.find(req => req.id === activeWashId)
     : null;
   
   const handleAcceptRequest = async (requestId: string) => {
@@ -51,7 +67,16 @@ const TechnicianHome = () => {
     try {
       console.log(`Accepting request ${requestId} as technician ${user?.id}`);
       
-      // First update the status to "confirmed" and set technician
+      // First update local state immediately for better UX
+      setLocalStateRequests(prev => 
+        prev.map(req => 
+          req.id === requestId 
+            ? { ...req, status: "confirmed", technician: user?.id } 
+            : req
+        )
+      );
+      
+      // Then update the database
       const result = await updateWashRequest(requestId, {
         status: "confirmed",
         technician: user?.id,
@@ -59,20 +84,24 @@ const TechnicianHome = () => {
       
       if (result) {
         toast.success("Request accepted successfully");
-        // Force refresh to get the updated data
-        await refreshData(); 
         
-        // Wait a bit to ensure database has fully processed the update
+        // Close the dialog after a small delay to show the success message
         setTimeout(() => {
-          // Close the dialog after a small delay to show the success message
           setSelectedRequestId(null);
+          
+          // Force refresh after a delay to ensure database has been updated
+          setTimeout(() => refreshData(), 500);
         }, 1000);
       } else {
         toast.error("Failed to accept request");
+        // Revert local state if update failed
+        setLocalStateRequests(washRequests);
       }
     } catch (error) {
       console.error("Error accepting request:", error);
       toast.error("An error occurred while accepting the request");
+      // Revert local state if there was an error
+      setLocalStateRequests(washRequests);
     } finally {
       setIsUpdating(false);
     }
@@ -165,7 +194,7 @@ const TechnicianHome = () => {
                 <p>User ID: {user?.id}</p>
                 <p>User Role: {user?.role}</p>
                 <pre className="mt-2 bg-gray-200 p-2 rounded overflow-auto">
-                  {JSON.stringify(washRequests.map(r => ({id: r.id, status: r.status, technician: r.technician})), null, 2)}
+                  {JSON.stringify(localStateRequests.map(r => ({id: r.id, status: r.status, technician: r.technician})), null, 2)}
                 </pre>
                 <button 
                   className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"

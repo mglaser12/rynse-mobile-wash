@@ -32,6 +32,9 @@ export const RequestDetailDialog = ({
   console.log("RequestDetailDialog - Current request status:", selectedRequest.status);
   console.log("RequestDetailDialog - Current technician:", selectedRequest.technician);
   console.log("RequestDetailDialog - User ID:", userId);
+  
+  // Check if this technician is assigned to this request
+  const isAssignedTechnician = selectedRequest.technician === userId;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -63,7 +66,7 @@ export const RequestDetailDialog = ({
             </Button>
           )}
           
-          {selectedRequest.status === "confirmed" && selectedRequest.technician === userId && (
+          {selectedRequest.status === "confirmed" && isAssignedTechnician && (
             <Button 
               className="w-full" 
               onClick={() => onStartWash(selectedRequest.id)}
@@ -76,7 +79,7 @@ export const RequestDetailDialog = ({
             </Button>
           )}
           
-          {selectedRequest.status === "in_progress" && selectedRequest.technician === userId && (
+          {selectedRequest.status === "in_progress" && isAssignedTechnician && (
             <Button 
               className="w-full" 
               onClick={() => onCompleteWash(selectedRequest.id)}
@@ -93,6 +96,7 @@ export const RequestDetailDialog = ({
           <div className="mt-4 text-xs text-muted-foreground">
             <p>Status: {selectedRequest.status}</p>
             <p>Technician: {selectedRequest.technician || 'None'}</p>
+            <p>Assigned to you: {isAssignedTechnician ? 'Yes' : 'No'}</p>
           </div>
         </div>
       </DialogContent>
