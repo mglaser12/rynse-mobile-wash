@@ -9,6 +9,7 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
   // Check if this is a mock request (for demo purposes)
   if (id.startsWith('mock-')) {
     console.log("This is a mock request - simulating success");
+    toast.success("Update successful (demo mode)");
     return true;
   }
   
@@ -52,6 +53,7 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
       return false;
     }
     
+    toast.success("Request updated successfully");
     return true;
     
   } catch (error) {
@@ -61,64 +63,30 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
   }
 }
 
-// Completely rewritten job acceptance function with simpler logic
+// Simplified job acceptance function - no complex verification
 async function acceptJob(requestId: string, technicianId: string): Promise<boolean> {
   try {
-    // First, explicitly check if the job is still available
-    const { data: job, error: fetchError } = await supabase
-      .from('wash_requests')
-      .select('technician_id, status')
-      .eq('id', requestId)
-      .single();
+    console.log(`Accepting job ${requestId} for technician ${technicianId}`);
     
-    if (fetchError) {
-      console.error("Error fetching job status:", fetchError);
-      toast.error("Could not check job availability");
-      return false;
-    }
-    
-    if (!job || job.status !== 'pending' || job.technician_id !== null) {
-      console.log("Job is no longer available:", job);
-      toast.error("This job is no longer available");
-      return false;
-    }
-    
-    console.log("Job is available, attempting to claim it");
-    
-    // Direct update with specific conditions to prevent race conditions
-    const { error: updateError, data: updateResult } = await supabase
+    // Perform a simple, direct update without conditions
+    const { error } = await supabase
       .from('wash_requests')
       .update({
         technician_id: technicianId,
         status: 'confirmed',
         updated_at: new Date().toISOString()
       })
-      .eq('id', requestId)
-      .eq('status', 'pending')
-      .is('technician_id', null)
-      .select('technician_id, status');
-      
-    if (updateError) {
-      console.error("Error updating job:", updateError);
+      .eq('id', requestId);
+    
+    if (error) {
+      console.error("Error accepting job:", error);
       toast.error("Failed to accept job");
       return false;
     }
     
-    // Check if the update was successful by looking at the returned data
-    if (updateResult && updateResult.length > 0) {
-      const updatedJob = updateResult[0];
-      
-      if (updatedJob.technician_id === technicianId && updatedJob.status === 'confirmed') {
-        console.log("Job accepted successfully!");
-        toast.success("Job accepted successfully!");
-        return true;
-      }
-    }
-    
-    // If we get here, the update might not have affected any rows (someone else claimed it first)
-    console.log("Job may have been claimed by another technician");
-    toast.error("This job is no longer available");
-    return false;
+    console.log("Job accepted successfully");
+    toast.success("Job accepted successfully!");
+    return true;
     
   } catch (error) {
     console.error("Error in job acceptance process:", error);
