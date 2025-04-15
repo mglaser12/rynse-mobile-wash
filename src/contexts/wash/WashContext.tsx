@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, useCallback, useRef } from "react";
 import { WashRequest } from "@/models/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -125,7 +124,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(timer);
   }, [safeRefreshData]);
 
-  // Update a wash request with improved throttling and special handling for job acceptance
+  // Update a wash request with improved handling for job acceptance
   const handleUpdateWashRequest = useCallback(async (id: string, data: Partial<WashRequest>) => {
     console.log(`WashContext: Updating request ${id} with:`, data);
     
@@ -170,14 +169,12 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       if (success) {
         console.log("Update was successful");
         
-        // For job acceptance, do a refresh to ensure everything is in sync
+        // For job acceptance, force refresh after a short delay for UI consistency
         if (isJobAcceptance) {
-          // Immediate refresh for job acceptance
           setTimeout(() => {
-            safeRefreshData(true).catch(err => {
-              console.error("Error refreshing data after job acceptance:", err);
-            });
-          }, 500);  // Reduced delay for better UX
+            console.log("Forcing refresh after job acceptance");
+            safeRefreshData(true);
+          }, 800);
         }
         
         return true;
@@ -199,16 +196,13 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       // Skip this for job acceptance since we already refresh above
       if (!isJobAcceptance) {
         setTimeout(() => {
-          safeRefreshData().catch(err => {
-            console.error("Error refreshing data after update:", err);
-          });
+          safeRefreshData();
         }, 2000);
       }
     }
   }, [washRequests, safeRefreshData, isUpdating]);
 
   const handleRemoveWashRequest = async (id: string) => {
-    // This is a placeholder implementation - in a real app, you'd call an API
     console.log("Remove wash request", id);
     setWashRequests(prev => prev.filter(request => request.id !== id));
   };

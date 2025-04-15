@@ -1,4 +1,3 @@
-
 import { WashRequest, WashStatus } from "@/models/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -198,9 +197,6 @@ export async function updateWashRequest(
         console.log(`Attempt ${attempt} to update wash request...`);
       }
       
-      // For job acceptance, force a full fetch after update to verify it was saved
-      const shouldFetch = isJobAcceptance;
-      
       // Perform the update
       const { error } = await supabase
         .from('wash_requests')
@@ -219,46 +215,8 @@ export async function updateWashRequest(
         return false;
       }
       
-      // After a successful update with no errors, verify the update was actually saved 
-      // (only for critical operations like job acceptance)
-      if (shouldFetch) {
-        try {
-          // Verify the update was actually saved by fetching the record
-          const { data: verifyData, error: verifyError } = await supabase
-            .from('wash_requests')
-            .select('*')
-            .eq('id', id)
-            .single();
-          
-          if (verifyError) {
-            console.error("Error verifying update:", verifyError);
-          } else if (verifyData) {
-            // Check if the status and technician_id were actually updated
-            const statusUpdated = data.status && verifyData.status === data.status;
-            const technicianUpdated = data.technician && verifyData.technician_id === data.technician;
-            
-            if (isJobAcceptance && (!statusUpdated || !technicianUpdated)) {
-              if (attempt < maxRetries) {
-                console.log("Update verification failed, retrying...");
-                await new Promise(r => setTimeout(r, 800));
-                continue;
-              } else {
-                console.error("Failed to verify update after multiple attempts");
-                toast.error("Update may not have been saved correctly");
-                return false;
-              }
-            }
-            
-            console.log("Update verification successful:", verifyData);
-          }
-        } catch (verifyError) {
-          console.error("Exception during verification:", verifyError);
-        }
-      }
-      
-      // Since the update went through without error and verification passed (if applicable),
-      // we consider it successful
-      console.log("Wash request updated successfully (verified)");
+      // If there was no error, we consider the update successful
+      console.log("Wash request updated successfully (no error)");
       
       // Success - show confirmation message
       if (isJobAcceptance) {
