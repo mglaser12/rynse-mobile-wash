@@ -43,8 +43,8 @@ const ProfilePage = () => {
       <div className="car-wash-container animate-fade-in">
         <div className="flex flex-col items-center mb-6 py-4">
           <Avatar className="h-24 w-24 mb-4">
-            {user?.avatar_url ? (
-              <AvatarImage src={user.avatar_url} alt={user?.name || "User"} />
+            {user?.avatarUrl ? (
+              <AvatarImage src={user.avatarUrl} alt={user?.name || "User"} />
             ) : null}
             <AvatarFallback className="text-2xl">{getAvatarFallback()}</AvatarFallback>
           </Avatar>
