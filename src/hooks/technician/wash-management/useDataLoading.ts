@@ -1,12 +1,13 @@
 
 import { useCallback, useEffect } from "react";
 
-export function useDataLoading(refreshData: () => Promise<void>) {
+export function useDataLoading(refreshData: () => Promise<void> | void) {
   // Load data function to force refresh
   const loadData = useCallback(async () => {
     console.log("Forcing data refresh");
     try {
-      await refreshData();
+      // Ensure we always return a Promise, even if refreshData does not
+      await Promise.resolve(refreshData());
     } catch (error) {
       console.error("Error refreshing data:", error);
     }
