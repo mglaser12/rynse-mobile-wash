@@ -75,8 +75,40 @@ export async function updateWashRequest(
         return false;
       }
       
+      // Verify the update actually took effect in the database
+      const { data: verificationData, error: verificationError } = await supabase
+        .from('wash_requests')
+        .select('status, technician_id')
+        .eq('id', id)
+        .maybeSingle();
+        
+      if (verificationError) {
+        console.error("Error verifying update:", verificationError);
+        if (attempt < maxRetries) {
+          console.log("Update verification failed, retrying...");
+          await new Promise(r => setTimeout(r, 500));
+          continue;
+        }
+        toast.error("Failed to confirm update");
+        return false;
+      }
+      
+      // Check if our intended changes were actually applied
+      if (isJobAcceptance && 
+          (verificationData?.status !== 'confirmed' || 
+           verificationData?.technician_id !== data.technician)) {
+        if (attempt < maxRetries) {
+          console.log("Update verification failed, retrying...");
+          await new Promise(r => setTimeout(r, 500));
+          continue;
+        }
+        console.error("Failed to verify update after multiple attempts");
+        toast.error("Failed to confirm job acceptance");
+        return false;
+      }
+      
       // If there was no error, we consider the update successful
-      console.log("Wash request updated successfully (no error)");
+      console.log("Wash request updated and verified successfully");
       
       // Success - show confirmation message
       if (isJobAcceptance) {
