@@ -21,13 +21,20 @@ export function useWash() {
 export function WashProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { washRequests: loadedWashRequests, isLoading: isLoadingWashRequests } = useLoadWashRequests(user?.id);
-  const { locations, isLoading: isLoadingLocations } = useLoadLocations();
+  const { locations: loadedLocations, isLoading: isLoadingLocations } = useLoadLocations();
   const [washRequests, setWashRequests] = useState<WashRequest[]>([]);
+  const [locations, setLocations] = useState<WashLocation[]>([]);
 
   // Update local state when loaded wash requests change
   useEffect(() => {
     setWashRequests(loadedWashRequests);
   }, [loadedWashRequests]);
+
+  // Update local state when loaded locations change
+  useEffect(() => {
+    // Ensure locations is always an array
+    setLocations(loadedLocations || []);
+  }, [loadedLocations]);
 
   // Create a new wash request
   const handleCreateWashRequest = async (washRequestData: Omit<WashRequest, "id" | "status" | "createdAt" | "updatedAt">) => {

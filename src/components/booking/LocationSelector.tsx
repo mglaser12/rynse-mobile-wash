@@ -17,6 +17,9 @@ interface LocationSelectorProps {
 export function LocationSelector({ locations, selectedLocation, onSelectLocation }: LocationSelectorProps) {
   const [open, setOpen] = useState(false);
 
+  // Make sure locations is always an array, even if it's undefined
+  const safeLocations = Array.isArray(locations) ? locations : [];
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -36,7 +39,7 @@ export function LocationSelector({ locations, selectedLocation, onSelectLocation
           <CommandEmpty>No location found.</CommandEmpty>
           <ScrollArea className="max-h-[300px]">
             <CommandGroup>
-              {locations.map((location) => (
+              {safeLocations.map((location) => (
                 <CommandItem
                   key={location.id}
                   value={location.name}
