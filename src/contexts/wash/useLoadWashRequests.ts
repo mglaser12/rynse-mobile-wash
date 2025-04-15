@@ -51,20 +51,23 @@ export function useLoadWashRequests(userId: string | undefined) {
         console.log("Wash requests raw data:", requestsData);
 
         // Check if there are actual wash requests in the database (regardless of user)
-        const { count: totalRequestsCount, error: countError } = await supabase
+        // Using a simple select * and count the results instead of using count(*)
+        const { data: countData, error: countError } = await supabase
           .from('wash_requests')
-          .select('*', { count: 'exact', head: true });
-
+          .select('id');
+          
+        const totalRequestsCount = countData ? countData.length : 0;
         console.log("Total wash requests in database:", totalRequestsCount);
+        
         if (countError) {
           console.error("Error counting requests:", countError);
         }
 
-        // Check RLS permissions
+        // Check RLS permissions with a simple query
         try {
           const { data: rlsTestData, error: rlsError } = await supabase
             .from('wash_requests')
-            .select('count(*)')
+            .select('id')
             .limit(1);
           
           console.log("RLS test result:", { data: rlsTestData, error: rlsError });
