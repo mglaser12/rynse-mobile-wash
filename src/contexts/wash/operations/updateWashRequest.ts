@@ -61,6 +61,17 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
     
     console.log("Final update data being sent to Supabase:", updateData);
     
+    // Log the full request that will be sent to Supabase
+    console.log("SENDING TO SUPABASE:", {
+      method: "POST (UPDATE)",
+      endpoint: `/rest/v1/wash_requests?id=eq.${id}`,
+      headers: {
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+      },
+      body: JSON.stringify(updateData)
+    });
+    
     const { data: updatedData, error } = await supabase
       .from('wash_requests')
       .update(updateData)
@@ -129,6 +140,17 @@ async function acceptJob(
     }
 
     console.log("Sending job acceptance payload to database:", updatePayload);
+    
+    // Log the full request that will be sent to Supabase
+    console.log("SENDING JOB ACCEPTANCE TO SUPABASE:", {
+      method: "POST (UPDATE)",
+      endpoint: `/rest/v1/wash_requests?id=eq.${requestId}`,
+      headers: {
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+      },
+      body: JSON.stringify(updatePayload)
+    });
     
     // Direct database update
     const { data, error } = await supabase
