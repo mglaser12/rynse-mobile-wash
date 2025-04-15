@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect, useCallback, useRef } from "react";
 import { WashRequest } from "@/models/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -97,7 +98,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
     }
   }, [refreshData]);
 
-  // Update a wash request with throttling to prevent infinite loops
+  // Update a wash request with improved throttling to prevent infinite loops
   const handleUpdateWashRequest = useCallback(async (id: string, data: Partial<WashRequest>) => {
     console.log(`WashContext: Updating request ${id} with:`, data);
     
@@ -106,14 +107,21 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
     
-    // Throttle updates to prevent rapid consecutive calls
-    const now = Date.now();
-    if (now - lastUpdateTimestampRef.current < 3000) { // 3 second throttle
-      console.log("Update throttled - too soon after last update");
-      return false;
+    // Special handling for status changes to "confirmed" (job acceptance)
+    // Skip throttling for job acceptance to ensure UI responsiveness
+    const isJobAcceptance = data.status === "confirmed" && data.technician;
+    
+    // Check throttling for non-job-acceptance updates
+    if (!isJobAcceptance) {
+      // Throttle updates to prevent rapid consecutive calls
+      const now = Date.now();
+      if (now - lastUpdateTimestampRef.current < 3000) { // 3 second throttle
+        console.log("Update throttled - too soon after last update");
+        return false;
+      }
     }
     
-    lastUpdateTimestampRef.current = now;
+    lastUpdateTimestampRef.current = Date.now();
     setIsUpdating(true);
     
     // Keep a copy of the current state for potential rollback
