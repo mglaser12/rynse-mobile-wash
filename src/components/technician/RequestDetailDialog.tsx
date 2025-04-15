@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { WashRequest } from "@/models/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
@@ -29,12 +29,13 @@ export const RequestDetailDialog = ({
 }: RequestDetailDialogProps) => {
   if (!selectedRequest) return null;
 
+  // Log information for debugging
   console.log("RequestDetailDialog - Current request status:", selectedRequest.status);
   console.log("RequestDetailDialog - Current technician:", selectedRequest.technician);
   console.log("RequestDetailDialog - User ID:", userId);
   
   // Check if this technician is assigned to this request
-  const isAssignedTechnician = selectedRequest.technician === userId;
+  const isAssignedTechnician = userId && selectedRequest.technician === userId;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -51,13 +52,12 @@ export const RequestDetailDialog = ({
             <Button 
               className="w-full" 
               onClick={() => {
-                console.log("Accept button clicked for request:", selectedRequest.id);
                 if (userId) {
                   console.log("Accepting job with technician ID:", userId);
+                  onAcceptRequest(selectedRequest.id);
                 }
-                onAcceptRequest(selectedRequest.id);
               }}
-              disabled={isUpdating}
+              disabled={isUpdating || !userId}
             >
               {isUpdating ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />

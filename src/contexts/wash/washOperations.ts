@@ -190,7 +190,7 @@ export async function updateWashRequest(
       .from('wash_requests')
       .update(updateData)
       .eq('id', id)
-      .select();
+      .select('*');
     
     if (error) {
       console.error("Error updating wash request:", error);
@@ -200,28 +200,24 @@ export async function updateWashRequest(
     
     console.log("Wash request updated successfully:", updatedData);
     
-    // Explicitly verify the update succeeded
-    const { data: verificationData, error: verificationError } = await supabase
-      .from('wash_requests')
-      .select('*')
-      .eq('id', id)
-      .single();
-      
-    if (verificationError) {
-      console.error("Error verifying update:", verificationError);
+    // Check if we got data back
+    if (!updatedData || updatedData.length === 0) {
+      console.error("No data returned from update operation");
+      toast.error("Update may not have been applied correctly");
       return false;
     }
     
-    console.log("Verification data after update:", verificationData);
+    // Verify the update was applied as expected
+    const updatedItem = updatedData[0];
     
-    // Check if the update was applied correctly
-    if (data.status && verificationData.status !== data.status) {
-      console.error("Status was not updated correctly. Expected:", data.status, "Got:", verificationData.status);
+    // Check specific fields
+    if (data.status && updatedItem.status !== data.status) {
+      console.error(`Status update verification failed. Expected: ${data.status}, Got: ${updatedItem.status}`);
       return false;
     }
     
-    if (data.technician && verificationData.technician_id !== data.technician) {
-      console.error("Technician was not updated correctly. Expected:", data.technician, "Got:", verificationData.technician_id);
+    if (data.technician && updatedItem.technician_id !== data.technician) {
+      console.error(`Technician update verification failed. Expected: ${data.technician}, Got: ${updatedItem.technician_id}`);
       return false;
     }
     
