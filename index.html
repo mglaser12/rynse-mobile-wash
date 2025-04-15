@@ -3,10 +3,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Rynse - Mobile Wash Services</title>
     <meta name="description" content="Rynse - Mobile Wash Services" />
     <meta name="author" content="Rynse" />
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#9b87f5" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Rynse" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/lovable-uploads/3d6deccc-d4a2-4bfb-9acc-18c6e46f5b73.png" />
 
     <meta property="og:title" content="Rynse - Mobile Wash Services" />
     <meta property="og:description" content="Rynse - Mobile Wash Services" />
@@ -25,5 +33,11 @@
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    <noscript>
+      <div style="padding: 2rem; text-align: center;">
+        <h1>JavaScript Required</h1>
+        <p>Please enable JavaScript to use this application.</p>
+      </div>
+    </noscript>
   </body>
 </html>

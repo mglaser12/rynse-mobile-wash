@@ -1,0 +1,25 @@
+
+{
+  "name": "Rynse - Mobile Wash Services",
+  "short_name": "Rynse",
+  "description": "Mobile car wash and detailing services on demand",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#9b87f5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/lovable-uploads/3d6deccc-d4a2-4bfb-9acc-18c6e46f5b73.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/lovable-uploads/3d6deccc-d4a2-4bfb-9acc-18c6e46f5b73.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

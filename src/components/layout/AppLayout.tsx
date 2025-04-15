@@ -2,6 +2,7 @@
 import React from "react";
 import { MobileNavigation } from "./MobileNavigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { OfflineIndicator } from "./OfflineIndicator";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -18,6 +19,7 @@ export function AppLayout({ children, hideNavigation = false }: AppLayoutProps) 
       </main>
       
       {isAuthenticated && !hideNavigation && <MobileNavigation />}
+      <OfflineIndicator />
     </div>
   );
 }
