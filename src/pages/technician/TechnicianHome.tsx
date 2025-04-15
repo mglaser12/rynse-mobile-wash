@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useWashRequests } from "@/contexts/WashContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +19,11 @@ const TechnicianHome = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDebugMode, setIsDebugMode] = useState(false);
   const [activeWashId, setActiveWashId] = useState<string | null>(null);
+  
+  // Force a refresh of wash requests data when the component mounts
+  useEffect(() => {
+    refreshData();
+  }, []);
   
   // Safely filter wash requests (defensive programming)
   const pendingRequests = Array.isArray(washRequests) 
@@ -44,6 +49,7 @@ const TechnicianHome = () => {
   const handleAcceptRequest = async (requestId: string) => {
     setIsUpdating(true);
     try {
+      console.log(`Accepting request ${requestId} as technician ${user?.id}`);
       const result = await updateWashRequest(requestId, {
         status: "confirmed",
         technician: user?.id,
@@ -51,7 +57,7 @@ const TechnicianHome = () => {
       
       if (result) {
         toast.success("Request accepted successfully");
-        refreshData(); // Refresh data after accepting a request
+        await refreshData(); // Force refresh data after accepting a request
       } else {
         toast.error("Failed to accept request");
       }
@@ -67,13 +73,14 @@ const TechnicianHome = () => {
   const handleStartWash = async (requestId: string) => {
     setIsUpdating(true);
     try {
+      console.log(`Starting wash for request ${requestId}`);
       const result = await updateWashRequest(requestId, {
         status: "in_progress",
       });
       
       if (result) {
         toast.success("Wash started successfully");
-        refreshData(); // Refresh data after starting a wash
+        await refreshData(); // Force refresh data after starting a wash
         
         // Open the wash progress dialog
         setActiveWashId(requestId);
@@ -92,13 +99,14 @@ const TechnicianHome = () => {
   const handleCompleteWash = async (requestId: string) => {
     setIsUpdating(true);
     try {
+      console.log(`Completing wash for request ${requestId}`);
       const result = await updateWashRequest(requestId, {
         status: "completed",
       });
       
       if (result) {
         toast.success("Wash completed successfully");
-        refreshData(); // Refresh data after completing a wash
+        await refreshData(); // Force refresh data after completing a wash
         
         // Clear any active wash dialog
         if (activeWashId === requestId) {
@@ -148,6 +156,9 @@ const TechnicianHome = () => {
                 <p>Total requests: {washRequests.length}</p>
                 <p>User ID: {user?.id}</p>
                 <p>User Role: {user?.role}</p>
+                <pre className="mt-2 bg-gray-200 p-2 rounded overflow-auto">
+                  {JSON.stringify(washRequests.map(r => ({id: r.id, status: r.status})), null, 2)}
+                </pre>
                 <button 
                   className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"
                   onClick={refreshData}

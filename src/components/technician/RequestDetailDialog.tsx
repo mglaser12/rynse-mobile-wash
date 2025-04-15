@@ -29,6 +29,10 @@ export const RequestDetailDialog = ({
 }: RequestDetailDialogProps) => {
   if (!selectedRequest) return null;
 
+  console.log("RequestDetailDialog - Current request status:", selectedRequest.status);
+  console.log("RequestDetailDialog - Current technician:", selectedRequest.technician);
+  console.log("RequestDetailDialog - User ID:", userId);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full max-w-lg">
@@ -43,7 +47,10 @@ export const RequestDetailDialog = ({
           {selectedRequest.status === "pending" && (
             <Button 
               className="w-full" 
-              onClick={() => onAcceptRequest(selectedRequest.id)}
+              onClick={() => {
+                console.log("Accept button clicked for request:", selectedRequest.id);
+                onAcceptRequest(selectedRequest.id);
+              }}
               disabled={isUpdating}
             >
               {isUpdating ? (
@@ -78,6 +85,12 @@ export const RequestDetailDialog = ({
               Complete Wash
             </Button>
           )}
+
+          {/* Debug info */}
+          <div className="mt-4 text-xs text-muted-foreground">
+            <p>Status: {selectedRequest.status}</p>
+            <p>Technician: {selectedRequest.technician || 'None'}</p>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

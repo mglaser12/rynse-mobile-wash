@@ -1,3 +1,4 @@
+
 import { WashRequest, WashStatus } from "@/models/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -181,11 +182,14 @@ export async function updateWashRequest(
       }
     }
     
+    console.log("Final update data being sent to Supabase:", updateData);
+    
     // Perform the update
-    const { error } = await supabase
+    const { data: updatedData, error } = await supabase
       .from('wash_requests')
       .update(updateData)
-      .eq('id', id);
+      .eq('id', id)
+      .select('*');
     
     if (error) {
       console.error("Error updating wash request:", error);
@@ -193,7 +197,7 @@ export async function updateWashRequest(
       return false;
     }
     
-    console.log("Wash request updated successfully");
+    console.log("Wash request updated successfully:", updatedData);
     toast.success("Wash request updated successfully");
     return true;
   } catch (error) {

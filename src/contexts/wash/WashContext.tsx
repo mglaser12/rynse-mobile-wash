@@ -31,7 +31,12 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
 
   // Update local state when loaded wash requests change
   useEffect(() => {
-    setWashRequests(Array.isArray(loadedWashRequests) ? loadedWashRequests : []);
+    if (Array.isArray(loadedWashRequests)) {
+      console.log("Updating wash requests from loaded data:", loadedWashRequests);
+      setWashRequests(loadedWashRequests);
+    } else {
+      setWashRequests([]);
+    }
   }, [loadedWashRequests]);
 
   // Create a new wash request
@@ -60,13 +65,21 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
 
   // Update a wash request
   const handleUpdateWashRequest = async (id: string, data: Partial<WashRequest>) => {
+    console.log(`WashContext: Updating request ${id} with:`, data);
     const success = await updateWashRequest(id, data);
+    
     if (success) {
-      setWashRequests(prev => 
-        prev.map(request => 
-          request.id === id ? { ...request, ...data } : request
-        )
-      );
+      console.log("Update was successful, updating local state");
+      setWashRequests(prev => {
+        const updated = prev.map(request => 
+          request.id === id ? { ...request, ...data, updatedAt: new Date() } : request
+        );
+        console.log("Updated local state:", updated);
+        return updated;
+      });
+      
+      // Force refresh data from server to ensure we have the latest state
+      setTimeout(() => refreshData(), 500);
     }
     return success;
   };
