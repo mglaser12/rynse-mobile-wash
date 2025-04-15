@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, useEffect } from "react";
-import { WashRequest, WashLocation, WashStatus, SupabaseLocation } from "../models/types";
+import { WashRequest, WashLocation, WashStatus, SupabaseLocation, SupabaseWashRequest } from "../models/types";
 import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
 import { supabase } from "../integrations/supabase/client";
@@ -172,10 +172,10 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const { customerId, location, preferredDates, vehicles, price, notes } = requestData;
+      const { location, preferredDates, vehicles, price, notes } = requestData;
       
       // Insert wash request in Supabase
-      const { data: requestData, error: requestError } = await supabase
+      const { data: newRequest, error: requestError } = await supabase
         .from('wash_requests')
         .insert({
           user_id: user.id,
@@ -198,7 +198,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       // Associate vehicles with the request
       if (vehicles.length > 0) {
         const vehicleAssociations = vehicles.map(vehicleId => ({
-          wash_request_id: requestData.id,
+          wash_request_id: newRequest.id,
           vehicle_id: vehicleId
         }));
 
@@ -213,13 +213,13 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Fetch the newly created request with its location
-      const { data: newRequest, error: fetchError } = await supabase
+      const { data: completeRequest, error: fetchError } = await supabase
         .from('wash_requests')
         .select(`
           *,
           wash_location:location_id(*)
         `)
-        .eq('id', requestData.id)
+        .eq('id', newRequest.id)
         .single();
 
       if (fetchError) {
@@ -227,35 +227,35 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       } else {
         // Transform to our model and add to state
         const washLocation: WashLocation = {
-          id: newRequest.wash_location.id,
-          name: newRequest.wash_location.name,
-          address: newRequest.wash_location.address,
-          city: newRequest.wash_location.city,
-          state: newRequest.wash_location.state,
-          zipCode: newRequest.wash_location.zip_code,
-          coordinates: newRequest.wash_location.latitude && newRequest.wash_location.longitude
+          id: completeRequest.wash_location.id,
+          name: completeRequest.wash_location.name,
+          address: completeRequest.wash_location.address,
+          city: completeRequest.wash_location.city,
+          state: completeRequest.wash_location.state,
+          zipCode: completeRequest.wash_location.zip_code,
+          coordinates: completeRequest.wash_location.latitude && completeRequest.wash_location.longitude
             ? {
-                latitude: newRequest.wash_location.latitude,
-                longitude: newRequest.wash_location.longitude
+                latitude: completeRequest.wash_location.latitude,
+                longitude: completeRequest.wash_location.longitude
               }
             : undefined
         };
 
         const newWashRequest: WashRequest = {
-          id: newRequest.id,
-          customerId: newRequest.user_id,
+          id: completeRequest.id,
+          customerId: completeRequest.user_id,
           location: washLocation,
           vehicles: vehicles,
           preferredDates: {
-            start: new Date(newRequest.preferred_date_start),
-            end: newRequest.preferred_date_end ? new Date(newRequest.preferred_date_end) : undefined
+            start: new Date(completeRequest.preferred_date_start),
+            end: completeRequest.preferred_date_end ? new Date(completeRequest.preferred_date_end) : undefined
           },
-          status: newRequest.status as WashStatus,
-          technician: newRequest.technician_id,
-          price: parseFloat(newRequest.price),
-          notes: newRequest.notes,
-          createdAt: new Date(newRequest.created_at),
-          updatedAt: new Date(newRequest.updated_at)
+          status: completeRequest.status as WashStatus,
+          technician: completeRequest.technician_id,
+          price: parseFloat(completeRequest.price),
+          notes: completeRequest.notes,
+          createdAt: new Date(completeRequest.created_at),
+          updatedAt: new Date(completeRequest.updated_at)
         };
         
         setWashRequests(prev => [newWashRequest, ...prev]);
@@ -279,7 +279,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       if (data.preferredDates?.end) updateData.preferred_date_end = data.preferredDates.end.toISOString();
       if (data.status) updateData.status = data.status;
       if (data.technician !== undefined) updateData.technician_id = data.technician;
-      if (data.price !== undefined) updateData.price = data.price;
+      if (data.price !== undefined) updateData.price = data.price.toString();
       if (data.notes !== undefined) updateData.notes = data.notes;
       
       updateData.updated_at = new Date().toISOString();
