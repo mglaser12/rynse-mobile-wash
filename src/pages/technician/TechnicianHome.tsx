@@ -1,45 +1,47 @@
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useWashRequests } from "@/contexts/WashContext";
-import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { TechnicianHeader } from "@/components/technician/TechnicianHeader";
 import { TodaySchedule } from "@/components/technician/TodaySchedule";
-import { JobRequestsTabs } from "@/components/technician/JobRequestsTabs";
-import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { VehicleWashProgressDialog } from "@/components/technician/VehicleWashProgressDialog";
-import { WashRequest } from "@/models/types";
+import { DebugPanel } from "@/components/technician/DebugPanel";
+import { useWashManagement } from "@/hooks/technician/useWashManagement";
+import { TechnicianTabs } from "@/components/technician/TechnicianTabs";
+import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
 
 const TechnicianHome = () => {
-  const { user } = useAuth();
-  const { washRequests = [], isLoading, updateWashRequest, refreshData } = useWashRequests();
-  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const { 
+    user,
+    washRequests,
+    localStateRequests,
+    setLocalStateRequests,
+    isLoading, 
+    isUpdating,
+    selectedRequestId,
+    setSelectedRequestId,
+    activeWashId,
+    setActiveWashId,
+    loadData,
+    handleAcceptRequest,
+    handleScheduleJob,
+    handleStartWash,
+    handleCompleteWash,
+    handleWashProgressComplete,
+    handleViewJobDetails
+  } = useWashManagement();
   const [isDebugMode, setIsDebugMode] = useState(false);
-  const [activeWashId, setActiveWashId] = useState<string | null>(null);
-  const [localStateRequests, setLocalStateRequests] = useState<WashRequest[]>([]);
   
   // Update local state when washRequests change
   useEffect(() => {
     if (Array.isArray(washRequests)) {
       setLocalStateRequests(washRequests);
     }
-  }, [washRequests]);
+  }, [washRequests, setLocalStateRequests]);
   
   // Force a refresh of wash requests data when the component mounts
-  const loadData = useCallback(async () => {
-    console.log("Forcing data refresh");
-    try {
-      // Fix: Call refreshData without arguments
-      await refreshData();
-    } catch (error) {
-      console.error("Error refreshing data:", error);
-    }
-  }, [refreshData]);
-  
   useEffect(() => {
     console.log("TechnicianHome mounted - loading initial data");
     loadData();
@@ -58,6 +60,10 @@ const TechnicianHome = () => {
     ? localStateRequests.filter(req => req.status === "in_progress" && req.technician === user?.id)
     : [];
   
+  const completedRequests = Array.isArray(localStateRequests)
+    ? localStateRequests.filter(req => req.status === "completed" && req.technician === user?.id)
+    : [];
+  
   const selectedRequest = selectedRequestId && Array.isArray(localStateRequests)
     ? localStateRequests.find(req => req.id === selectedRequestId) 
     : null;
@@ -65,111 +71,6 @@ const TechnicianHome = () => {
   const activeWashRequest = activeWashId && Array.isArray(localStateRequests)
     ? localStateRequests.find(req => req.id === activeWashId)
     : null;
-  
-  const handleAcceptRequest = async (requestId: string) => {
-    if (!user?.id) {
-      console.error("Cannot accept request - user ID is undefined");
-      toast.error("User authentication error");
-      return;
-    }
-    
-    setIsUpdating(true);
-    console.log(`Accepting request ${requestId} as technician ${user?.id}`);
-    
-    try {
-      // Direct database update with minimal complexity
-      const result = await updateWashRequest(requestId, {
-        status: "confirmed",
-        technician: user?.id,
-      });
-      
-      if (result) {
-        toast.success("Request accepted successfully");
-        
-        // Force refresh after a successful update to get the latest data
-        await loadData();
-        
-        // Close the dialog after success
-        setTimeout(() => {
-          setSelectedRequestId(null);
-        }, 1000);
-      } else {
-        toast.error("Failed to accept request");
-        // Force refresh to ensure we have the current state
-        await loadData();
-      }
-    } catch (error) {
-      console.error("Error accepting request:", error);
-      toast.error("An error occurred while accepting the request");
-      await loadData(); // Refresh data to get current state
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-  
-  const handleStartWash = async (requestId: string) => {
-    setIsUpdating(true);
-    try {
-      console.log(`Starting wash for request ${requestId}`);
-      const result = await updateWashRequest(requestId, {
-        status: "in_progress",
-      });
-      
-      if (result) {
-        toast.success("Wash started successfully");
-        await loadData(); // Force refresh data after starting a wash
-        
-        // Open the wash progress dialog
-        setActiveWashId(requestId);
-      } else {
-        toast.error("Failed to start wash");
-        await loadData(); // Refresh to get current state
-      }
-    } catch (error) {
-      console.error("Error starting wash:", error);
-      toast.error("An error occurred while starting the wash");
-      await loadData();
-    } finally {
-      setIsUpdating(false);
-      setSelectedRequestId(null);
-    }
-  };
-  
-  const handleCompleteWash = async (requestId: string) => {
-    setIsUpdating(true);
-    try {
-      console.log(`Completing wash for request ${requestId}`);
-      const result = await updateWashRequest(requestId, {
-        status: "completed",
-      });
-      
-      if (result) {
-        toast.success("Wash completed successfully");
-        await loadData(); // Force refresh data after completing a wash
-        
-        // Clear any active wash dialog
-        if (activeWashId === requestId) {
-          setActiveWashId(null);
-        }
-      } else {
-        toast.error("Failed to complete wash");
-        await loadData();
-      }
-    } catch (error) {
-      console.error("Error completing wash:", error);
-      toast.error("An error occurred while completing the wash");
-      await loadData();
-    } finally {
-      setIsUpdating(false);
-      setSelectedRequestId(null);
-    }
-  };
-
-  const handleWashProgressComplete = async () => {
-    if (activeWashId) {
-      await handleCompleteWash(activeWashId);
-    }
-  };
   
   // Toggle debug mode
   const toggleDebugMode = () => {
@@ -189,27 +90,19 @@ const TechnicianHome = () => {
           <>
             {/* Debug information about requests */}
             {isDebugMode && (
-              <div className="bg-gray-100 p-4 mb-6 rounded-lg text-xs overflow-auto max-h-48">
-                <h3 className="font-bold mb-2">Debug Information:</h3>
-                <p>Pending requests: {pendingRequests.length}</p>
-                <p>Assigned requests: {assignedRequests.length}</p>
-                <p>In-progress requests: {inProgressRequests.length}</p>
-                <p>Total requests: {washRequests.length}</p>
-                <p>User ID: {user?.id}</p>
-                <p>User Role: {user?.role}</p>
-                <pre className="mt-2 bg-gray-200 p-2 rounded overflow-auto">
-                  {JSON.stringify(localStateRequests.map(r => ({id: r.id, status: r.status, technician: r.technician})), null, 2)}
-                </pre>
-                <button 
-                  className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"
-                  onClick={loadData}
-                >
-                  Force Refresh
-                </button>
-              </div>
+              <DebugPanel
+                pendingRequests={pendingRequests}
+                assignedRequests={assignedRequests}
+                inProgressRequests={inProgressRequests}
+                washRequests={washRequests}
+                userId={user?.id}
+                userRole={user?.role}
+                localStateRequests={localStateRequests}
+                onRefresh={loadData}
+              />
             )}
             
-            {/* Main content */}
+            {/* Today's schedule */}
             <TodaySchedule
               inProgressRequests={inProgressRequests}
               assignedRequests={assignedRequests}
@@ -218,11 +111,14 @@ const TechnicianHome = () => {
               onCompleteWash={handleCompleteWash}
             />
             
-            <JobRequestsTabs
+            {/* Job tabs (current jobs and history) */}
+            <TechnicianTabs
               pendingRequests={pendingRequests}
               assignedRequests={assignedRequests}
+              completedRequests={completedRequests}
               onRequestClick={setSelectedRequestId}
               onStartWash={handleStartWash}
+              onViewJobDetails={handleViewJobDetails}
             />
             
             {/* Debug toggle button */}
@@ -240,7 +136,7 @@ const TechnicianHome = () => {
         )}
       </div>
       
-      {/* Request Detail Dialog */}
+      {/* Request Detail Dialog with Scheduling */}
       <RequestDetailDialog
         open={!!selectedRequestId}
         onOpenChange={(open) => !open && setSelectedRequestId(null)}
@@ -250,6 +146,7 @@ const TechnicianHome = () => {
         onAcceptRequest={handleAcceptRequest}
         onStartWash={handleStartWash}
         onCompleteWash={handleCompleteWash}
+        onScheduleJob={handleScheduleJob}
       />
       
       {/* Wash Progress Dialog */}

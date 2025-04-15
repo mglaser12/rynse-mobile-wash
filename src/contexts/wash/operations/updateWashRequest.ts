@@ -16,7 +16,7 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
   // Special handling for job acceptance (technician claiming a job)
   if (data.status === 'confirmed' && data.technician) {
     console.log(`Technician ${data.technician} is trying to accept job ${id}`);
-    return await acceptJob(id, data.technician);
+    return await acceptJob(id, data.technician, data.preferredDates);
   }
   
   // Handle all other status changes
@@ -38,6 +38,21 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
     
     if (data.notes) {
       updateData.notes = data.notes;
+    }
+    
+    // Handle date updates for scheduling
+    if (data.preferredDates) {
+      if (data.preferredDates.start) {
+        console.log("Setting preferred_date_start to:", data.preferredDates.start);
+        updateData.preferred_date_start = data.preferredDates.start.toISOString();
+      }
+      if (data.preferredDates.end) {
+        console.log("Setting preferred_date_end to:", data.preferredDates.end);
+        updateData.preferred_date_end = data.preferredDates.end.toISOString();
+      } else if (data.preferredDates.end === undefined && Object.hasOwnProperty.call(data.preferredDates, 'end')) {
+        // If end is explicitly set to undefined, clear the end date
+        updateData.preferred_date_end = null;
+      }
     }
     
     console.log("Final update data being sent to Supabase:", updateData);
@@ -64,16 +79,34 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
 }
 
 // Simplified job acceptance function with direct database update
-async function acceptJob(requestId: string, technicianId: string): Promise<boolean> {
+async function acceptJob(
+  requestId: string, 
+  technicianId: string, 
+  preferredDates?: { start?: Date, end?: Date }
+): Promise<boolean> {
   try {
     console.log(`DIRECT DB UPDATE: Accepting job ${requestId} for technician ${technicianId}`);
     
     // Simple update payload
-    const updatePayload = {
+    const updatePayload: any = {
       technician_id: technicianId,
       status: 'confirmed',
       updated_at: new Date().toISOString()
     };
+
+    // If a specific date was selected during scheduling
+    if (preferredDates && preferredDates.start) {
+      console.log("Setting scheduled date:", preferredDates.start);
+      updatePayload.preferred_date_start = preferredDates.start.toISOString();
+      
+      // If end date is explicitly provided
+      if (preferredDates.end) {
+        updatePayload.preferred_date_end = preferredDates.end.toISOString();
+      } else {
+        // If scheduling for a single day, clear the end date
+        updatePayload.preferred_date_end = null;
+      }
+    }
 
     console.log("Sending update payload to database:", updatePayload);
     
