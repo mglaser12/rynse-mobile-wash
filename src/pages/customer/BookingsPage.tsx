@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
 import { CreateWashRequestForm } from "@/components/booking/CreateWashRequestForm";
@@ -13,10 +12,16 @@ import { CompletedWashDetailDialog } from "@/components/technician/CompletedWash
 import { WashRequest } from "@/models/types";
 
 const BookingsPage = () => {
+  console.log("BookingsPage rendered - testing AI edits");
+  
   const { washRequests, isLoading, cancelWashRequest } = useWashRequests();
   const [showNewBookingDialog, setShowNewBookingDialog] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [selectedWashRequest, setSelectedWashRequest] = useState<WashRequest | null>(null);
+
+  useEffect(() => {
+    console.log("BookingsPage - Wash Requests:", washRequests.length);
+  }, [washRequests]);
 
   const activeRequests = washRequests.filter(req => 
     ["pending", "confirmed", "in_progress"].includes(req.status)
@@ -158,7 +163,6 @@ const BookingsPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog for completed wash details */}
       <CompletedWashDetailDialog
         open={!!selectedWashRequest}
         onOpenChange={(open) => !open && setSelectedWashRequest(null)}
