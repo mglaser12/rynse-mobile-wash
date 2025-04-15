@@ -18,8 +18,9 @@ export function WashRequestCard({ washRequest, onClick, actions }: WashRequestCa
   const { vehicles } = useVehicles();
   
   // Use either vehicleDetails from the request or find them in the vehicles context
+  // Filter out any null or undefined values to prevent errors
   const requestVehicles = washRequest.vehicleDetails && washRequest.vehicleDetails.length > 0
-    ? washRequest.vehicleDetails
+    ? washRequest.vehicleDetails.filter(vehicle => vehicle !== null && vehicle !== undefined)
     : vehicles.filter(v => washRequest.vehicles.includes(v.id));
 
   const statusColors: Record<string, string> = {
@@ -78,13 +79,19 @@ export function WashRequestCard({ washRequest, onClick, actions }: WashRequestCa
           <div className="flex gap-2">
             <Car className="h-4 w-4 text-muted-foreground mt-0.5" />
             <div>
-              {requestVehicles.slice(0, 2).map((vehicle, index) => (
-                <span key={vehicle.id || index}>
-                  {vehicle.make} {vehicle.model}
-                  {index < Math.min(requestVehicles.length, 2) - 1 && ", "}
-                </span>
-              ))}
-              {requestVehicles.length > 2 && ` +${requestVehicles.length - 2} more`}
+              {requestVehicles.length > 0 ? (
+                <>
+                  {requestVehicles.slice(0, 2).map((vehicle, index) => (
+                    <span key={vehicle.id || index}>
+                      {vehicle.make} {vehicle.model}
+                      {index < Math.min(requestVehicles.length, 2) - 1 && ", "}
+                    </span>
+                  ))}
+                  {requestVehicles.length > 2 && ` +${requestVehicles.length - 2} more`}
+                </>
+              ) : (
+                <span>No vehicles</span>
+              )}
             </div>
           </div>
         </div>
