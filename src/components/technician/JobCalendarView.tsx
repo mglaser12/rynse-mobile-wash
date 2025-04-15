@@ -4,15 +4,22 @@ import { WashRequest } from "@/models/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format, isSameDay } from "date-fns";
-import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarIcon, ChevronLeft, ChevronRight, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface JobCalendarViewProps {
   assignedRequests: WashRequest[];
+  inProgressRequests: WashRequest[];
   onSelectJob: (requestId: string) => void;
+  onReopenWash: (requestId: string) => void;
 }
 
-export const JobCalendarView = ({ assignedRequests, onSelectJob }: JobCalendarViewProps) => {
+export const JobCalendarView = ({ 
+  assignedRequests, 
+  inProgressRequests,
+  onSelectJob,
+  onReopenWash
+}: JobCalendarViewProps) => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   
   // Group jobs by date with null check on assignedRequests
@@ -61,9 +68,51 @@ export const JobCalendarView = ({ assignedRequests, onSelectJob }: JobCalendarVi
 
   return (
     <div className="space-y-8">
+      {/* In Progress Jobs */}
+      {inProgressRequests.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Wrench className="h-5 w-5 mr-2 text-yellow-500" />
+              In Progress Jobs
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {inProgressRequests.map((job) => (
+                <Card 
+                  key={job.id} 
+                  className="cursor-pointer hover:bg-slate-50 transition-colors border-l-4 border-l-yellow-500"
+                >
+                  <CardContent className="p-4 flex justify-between items-center">
+                    <div className="flex-1" onClick={() => onSelectJob(job.id)}>
+                      <p className="font-medium">{getCustomerName(job.customerId)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {job.vehicles.length} vehicle{job.vehicles.length !== 1 && "s"} • In progress
+                      </p>
+                    </div>
+                    <Button 
+                      variant="secondary" 
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onReopenWash(job.id);
+                      }}
+                    >
+                      Continue Wash
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Scheduled Jobs */}
       <Card>
         <CardHeader>
-          <CardTitle>Job Schedule</CardTitle>
+          <CardTitle>Scheduled Jobs</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">

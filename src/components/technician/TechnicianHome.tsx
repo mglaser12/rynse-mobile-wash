@@ -25,6 +25,7 @@ const TechnicianHome = () => {
     loadData,
     handleAcceptRequest,
     handleStartWash,
+    handleReopenWash,
     handleCompleteWash,
     handleWashProgressComplete
   } = useWashManagement();
@@ -93,6 +94,7 @@ const TechnicianHome = () => {
               assignedRequests={assignedRequests}
               onRequestClick={setSelectedRequestId}
               onStartWash={handleStartWash}
+              onReopenWash={handleReopenWash}
               onCompleteWash={handleCompleteWash}
             />
             
