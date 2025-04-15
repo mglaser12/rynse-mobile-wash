@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { WashRequest } from "@/models/types";
 import { useVehicles } from "@/contexts/VehicleContext";
-import { Calendar, MapPin, Car } from "lucide-react";
+import { Calendar, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface WashRequestCardProps {
@@ -71,11 +71,6 @@ export function WashRequestCard({ washRequest, onClick, actions }: WashRequestCa
           <div className="flex gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
             <span>{formatDateRange()}</span>
-          </div>
-          
-          <div className="flex gap-2">
-            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-            <span>{washRequest.location.name}</span>
           </div>
           
           <div className="flex gap-2">

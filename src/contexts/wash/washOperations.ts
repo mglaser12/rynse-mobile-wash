@@ -15,11 +15,46 @@ export async function createWashRequest(
   try {
     const { customerId, vehicles, preferredDates, price, notes } = washRequestData;
     
+    // First get the first available location (or create one if needed)
+    // This is a temporary solution until we implement proper location selection
+    const { data: locationData, error: locationError } = await supabase
+      .from('wash_locations')
+      .select('id')
+      .limit(1)
+      .single();
+      
+    if (locationError) {
+      // If we can't find a location, create a default one
+      const { data: newLocation, error: createLocationError } = await supabase
+        .from('wash_locations')
+        .insert({
+          name: "Default Location",
+          address: "123 Main St",
+          city: "Default City",
+          state: "CA",
+          zip_code: "00000"
+        })
+        .select('id')
+        .single();
+        
+      if (createLocationError) {
+        console.error("Error creating default location:", createLocationError);
+        toast.error("Failed to create wash request - location error");
+        return null;
+      }
+      
+      // Use the newly created location
+      var locationId = newLocation.id;
+    } else {
+      var locationId = locationData.id;
+    }
+    
     // Insert new wash request in Supabase
     const { data, error } = await supabase
       .from('wash_requests')
       .insert({
         user_id: user.id,
+        location_id: locationId, // Use the location we found or created
         preferred_date_start: preferredDates.start.toISOString(),
         preferred_date_end: preferredDates.end?.toISOString(),
         price,
