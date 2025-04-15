@@ -17,7 +17,7 @@ export async function createWashRequest(
   console.log("Wash request data:", washRequestData);
 
   try {
-    const { customerId, vehicles, preferredDates, price, notes } = washRequestData;
+    const { customerId, vehicles, preferredDates, price, notes, organizationId } = washRequestData;
     
     // First get the first available location (or create one if needed)
     // This is a temporary solution until we implement proper location selection
@@ -56,17 +56,34 @@ export async function createWashRequest(
     
     console.log("Using location ID:", locationId);
     
+    // Get the user's organization_id from their profile
+    let userOrgId = organizationId;
+    if (!userOrgId) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', user.id)
+        .single();
+        
+      if (profileData?.organization_id) {
+        userOrgId = profileData.organization_id;
+      }
+    }
+    
+    console.log("Using organization ID:", userOrgId);
+    
     // Insert new wash request in Supabase
     const { data, error } = await supabase
       .from('wash_requests')
       .insert({
         user_id: user.id,
-        location_id: locationId, // Use the location we found or created
+        location_id: locationId,
         preferred_date_start: preferredDates.start.toISOString(),
         preferred_date_end: preferredDates.end?.toISOString(),
         price,
         notes,
-        status: 'pending'
+        status: 'pending',
+        organization_id: userOrgId
       })
       .select('*')
       .single();
@@ -109,7 +126,8 @@ export async function createWashRequest(
       price: data.price,
       notes: data.notes || undefined,
       createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
+      updatedAt: new Date(data.updated_at),
+      organizationId: data.organization_id
     };
     
     console.log("Returning new wash request object:", newWashRequest);

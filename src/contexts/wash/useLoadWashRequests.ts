@@ -65,7 +65,7 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
           try {
             // Try to fetch from Supabase first - now using organization_wash_requests view
             const { data, error } = await supabase
-              .from('wash_requests')
+              .from('organization_wash_requests')
               .select(`
                 *,
                 wash_request_vehicles!inner (
@@ -95,13 +95,48 @@ export function useLoadWashRequests(userId: string | undefined, userRole?: strin
               throw error;
             }
           }
+        } else if (userRole === 'admin') {
+          // For admins, show all wash requests
+          console.log("Loading all requests for admin");
+          
+          try {
+            const { data, error } = await supabase
+              .from('wash_requests')
+              .select(`
+                *,
+                wash_request_vehicles!inner (
+                  id,
+                  vehicle_id,
+                  vehicles (*)
+                )
+              `);
+              
+            if (error) {
+              console.error("Error loading admin wash requests:", error);
+              throw error;
+            }
+            
+            requestsData = data || [];
+            errorCountRef.current = 0; // Reset error count on success
+          } catch (error) {
+            errorCountRef.current++;
+            console.error(`Error loading admin data (attempt ${errorCountRef.current}):`, error);
+            
+            if (errorCountRef.current >= MAX_RETRY_COUNT) {
+              toast.error("Failed to load wash requests. Using demo data instead.");
+              requestsData = getMockWashRequests(userId);
+            } else {
+              toast.error("Connection issue. Please check your network.");
+              throw error;
+            }
+          }
         } else {
           // For customers/fleet managers, also load using organization-based visibility
           console.log("Loading requests for customer/fleet manager - showing all within organization");
           
           try {
             const { data, error } = await supabase
-              .from('wash_requests')
+              .from('organization_wash_requests')
               .select(`
                 *,
                 wash_request_vehicles!inner (

@@ -215,6 +215,7 @@ export type Database = {
           id: string
           location_id: string
           notes: string | null
+          organization_id: string | null
           preferred_date_end: string | null
           preferred_date_start: string
           price: number
@@ -228,6 +229,7 @@ export type Database = {
           id?: string
           location_id: string
           notes?: string | null
+          organization_id?: string | null
           preferred_date_end?: string | null
           preferred_date_start: string
           price: number
@@ -241,6 +243,7 @@ export type Database = {
           id?: string
           location_id?: string
           notes?: string | null
+          organization_id?: string | null
           preferred_date_end?: string | null
           preferred_date_start?: string
           price?: number
@@ -255,6 +258,13 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "wash_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wash_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -278,17 +288,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "profiles_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "wash_requests_location_id_fkey"
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "wash_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wash_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
