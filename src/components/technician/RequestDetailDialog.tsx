@@ -49,6 +49,9 @@ export const RequestDetailDialog = ({
               className="w-full" 
               onClick={() => {
                 console.log("Accept button clicked for request:", selectedRequest.id);
+                if (userId) {
+                  console.log("Accepting job with technician ID:", userId);
+                }
                 onAcceptRequest(selectedRequest.id);
               }}
               disabled={isUpdating}

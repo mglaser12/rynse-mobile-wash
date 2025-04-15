@@ -159,10 +159,12 @@ export async function updateWashRequest(
     // Map WashRequest fields to database column names
     if (data.status) {
       updateData.status = data.status;
+      console.log(`Setting status to: ${data.status}`);
     }
     
     if (data.technician) {
       updateData.technician_id = data.technician;
+      console.log(`Setting technician_id to: ${data.technician}`);
     }
     
     if (data.price !== undefined) {
@@ -189,7 +191,7 @@ export async function updateWashRequest(
       .from('wash_requests')
       .update(updateData)
       .eq('id', id)
-      .select('*');
+      .select();
     
     if (error) {
       console.error("Error updating wash request:", error);
@@ -198,6 +200,13 @@ export async function updateWashRequest(
     }
     
     console.log("Wash request updated successfully:", updatedData);
+    
+    // Check if we got data back
+    if (!updatedData || updatedData.length === 0) {
+      console.warn("Update succeeded but no data was returned");
+      // Even though no data was returned, the update was successful
+    }
+    
     toast.success("Wash request updated successfully");
     return true;
   } catch (error) {

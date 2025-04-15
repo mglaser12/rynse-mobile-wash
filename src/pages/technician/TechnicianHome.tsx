@@ -50,6 +50,8 @@ const TechnicianHome = () => {
     setIsUpdating(true);
     try {
       console.log(`Accepting request ${requestId} as technician ${user?.id}`);
+      
+      // First update the status to "confirmed" and set technician
       const result = await updateWashRequest(requestId, {
         status: "confirmed",
         technician: user?.id,
@@ -57,7 +59,14 @@ const TechnicianHome = () => {
       
       if (result) {
         toast.success("Request accepted successfully");
-        await refreshData(); // Force refresh data after accepting a request
+        // Force refresh to get the updated data
+        await refreshData(); 
+        
+        // Wait a bit to ensure database has fully processed the update
+        setTimeout(() => {
+          // Close the dialog after a small delay to show the success message
+          setSelectedRequestId(null);
+        }, 1000);
       } else {
         toast.error("Failed to accept request");
       }
@@ -66,7 +75,6 @@ const TechnicianHome = () => {
       toast.error("An error occurred while accepting the request");
     } finally {
       setIsUpdating(false);
-      setSelectedRequestId(null);
     }
   };
   
@@ -157,7 +165,7 @@ const TechnicianHome = () => {
                 <p>User ID: {user?.id}</p>
                 <p>User Role: {user?.role}</p>
                 <pre className="mt-2 bg-gray-200 p-2 rounded overflow-auto">
-                  {JSON.stringify(washRequests.map(r => ({id: r.id, status: r.status})), null, 2)}
+                  {JSON.stringify(washRequests.map(r => ({id: r.id, status: r.status, technician: r.technician})), null, 2)}
                 </pre>
                 <button 
                   className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"
