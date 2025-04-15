@@ -48,19 +48,21 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
       // Use scrollIntoView for all platforms
       section.scrollIntoView({ behavior: "smooth", block: "start" });
       
-      // For mobile, we need additional handling to account for the ScrollArea component
-      if (isMobile && scrollAreaRef.current) {
-        const sectionTop = section.getBoundingClientRect().top;
-        const containerTop = scrollAreaRef.current.getBoundingClientRect().top;
-        const scrollPosition = sectionTop - containerTop;
-        
-        scrollAreaRef.current.scrollTop = scrollPosition;
+      // Additional handling for ScrollArea component
+      if (scrollAreaRef.current) {
+        setTimeout(() => {
+          const sectionTop = section.getBoundingClientRect().top;
+          const containerTop = scrollAreaRef.current?.getBoundingClientRect().top || 0;
+          const scrollPosition = scrollAreaRef.current.scrollTop + (sectionTop - containerTop);
+          
+          scrollAreaRef.current.scrollTop = scrollPosition;
+        }, 50); // Small delay to ensure DOM is updated
       }
     }
   };
 
   return (
-    <div className="space-y-6 overflow-hidden flex flex-col h-full">
+    <div className="space-y-6 overflow-hidden flex flex-col h-full max-h-[80vh]">
       <div>
         <h3 className="text-lg font-medium">Request a Mobile Wash</h3>
         <p className="text-sm text-muted-foreground">
@@ -69,11 +71,11 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
       </div>
       
       <ScrollArea 
-        className="flex-1 pr-4 -mr-4" 
+        className="flex-1 pr-4 -mr-4 overflow-y-auto" 
         scrollHideDelay={0} 
         ref={scrollAreaRef}
       >
-        <div ref={formRef}>
+        <div ref={formRef} className="pb-4">
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
               {/* Vehicle Selection */}

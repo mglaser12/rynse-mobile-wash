@@ -28,7 +28,7 @@ export function NotesSection({ notes, onNotesChange, onContinue }: NotesSectionP
         />
       </div>
       
-      {isMobile && onContinue && (
+      {onContinue && (
         <Button 
           type="button" 
           className="w-full" 

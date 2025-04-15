@@ -42,7 +42,7 @@ export function DateSelectionSection({
         Select a single date or a range of dates for your wash.
       </p>
       
-      {isMobile && onContinue && startDate && (
+      {startDate && onContinue && (
         <div className="mt-4">
           <Button 
             type="button" 

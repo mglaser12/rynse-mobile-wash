@@ -58,7 +58,7 @@ export function VehicleSelectionSection({
         </div>
       </div>
       
-      {isMobile && onContinue && selectedVehicleIds.length > 0 && (
+      {selectedVehicleIds.length > 0 && onContinue && (
         <Button 
           type="button" 
           className="w-full" 
