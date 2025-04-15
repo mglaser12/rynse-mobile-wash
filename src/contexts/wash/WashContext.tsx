@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { WashContextType } from "./types";
 import { useLoadWashRequests } from "./useLoadWashRequests";
 import { createWashRequest, cancelWashRequest, updateWashRequest } from "./washOperations";
+import { toast } from "sonner";
 
 const WashContext = createContext<WashContextType>({} as WashContextType);
 
