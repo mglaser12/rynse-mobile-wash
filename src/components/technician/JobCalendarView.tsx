@@ -71,10 +71,10 @@ export const JobCalendarView = ({ assignedRequests, onSelectJob }: JobCalendarVi
                 onSelect={setSelectedDate}
                 className="rounded-md border"
                 components={{
-                  DayContent: (props) => (
+                  DayContent: ({ date, ...props }) => (
                     <div className="relative w-full h-full">
-                      {props.day}
-                      {renderJobsForDay(props.date)}
+                      {props.children}
+                      {renderJobsForDay(date)}
                     </div>
                   ),
                 }}
