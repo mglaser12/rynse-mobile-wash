@@ -11,6 +11,7 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DeleteVehicleDialogProps {
   isOpen: boolean;
@@ -27,9 +28,11 @@ export function DeleteVehicleDialog({
   onCancel,
   vehicleName
 }: DeleteVehicleDialogProps) {
+  const isMobile = useIsMobile();
+  
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
-      <AlertDialogContent>
+      <AlertDialogContent className={`w-[calc(100%-32px)] ${isMobile ? 'max-w-[95vw]' : 'max-w-lg'}`}>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Vehicle</AlertDialogTitle>
           <AlertDialogDescription>
@@ -37,15 +40,20 @@ export function DeleteVehicleDialog({
             associated with this vehicle will be permanently removed.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+        <AlertDialogFooter className={isMobile ? 'flex-col gap-2' : ''}>
+          <AlertDialogCancel 
+            disabled={isDeleting}
+            className={isMobile ? 'w-full mt-0' : ''}
+          >
+            Cancel
+          </AlertDialogCancel>
           <AlertDialogAction 
             onClick={(e) => {
               e.preventDefault();
               onDelete();
             }}
             disabled={isDeleting}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className={`bg-destructive text-destructive-foreground hover:bg-destructive/90 ${isMobile ? 'w-full' : ''}`}
           >
             {isDeleting ? (
               <>

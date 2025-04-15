@@ -8,11 +8,13 @@ import { VehicleDialogs } from "@/components/vehicles/VehicleDialogs";
 import { VehiclePageSkeleton } from "@/components/vehicles/VehiclePageSkeleton";
 import { DemoVehicleButton } from "@/components/vehicles/DemoVehicleButton";
 import { VehicleInfoSection } from "@/components/vehicles/VehicleInfoSection";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const VehiclesPage = () => {
   const { vehicles, isLoading } = useVehicles();
   const [showAddVehicleDialog, setShowAddVehicleDialog] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   const handleAddVehicle = () => {
     setShowAddVehicleDialog(true);
