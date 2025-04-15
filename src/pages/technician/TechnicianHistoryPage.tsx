@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WashRequest } from "@/models/types";
-import { Loader2, Calendar, FileText } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, FileText } from "lucide-react";
 import { JobHistory } from "@/components/technician/JobHistory";
 import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
 import { useWashManagement } from "@/hooks/technician/useWashManagement";
+import { CompletedWashDetailDialog } from "@/components/technician/CompletedWashDetailDialog";
 
 const TechnicianHistoryPage = () => {
   const { 
@@ -24,6 +24,8 @@ const TechnicianHistoryPage = () => {
     loadData
   } = useWashManagement();
 
+  const [selectedCompletedWash, setSelectedCompletedWash] = useState<WashRequest | null>(null);
+
   // Initialize component on mount
   useEffect(() => {
     // Force refresh data when component mounts
@@ -39,6 +41,13 @@ const TechnicianHistoryPage = () => {
   const selectedRequest = selectedRequestId && Array.isArray(washRequests)
     ? washRequests.find(req => req.id === selectedRequestId) 
     : null;
+    
+  const handleViewCompletedWashDetails = (requestId: string) => {
+    const washRequest = washRequests.find(req => req.id === requestId);
+    if (washRequest && washRequest.status === "completed") {
+      setSelectedCompletedWash(washRequest);
+    }
+  };
 
   return (
     <AppLayout>
@@ -55,7 +64,7 @@ const TechnicianHistoryPage = () => {
         ) : (
           <JobHistory 
             completedJobs={completedRequests} 
-            onViewJobDetails={handleViewJobDetails} 
+            onViewJobDetails={(requestId) => handleViewCompletedWashDetails(requestId)} 
           />
         )}
       </div>
@@ -72,6 +81,13 @@ const TechnicianHistoryPage = () => {
         onCompleteWash={handleCompleteWash}
         onScheduleJob={handleScheduleJob}
         readOnly={true}
+      />
+      
+      {/* Completed Wash Detail Dialog */}
+      <CompletedWashDetailDialog
+        open={!!selectedCompletedWash}
+        onOpenChange={(open) => !open && setSelectedCompletedWash(null)}
+        washRequest={selectedCompletedWash}
       />
     </AppLayout>
   );

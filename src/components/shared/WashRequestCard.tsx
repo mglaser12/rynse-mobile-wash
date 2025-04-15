@@ -12,16 +12,22 @@ interface WashRequestCardProps {
   washRequest: WashRequest;
   onClick?: () => void;
   actions?: React.ReactNode;
+  showDetailsButton?: boolean; // Added to optionally show a details button
 }
 
-export function WashRequestCard({ washRequest, onClick, actions }: WashRequestCardProps) {
+export function WashRequestCard({ 
+  washRequest, 
+  onClick, 
+  actions, 
+  showDetailsButton = false 
+}: WashRequestCardProps) {
   const { vehicles } = useVehicles();
   
   // Use either vehicleDetails from the request or find them in the vehicles context
   // Filter out any null or undefined values to prevent errors
   const requestVehicles = washRequest.vehicleDetails && washRequest.vehicleDetails.length > 0
     ? washRequest.vehicleDetails.filter(vehicle => vehicle !== null && vehicle !== undefined)
-    : vehicles.filter(v => washRequest.vehicles.includes(v.id));
+    : vehicles.filter(v => washRequest.vehicles && washRequest.vehicles.includes(v.id));
 
   const statusColors: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800",
@@ -50,7 +56,7 @@ export function WashRequestCard({ washRequest, onClick, actions }: WashRequestCa
   return (
     <Card 
       className={`overflow-hidden ${onClick ? "cursor-pointer hover:border-primary transition-colors" : ""}`}
-      onClick={onClick}
+      onClick={onClick ? onClick : undefined}
     >
       <CardContent className="p-4">
         <div className="flex justify-between items-start">
@@ -97,6 +103,23 @@ export function WashRequestCard({ washRequest, onClick, actions }: WashRequestCa
         </div>
         
         {actions && <div className="mt-4">{actions}</div>}
+        
+        {/* Show a details button if explicitly requested */}
+        {showDetailsButton && washRequest.status === "completed" && !onClick && (
+          <div className="mt-4">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full" 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (typeof onClick === 'function') onClick();
+              }}
+            >
+              View Wash Details
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

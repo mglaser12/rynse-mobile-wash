@@ -9,11 +9,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Loader2, PlusCircle } from "lucide-react";
+import { CompletedWashDetailDialog } from "@/components/technician/CompletedWashDetailDialog";
+import { WashRequest } from "@/models/types";
 
 const BookingsPage = () => {
   const { washRequests, isLoading, cancelWashRequest } = useWashRequests();
   const [showNewBookingDialog, setShowNewBookingDialog] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [selectedWashRequest, setSelectedWashRequest] = useState<WashRequest | null>(null);
 
   const activeRequests = washRequests.filter(req => 
     ["pending", "confirmed", "in_progress"].includes(req.status)
@@ -29,6 +32,10 @@ const BookingsPage = () => {
     } finally {
       setCancellingId(null);
     }
+  };
+
+  const handleViewCompletedWash = (washRequest: WashRequest) => {
+    setSelectedWashRequest(washRequest);
   };
 
   return (
@@ -108,6 +115,7 @@ const BookingsPage = () => {
                   <WashRequestCard 
                     key={request.id} 
                     washRequest={request}
+                    onClick={() => handleViewCompletedWash(request)}
                   />
                 ))
               ) : (
@@ -149,6 +157,13 @@ const BookingsPage = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Dialog for completed wash details */}
+      <CompletedWashDetailDialog
+        open={!!selectedWashRequest}
+        onOpenChange={(open) => !open && setSelectedWashRequest(null)}
+        washRequest={selectedWashRequest}
+      />
     </AppLayout>
   );
 };

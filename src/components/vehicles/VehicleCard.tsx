@@ -10,12 +10,19 @@ interface VehicleCardProps {
   onClick?: () => void;
   selected?: boolean;
   selectionMode?: boolean;
+  className?: string; // Added className prop
 }
 
-export function VehicleCard({ vehicle, onClick, selected = false, selectionMode = false }: VehicleCardProps) {
+export function VehicleCard({ 
+  vehicle, 
+  onClick, 
+  selected = false, 
+  selectionMode = false,
+  className = ""
+}: VehicleCardProps) {
   return (
     <Card 
-      className={`overflow-hidden transition-all duration-200 ${selected ? 'ring-2 ring-primary' : ''} ${onClick ? 'cursor-pointer hover:bg-accent' : ''}`}
+      className={`overflow-hidden transition-all duration-200 ${selected ? 'ring-2 ring-primary' : ''} ${onClick ? 'cursor-pointer hover:bg-accent' : ''} ${className}`}
       onClick={onClick}
     >
       <CardContent className="p-0">
