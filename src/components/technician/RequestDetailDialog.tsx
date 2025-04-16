@@ -4,7 +4,7 @@ import { WashRequest } from "@/models/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Loader2, Info, Building, Calendar } from "lucide-react";
+import { AlertTriangle, Loader2, Calendar } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { JobScheduler } from "./JobScheduler";
 
@@ -94,16 +94,6 @@ export const RequestDetailDialog = ({
               </Alert>
             )}
             
-            {/* Fleet manager notice */}
-            {isFleetManagerJob && selectedRequest.status === "pending" && !isMockRequest && !readOnly && (
-              <Alert>
-                <Building className="h-4 w-4 text-blue-500" />
-                <AlertDescription className="text-sm">
-                  This is a job created by someone in your organization. The vehicle(s) may require special handling.
-                </AlertDescription>
-              </Alert>
-            )}
-            
             <WashRequestCard washRequest={selectedRequest} />
             
             {/* Only show action buttons if not in readOnly mode */}
@@ -188,3 +178,4 @@ export const RequestDetailDialog = ({
     </>
   );
 };
+
