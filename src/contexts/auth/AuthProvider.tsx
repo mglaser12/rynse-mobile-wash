@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
@@ -65,15 +66,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("Registering with role:", role);
       
-      // Validate that role is one of the accepted values in the database
-      // Based on the error, it seems the database expects specific role values
-      let validRole = role;
+      // Map fleet_manager role to customer in the database
+      // This ensures fleet managers are stored as customers in the database
+      let databaseRole = role;
+      if (role === 'fleet_manager') {
+        console.log("Converting fleet_manager role to customer in database");
+        databaseRole = 'customer';
+      }
       
-      // Make sure role matches what's expected in the database
-      // Common values would be: 'fleet_manager', 'technician', 'admin', 'customer'
+      // Validate that role is one of the accepted values in the database
       if (!['fleet_manager', 'technician', 'admin', 'customer'].includes(role)) {
         console.warn(`Role '${role}' may not be valid in database, defaulting to 'customer'`);
-        validRole = 'customer';
+        databaseRole = 'customer';
       }
       
       // Get the default organization ID
@@ -86,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           data: {
             name: name,
-            role: validRole,
+            role: role, // Keep the original role in user metadata
           },
         },
       });
@@ -106,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: authData.user.id,
           email,
           name,
-          role: validRole, // Use the validated role
+          role: databaseRole, // Use the modified role for the database
           organization_id: defaultOrgId // Assign to default organization
         });
 
