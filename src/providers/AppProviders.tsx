@@ -9,7 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 
-// Create a client
+// Create a client outside of the component to avoid React hooks issues
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
