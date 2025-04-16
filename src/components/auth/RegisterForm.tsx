@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +42,8 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
     setIsLoading(true);
     
     try {
-      await register(name, email, password, role);
+      // Fix: Pass email as the first parameter (email), name as the third parameter (name)
+      await register(email, password, name, role);
       toast.success("Registration successful! Please login to continue.");
       // Redirect to login view
       onLoginClick();
