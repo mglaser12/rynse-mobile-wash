@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Rynse - Mobile Wash Services</title>
     <meta name="description" content="Rynse - Mobile Wash Services" />
     <meta name="author" content="Rynse" />
@@ -38,19 +38,38 @@
     <!-- Fix for iOS PWA input focus issues -->
     <style>
       @supports (-webkit-touch-callout: none) {
+        /* iOS form fixes */
         input, textarea, select {
-          font-size: 16px !important;
+          font-size: 16px !important; /* Prevents iOS zoom on focus */
+          -webkit-appearance: none !important;
+          appearance: none !important;
+          border-radius: var(--radius);
         }
+        
+        /* Enable text selection */
+        input, textarea, select, [contenteditable] {
+          -webkit-user-select: text !important;
+          user-select: text !important;
+          cursor: text !important;
+          -webkit-touch-callout: default !important;
+        }
+        
+        /* Disable text selection on non-input elements */
         body {
           -webkit-user-select: none;
           -webkit-tap-highlight-color: transparent;
           -webkit-touch-callout: none;
-          cursor: pointer;
+          cursor: default;
         }
-        input, textarea, select, [contenteditable] {
-          -webkit-user-select: text;
-          user-select: text;
-          cursor: text;
+        
+        /* Fix iOS PWA viewport issues */
+        html {
+          height: -webkit-fill-available;
+        }
+        
+        /* Ensure inputs are fixed correctly */
+        input[readonly], input[disabled] {
+          opacity: 1 !important;
         }
       }
     </style>

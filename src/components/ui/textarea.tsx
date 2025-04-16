@@ -8,6 +8,16 @@ export interface TextareaProps
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, ...props }, ref) => {
+    // iOS PWA fix for text input
+    const handleFocus = React.useCallback((e: React.FocusEvent<HTMLTextAreaElement>) => {
+      // On iOS PWA, force the element to be selected properly
+      if (e.target && /iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        setTimeout(() => {
+          e.target.focus();
+        }, 10);
+      }
+    }, []);
+    
     return (
       <textarea
         className={cn(
@@ -15,6 +25,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           className
         )}
         ref={ref}
+        onFocus={handleFocus}
         {...props}
       />
     )

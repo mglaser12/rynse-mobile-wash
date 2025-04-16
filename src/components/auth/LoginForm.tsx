@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -18,6 +18,36 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  
+  // Fix for iOS focus issues
+  useEffect(() => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    
+    if (isIOS) {
+      const inputs = document.querySelectorAll('input');
+      
+      const handleInputTouch = (e: Event) => {
+        const input = e.target as HTMLInputElement;
+        // Small delay seems to help iOS
+        setTimeout(() => {
+          input.focus();
+        }, 10);
+      };
+      
+      inputs.forEach(input => {
+        input.addEventListener('touchstart', handleInputTouch);
+      });
+      
+      return () => {
+        inputs.forEach(input => {
+          input.removeEventListener('touchstart', handleInputTouch);
+        });
+      };
+    }
+  }, []);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +67,15 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Special handler for iOS inputs
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  };
+  
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
   };
 
   return (
@@ -63,10 +102,11 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
               type="email"
               placeholder="john@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               disabled={isLoading}
               className="w-full"
               autoComplete="email"
+              ref={emailInputRef}
             />
           </div>
           <div className="space-y-2">
@@ -80,10 +120,11 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
               disabled={isLoading}
               className="w-full"
               autoComplete="current-password"
+              ref={passwordInputRef}
             />
           </div>
           <Button type="submit" className="w-full" disabled={isLoading || authLoading}>
