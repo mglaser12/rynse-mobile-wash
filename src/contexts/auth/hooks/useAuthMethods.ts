@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -86,25 +85,11 @@ export const useAuthMethods = () => {
         throw new Error("Failed to create user account");
       }
 
-      // When inserting into profiles table, explicitly cast the string to UUID
-      // This solves the type mismatch between text and UUID
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
-          email,
-          name,
-          role: databaseRole,
-          organization_id: organizationId  // The database function will handle this value from metadata
-        });
-
-      if (profileError) {
-        console.error("Error creating profile:", profileError.message);
-        toast.warning("Account created but profile setup incomplete. Please login to continue.");
-      } else {
-        toast.success("Registration successful! Please login to continue.");
-      }
+      // IMPORTANT: Don't insert into profiles table, the database trigger will handle this
+      // The handle_new_user() function will create the profile automatically
       
+      // Just show a success message
+      toast.success("Registration successful! Please login to continue.");
       navigate("/auth");
     } catch (error: any) {
       console.error("Registration failed:", error.message);
