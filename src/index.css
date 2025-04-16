@@ -76,6 +76,27 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+  
+  /* iOS PWA specific fixes */
+  /* Prevent zooming when focusing inputs */
+  input, textarea, select {
+    font-size: 16px;
+  }
+  
+  /* Fix for iOS standalone mode input issues */
+  .ios-standalone input,
+  .ios-standalone textarea,
+  .ios-standalone select {
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: var(--radius);
+  }
+  
+  /* Prevent scrolling issues in iOS standalone mode */
+  .ios-standalone {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+  }
 }
 
 @layer components {
