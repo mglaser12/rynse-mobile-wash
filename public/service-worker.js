@@ -1,7 +1,7 @@
-
 // Service Worker for Rynse PWA
-const CACHE_NAME = 'rynse-cache-v1';
-const APP_VERSION = '1.0.1'; // Version tracking for cache invalidation
+const CACHE_NAME = 'rynse-cache-v2'; // Increment cache version to force refresh
+const APP_VERSION = '1.0.2'; // Increment version 
+const FALLBACK_HTML = '/offline.html';
 
 // Assets to cache immediately on install
 const PRECACHE_ASSETS = [
@@ -14,26 +14,34 @@ const PRECACHE_ASSETS = [
 // Install event - precache static assets
 self.addEventListener('install', (event) => {
   console.log('Service Worker: Installing version', APP_VERSION);
+  
+  // Force activate this service worker immediately, replacing any older version
+  self.skipWaiting();
+  
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Service Worker: Caching files');
         return cache.addAll(PRECACHE_ASSETS);
       })
-      .then(() => self.skipWaiting()) // Force new service worker to activate immediately
+      .catch((error) => {
+        console.error('Service Worker: Precaching failed:', error);
+        // Continue installation even if precaching fails
+      })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
-  
   console.log('Service Worker: Activating version', APP_VERSION);
+  
+  // Clear all caches to ensure fresh content
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
+          // Delete all caches except the current one
+          if (cacheName !== CACHE_NAME) {
             console.log('Service Worker: Deleting old cache', cacheName);
             return caches.delete(cacheName);
           }
@@ -60,7 +68,7 @@ function shouldCache(url) {
   return url.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/);
 }
 
-// Enhanced fetch event - with better caching strategy and error recovery
+// Enhanced fetch event with network-first approach for main resources
 self.addEventListener('fetch', (event) => {
   // Skip cross-origin requests, like analytics
   if (!event.request.url.startsWith(self.location.origin)) {
@@ -76,32 +84,33 @@ self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('supabase.co')) {
     return;
   }
-
-  // HTML navigation requests - use network-first strategy
+  
+  // Network-first strategy for HTML and main JavaScript files
   if (event.request.mode === 'navigate' || 
-      (event.request.method === 'GET' && 
-       event.request.headers.get('accept').includes('text/html'))) {
+      (event.request.url.includes('/assets/') && event.request.url.endsWith('.js')) ||
+      (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'))) {
     
     event.respondWith(
       fetch(event.request)
         .then(response => {
-          // Cache a copy of the response
+          // Cache the fresh response
           const responseToCache = response.clone();
           caches.open(CACHE_NAME)
-            .then(cache => cache.put(event.request, responseToCache));
+            .then(cache => cache.put(event.request, responseToCache))
+            .catch(err => console.error('Failed to update cache:', err));
           
           return response;
         })
         .catch(() => {
-          // If network fetch fails, try to return cached response
+          // If network fetch fails, return cached response or home
           return caches.match(event.request)
             .then(cachedResponse => {
               if (cachedResponse) {
-                console.log('Service Worker: Serving cached HTML');
+                console.log('Service Worker: Serving cached content');
                 return cachedResponse;
               }
               
-              // If no cached response, serve fallback
+              // If no cached response for this exact URL, try the home page
               return caches.match('/');
             });
         })
@@ -109,27 +118,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For other requests, try cache first, then network
+  // For other assets use cache-first approach
   event.respondWith(
     caches.match(event.request)
       .then((cachedResponse) => {
         // Return cached response if found
         if (cachedResponse) {
-          // In background, check for newer version
-          const fetchPromise = fetch(event.request)
-            .then(networkResponse => {
-              // Update cache if should be cached
-              if (shouldCache(event.request.url)) {
-                const cacheCopy = networkResponse.clone();
-                caches.open(CACHE_NAME)
-                  .then(cache => cache.put(event.request, cacheCopy));
-              }
-            })
-            .catch(error => console.log('Failed to update cache:', error));
-            
-          // Don't wait for the fetch to complete
-          event.waitUntil(fetchPromise);
-          
           return cachedResponse;
         }
 
@@ -147,7 +141,8 @@ self.addEventListener('fetch', (event) => {
             caches.open(CACHE_NAME)
               .then((cache) => {
                 cache.put(event.request, responseToCache);
-              });
+              })
+              .catch(err => console.error('Failed to cache new response:', err));
 
             return response;
           })
@@ -156,6 +151,8 @@ self.addEventListener('fetch', (event) => {
             if (event.request.url.match(/\.(png|jpg|jpeg|gif|svg)$/)) {
               return caches.match('/placeholder.svg');
             }
+            // For JS/CSS files that fail, let the error bubble up
+            throw new Error(`Failed to fetch: ${event.request.url}`);
           });
       })
   );
@@ -187,4 +184,3 @@ self.addEventListener('message', (event) => {
 self.addEventListener('error', (event) => {
   console.error('Service Worker error:', event.message);
 });
-
