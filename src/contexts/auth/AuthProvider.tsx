@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import AuthContext from "./useAuth";
 import { useAuthMethods } from "./hooks/useAuthMethods";
@@ -17,6 +17,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     getSession 
   } = useSession();
   const location = useLocation();
+  const initialized = useRef(false);
 
   // Setup auth subscription
   useAuthSubscription(
@@ -29,9 +30,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Combine loading states
   const isLoading = authMethodsLoading || sessionLoading;
 
-  // Debug logging
+  // Debug logging - only log once per route change
   useEffect(() => {
-    console.log("Auth state:", { isAuthenticated, isLoading, user, path: location.pathname });
+    if (!initialized.current || location.pathname) {
+      console.log("Auth state:", { isAuthenticated, isLoading, user, path: location.pathname });
+      initialized.current = true;
+    }
   }, [isAuthenticated, isLoading, user, location]);
 
   const value = {

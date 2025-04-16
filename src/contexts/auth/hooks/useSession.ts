@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "../types";
 import { loadUserProfile } from "../userProfile";
@@ -10,9 +10,17 @@ export const useSession = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const sessionCheckInProgress = useRef(false);
 
   const getSession = useCallback(async () => {
+    // Prevent concurrent session checks
+    if (sessionCheckInProgress.current) {
+      console.log("Session check already in progress, skipping");
+      return;
+    }
+
     console.log("Getting session...");
+    sessionCheckInProgress.current = true;
     
     const cachedProfile = getUserProfileFromStorage();
     if (isRunningAsPWA() && cachedProfile) {
@@ -34,6 +42,7 @@ export const useSession = () => {
       }
       
       setIsLoading(false);
+      sessionCheckInProgress.current = false;
     }, 5000);
     
     try {
@@ -54,6 +63,7 @@ export const useSession = () => {
         }
         
         setIsLoading(false);
+        sessionCheckInProgress.current = false;
         return;
       }
       
@@ -115,6 +125,7 @@ export const useSession = () => {
       }
     } finally {
       setIsLoading(false);
+      sessionCheckInProgress.current = false;
       console.log("Session check complete, loading set to false");
     }
   }, []);

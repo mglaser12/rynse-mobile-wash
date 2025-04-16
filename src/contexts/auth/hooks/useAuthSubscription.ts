@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "../types";
 import { loadUserProfile } from "../userProfile";
@@ -12,8 +12,17 @@ export const useAuthSubscription = (
   setIsLoading: (isLoading: boolean) => void,
   getSession: () => Promise<void>
 ) => {
+  // Use ref to track if the subscription has been initialized
+  const subscriptionInitialized = useRef(false);
+
   useEffect(() => {
+    // Only initialize subscription once
+    if (subscriptionInitialized.current) {
+      return () => {};
+    }
+    
     console.log("Auth subscription initialized");
+    subscriptionInitialized.current = true;
     
     const detectBrokenState = () => {
       const loadingTimeout = setTimeout(() => {
@@ -70,6 +79,7 @@ export const useAuthSubscription = (
       }
     });
 
+    // Only call getSession once during initialization
     getSession();
 
     return () => {
