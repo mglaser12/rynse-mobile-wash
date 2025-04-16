@@ -12,7 +12,12 @@ export const useCalendarData = (assignedRequests: WashRequest[]) => {
   
   // Group jobs by date with null check on assignedRequests
   const jobsByDate = useMemo(() => {
-    return (assignedRequests || []).reduce((acc, job) => {
+    if (!assignedRequests || !Array.isArray(assignedRequests)) {
+      return {};
+    }
+    return assignedRequests.reduce((acc, job) => {
+      if (!job.preferredDates || !job.preferredDates.start) return acc;
+      
       const dateKey = format(job.preferredDates.start, "yyyy-MM-dd");
       if (!acc[dateKey]) {
         acc[dateKey] = [];
@@ -39,11 +44,18 @@ export const useCalendarData = (assignedRequests: WashRequest[]) => {
   }, [jobsByDate, selectedDate]);
   
   // Get jobs for selected date
-  const selectedDateJobs = jobsByDate[format(selectedDate, "yyyy-MM-dd")] || [];
+  const selectedDateJobs = useMemo(() => {
+    if (!selectedDate) return [];
+    
+    const dateKey = format(selectedDate, "yyyy-MM-dd");
+    return jobsByDate[dateKey] || [];
+  }, [selectedDate, jobsByDate]);
   
   // Get dates with jobs for calendar highlighting
-  const datesWithJobs = Object.keys(jobsByDate)
-    .map(dateStr => new Date(dateStr));
+  const datesWithJobs = useMemo(() => {
+    return Object.keys(jobsByDate)
+      .map(dateStr => new Date(dateStr));
+  }, [jobsByDate]);
     
   return {
     selectedDate,

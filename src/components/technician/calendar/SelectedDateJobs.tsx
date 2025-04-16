@@ -22,7 +22,7 @@ export const SelectedDateJobs = ({
         Jobs for {format(selectedDate, "MMMM d, yyyy")}
       </h3>
       <div className="space-y-4">
-        {selectedDateJobs.length > 0 ? (
+        {Array.isArray(selectedDateJobs) && selectedDateJobs.length > 0 ? (
           selectedDateJobs.map((job) => (
             <Card 
               key={job.id} 

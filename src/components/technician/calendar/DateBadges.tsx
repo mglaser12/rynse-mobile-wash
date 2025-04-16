@@ -15,6 +15,8 @@ export const DateBadges = ({
   selectedDate,
   onSelectDate
 }: DateBadgesProps) => {
+  if (!jobsByDate) return null;
+
   const sortedDates = Object.keys(jobsByDate)
     .map(dateStr => new Date(dateStr))
     .sort((a, b) => a.getTime() - b.getTime());
@@ -23,7 +25,9 @@ export const DateBadges = ({
     <div className="flex flex-wrap gap-2 justify-center mt-4">
       {sortedDates.map(date => {
         const dateStr = format(date, "yyyy-MM-dd");
-        const jobCount = jobsByDate[dateStr].length;
+        const jobs = jobsByDate[dateStr];
+        // Make sure jobs exist before accessing length
+        const jobCount = jobs ? jobs.length : 0;
         const isPastDate = isPast(date) && !isToday(date);
         const isCurrentDay = isToday(date);
         

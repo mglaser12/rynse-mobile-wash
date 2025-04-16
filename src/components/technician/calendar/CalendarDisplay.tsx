@@ -43,12 +43,16 @@ export const CalendarDisplay = ({
           }
         }}
         components={{
-          Day: ({ date, ...props }) => {
+          Day: (props) => {
+            // Make sure we're safely accessing the date property
+            if (!props || !props.date) return null;
+            
+            const date = props.date;
             const dateStr = format(date, "yyyy-MM-dd");
-            const hasJobs = jobsByDate[dateStr] && jobsByDate[dateStr].length > 0;
+            const hasJobs = jobsByDate && jobsByDate[dateStr] && jobsByDate[dateStr].length > 0;
             const isPastDay = isPast(date) && !isToday(date);
             const isCurrentDay = isToday(date);
-            const jobCount = jobsByDate[dateStr]?.length || 0;
+            const jobCount = jobsByDate && jobsByDate[dateStr] ? jobsByDate[dateStr].length : 0;
             
             return (
               <div 
