@@ -68,6 +68,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Get default organization
+  const getDefaultOrganization = async (): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('id')
+        .limit(1)
+        .single();
+        
+      if (error) {
+        console.error("Error fetching default organization:", error);
+        return null;
+      }
+      
+      return data?.id || null;
+    } catch (error) {
+      console.error("Error in getDefaultOrganization:", error);
+      return null;
+    }
+  };
+
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
@@ -128,6 +149,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         validRole = 'customer';
       }
       
+      // Get the default organization ID
+      const defaultOrgId = await getDefaultOrganization();
+      console.log("Default organization ID:", defaultOrgId);
+      
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email,
         password: password,
@@ -147,7 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Failed to create user account");
       }
 
-      // Try to create the profile with the valid role
+      // Try to create the profile with the valid role and default organization
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -155,6 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email,
           name,
           role: validRole, // Use the validated role
+          organization_id: defaultOrgId // Assign to default organization
         });
 
       if (profileError) {
