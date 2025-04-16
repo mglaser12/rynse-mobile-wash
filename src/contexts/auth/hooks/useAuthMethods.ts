@@ -86,8 +86,8 @@ export const useAuthMethods = () => {
         throw new Error("Failed to create user account");
       }
 
-      // Update the profile table insertion - use organization_id instead of organizationId
-      // This matches the column name in the profiles table
+      // When inserting into profiles table, explicitly cast the string to UUID
+      // This solves the type mismatch between text and UUID
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -95,7 +95,7 @@ export const useAuthMethods = () => {
           email,
           name,
           role: databaseRole,
-          organization_id: organizationId  // Changed from organizationId to match the column name
+          organization_id: organizationId  // The database function will handle this value from metadata
         });
 
       if (profileError) {
