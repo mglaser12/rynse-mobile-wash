@@ -107,13 +107,13 @@ export const JobCalendarView = ({
                   }
                 }}
                 components={{
-                  Day: ({ day, displayMonth, ...props }) => {
-                    const dateStr = format(day, "yyyy-MM-dd");
+                  Day: ({ date, ...props }) => {
+                    const dateStr = format(date, "yyyy-MM-dd");
                     const hasJobs = jobsByDate[dateStr] && jobsByDate[dateStr].length > 0;
                     
                     return (
                       <div {...props}>
-                        {day.getDate()}
+                        {date.getDate()}
                         {hasJobs && (
                           <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
                             <div className="h-1.5 w-1.5 rounded-full bg-primary" />
