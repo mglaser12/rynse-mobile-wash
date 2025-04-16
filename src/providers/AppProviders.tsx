@@ -2,7 +2,7 @@
 import { BrowserRouter as Router } from "react-router-dom";
 import { ThemeProvider } from "./ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
-import { SonnerToaster } from "@/components/ui/sonner";
+import { Toaster as SonnerToaster } from "sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { VehicleProvider } from "@/contexts/VehicleContext";
 import { WashProvider } from "@/contexts/WashContext";
