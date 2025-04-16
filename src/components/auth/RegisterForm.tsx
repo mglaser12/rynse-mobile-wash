@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,7 +58,7 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
       <CardHeader>
         <div className="flex justify-center mb-2">
           <img 
-            src="/public/lovable-uploads/3d6deccc-d4a2-4bfb-9acc-18c6e46f5b73.png" 
+            src="/lovable-uploads/bac5ded7-111c-4d47-84eb-53d334882aba.png" 
             alt="Rynse Icon" 
             className="h-10 w-10" 
           />
