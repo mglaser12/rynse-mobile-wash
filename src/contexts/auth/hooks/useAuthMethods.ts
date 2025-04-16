@@ -86,6 +86,8 @@ export const useAuthMethods = () => {
         throw new Error("Failed to create user account");
       }
 
+      // Update the profile table insertion - use organization_id instead of organizationId
+      // This matches the column name in the profiles table
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -93,7 +95,7 @@ export const useAuthMethods = () => {
           email,
           name,
           role: databaseRole,
-          organization_id: organizationId
+          organization_id: organizationId  // Changed from organizationId to match the column name
         });
 
       if (profileError) {
