@@ -42,10 +42,10 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
     setIsLoading(true);
     
     try {
-      // Use the updated register function with correct parameter order
+      // Pass the role directly - our updated register function will validate it
       await register(email, password, name, role);
       
-      // onLoginClick is called within register function after successful registration
+      // Success handling and redirection happens in the register function
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Registration error:", error);

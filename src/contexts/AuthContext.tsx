@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -114,13 +115,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (email: string, password: string, name: string, role: string) => {
     setIsLoading(true);
     try {
+      console.log("Registering with role:", role);
+      
+      // Validate that role is one of the accepted values in the database
+      // Based on the error, it seems the database expects specific role values
+      let validRole = role;
+      
+      // Make sure role matches what's expected in the database
+      // Common values would be: 'fleet_manager', 'technician', 'admin', 'customer'
+      if (!['fleet_manager', 'technician', 'admin', 'customer'].includes(role)) {
+        console.warn(`Role '${role}' may not be valid in database, defaulting to 'customer'`);
+        validRole = 'customer';
+      }
+      
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email,
         password: password,
         options: {
           data: {
             name: name,
-            role: role,
+            role: validRole,
           },
         },
       });
@@ -133,17 +147,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Failed to create user account");
       }
 
+      // Try to create the profile with the valid role
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
           id: authData.user.id,
           email,
           name,
-          role,
+          role: validRole, // Use the validated role
         });
 
       if (profileError) {
-        console.error("Error creating profile:", profileError);
+        console.error("Error creating profile:", profileError.message);
         toast.warning("Account created but profile setup incomplete. Please login to continue.");
       } else {
         toast.success("Registration successful! Please login to continue.");
