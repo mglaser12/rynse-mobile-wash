@@ -16,10 +16,16 @@ export const SelectedDateJobs = ({
   selectedDateJobs,
   onSelectJob
 }: SelectedDateJobsProps) => {
+  // Ensure selectedDate is a Date object
+  const formattedDate = selectedDate instanceof Date ? selectedDate : new Date(selectedDate);
+  
+  console.log("Selected Date:", formattedDate);
+  console.log("Jobs for selected date:", selectedDateJobs);
+  
   return (
     <div>
       <h3 className="font-medium mb-3">
-        Jobs for {format(selectedDate, "MMMM d, yyyy")}
+        Jobs for {format(formattedDate, "MMMM d, yyyy")}
       </h3>
       <div className="space-y-4">
         {Array.isArray(selectedDateJobs) && selectedDateJobs.length > 0 ? (
@@ -40,7 +46,7 @@ export const SelectedDateJobs = ({
                   <div className="text-right">
                     <p className="font-medium">${job.price.toFixed(2)}</p>
                     <p className="text-sm text-muted-foreground">
-                      {format(job.preferredDates.start, "h:mm a")}
+                      {format(new Date(job.preferredDates.start), "h:mm a")}
                     </p>
                   </div>
                 </div>

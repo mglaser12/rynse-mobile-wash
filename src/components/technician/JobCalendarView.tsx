@@ -31,6 +31,7 @@ export const JobCalendarView = ({
   
   // Force refresh of selectedDateJobs when date changes
   const handleSelectDate = (date: Date) => {
+    console.log("Date selected:", date);
     setSelectedDate(date);
   };
   

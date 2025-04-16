@@ -1,7 +1,7 @@
 
 import { useState, useMemo } from "react";
 import { WashRequest } from "@/models/types";
-import { format, isToday } from "date-fns";
+import { format, isSameDay, isToday, parseISO } from "date-fns";
 
 export const useCalendarData = (assignedRequests: WashRequest[]) => {
   // Initialize with today's date
@@ -15,10 +15,17 @@ export const useCalendarData = (assignedRequests: WashRequest[]) => {
     if (!assignedRequests || !Array.isArray(assignedRequests)) {
       return {};
     }
+    
     return assignedRequests.reduce((acc, job) => {
       if (!job.preferredDates || !job.preferredDates.start) return acc;
       
-      const dateKey = format(job.preferredDates.start, "yyyy-MM-dd");
+      // Ensure we're working with a Date object
+      const startDate = job.preferredDates.start instanceof Date 
+        ? job.preferredDates.start 
+        : new Date(job.preferredDates.start);
+      
+      const dateKey = format(startDate, "yyyy-MM-dd");
+      
       if (!acc[dateKey]) {
         acc[dateKey] = [];
       }
