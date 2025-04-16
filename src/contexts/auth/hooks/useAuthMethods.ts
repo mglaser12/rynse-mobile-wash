@@ -53,15 +53,15 @@ export const useAuthMethods = () => {
     try {
       console.log("Registering with role:", role);
       
-      let databaseRole = role === 'fleet_manager' ? 'customer' : role;
+      // Always use 'customer' in the database for fleet_manager and make sure auth metadata is consistent
+      const databaseRole = role === 'fleet_manager' ? 'customer' : role;
       console.log("Using database role:", databaseRole);
       
       if (!['fleet_manager', 'technician', 'admin', 'customer'].includes(role)) {
         console.warn(`Role '${role}' may not be valid in database, defaulting to 'customer'`);
-        databaseRole = 'customer';
       }
       
-      // Set specific organization ID
+      // Set specific organization ID as a string to avoid any type issues
       const organizationId = "7e73b8a3-eb87-4b9f-8534-d85d8dcae642";
       console.log("Using organization ID:", organizationId);
       
@@ -71,7 +71,9 @@ export const useAuthMethods = () => {
         options: {
           data: {
             name: name,
-            role: role,
+            // Use the same role in auth metadata as we'll store in the database
+            role: databaseRole,
+            organization_id: organizationId
           },
         },
       });
