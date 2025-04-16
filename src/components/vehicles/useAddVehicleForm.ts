@@ -67,8 +67,13 @@ export function useAddVehicleForm({ onSuccess }: UseAddVehicleFormProps) {
     
     setIsLoading(true);
     try {
+      // Make sure all required fields have values, providing defaults for optional ones in the Vehicle type
       await addVehicle({
         ...vehicleData,
+        // Ensure color exists with at least an empty string to satisfy the type constraint
+        color: vehicleData.color || "",
+        type: vehicleData.type || "",
+        licensePlate: vehicleData.licensePlate || "",
         customerId: user.id,
       });
       
