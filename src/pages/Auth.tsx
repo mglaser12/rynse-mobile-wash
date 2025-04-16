@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { LoginForm } from "@/components/auth/LoginForm";
@@ -6,22 +7,32 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/auth";
 
 const Auth = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const [currentView, setCurrentView] = useState<"login" | "register">("login");
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuthenticated) {
+    // Only redirect when we're sure authentication is complete and successful
+    if (isAuthenticated && !isLoading) {
+      console.log("Auth page detected authenticated user, redirecting to home");
       navigate("/");
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, isLoading]);
 
-  const handleSuccessfulAuth = () => {
-    navigate("/");
-  };
-
+  // Don't render anything during the loading state or if already authenticated
+  if (isLoading) {
+    return (
+      <AppLayout hideNavigation>
+        <div className="flex items-center justify-center h-screen">
+          <p>Loading...</p>
+        </div>
+      </AppLayout>
+    );
+  }
+  
+  // Redirect if already authenticated
   if (isAuthenticated) {
-    return null; // Will redirect in useEffect
+    return <Navigate to="/" replace />;
   }
 
   return (
@@ -41,12 +52,12 @@ const Auth = () => {
         {currentView === "login" ? (
           <LoginForm 
             onRegisterClick={() => setCurrentView("register")}
-            onSuccess={handleSuccessfulAuth}
+            onSuccess={() => {}} // We'll handle navigation in the useEffect
           />
         ) : (
           <RegisterForm 
             onLoginClick={() => setCurrentView("login")}
-            onSuccess={handleSuccessfulAuth}
+            onSuccess={() => {}} // We'll handle navigation in the useEffect
           />
         )}
       </div>

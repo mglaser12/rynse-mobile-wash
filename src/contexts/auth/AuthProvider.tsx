@@ -19,10 +19,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const initialized = useRef(false);
 
-  // Setup auth subscription
+  // Setup auth subscription with improved logging
   useAuthSubscription(
-    setUser,
-    setIsAuthenticated,
+    (user) => {
+      console.log("Auth subscription updating user:", user ? "User present" : "No user");
+      setUser(user);
+    },
+    (isAuth) => {
+      console.log("Auth subscription updating authentication state:", isAuth);
+      setIsAuthenticated(isAuth);
+    },
     (loading) => {}, // We manage loading state in useSession
     getSession
   );
@@ -33,7 +39,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Debug logging - only log once per route change
   useEffect(() => {
     if (!initialized.current || location.pathname) {
-      console.log("Auth state:", { isAuthenticated, isLoading, user, path: location.pathname });
+      console.log("Auth state:", { 
+        isAuthenticated, 
+        isLoading, 
+        user: user ? `User ${user.id} (${user.role})` : null, 
+        path: location.pathname 
+      });
       initialized.current = true;
     }
   }, [isAuthenticated, isLoading, user, location]);

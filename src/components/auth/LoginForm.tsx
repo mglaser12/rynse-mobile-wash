@@ -60,7 +60,9 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
     setIsLoading(true);
     
     try {
+      console.log("Attempting login...");
       await login(email, password);
+      console.log("Login successful");
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Login error:", error);

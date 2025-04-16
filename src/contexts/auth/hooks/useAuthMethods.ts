@@ -1,19 +1,17 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "../types";
 import { loadUserProfile } from "../userProfile";
 import { saveUserProfileToStorage } from "../storage";
-import { getDefaultOrganization } from "../useOrganization";
 
 export const useAuthMethods = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log("Attempting to sign in with email:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email,
         password: password,
@@ -24,6 +22,7 @@ export const useAuthMethods = () => {
       }
 
       if (data?.user) {
+        console.log("Login successful, fetching profile for user:", data.user.id);
         const profile = await loadUserProfile(data.user.id);
         const user: User = {
           id: data.user.id,
@@ -35,8 +34,10 @@ export const useAuthMethods = () => {
         };
         
         saveUserProfileToStorage(user);
-        navigate("/");
+        // Do NOT navigate here - let the Auth component handle navigation
+        // based on the auth state changes
         toast.success("Logged in successfully!");
+        return user;
       }
     } catch (error: any) {
       console.error("Login failed:", error.message);

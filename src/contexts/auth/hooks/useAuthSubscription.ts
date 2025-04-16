@@ -35,11 +35,13 @@ export const useAuthSubscription = (
     const loadingTimeout = detectBrokenState();
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event);
+      console.log("Auth state changed:", event, session ? "Session exists" : "No session");
       
       if (session) {
+        // Use setTimeout to prevent potential deadlock
         setTimeout(async () => {
           try {
+            console.log("Loading profile for user:", session.user.id);
             const profile = await loadUserProfile(session.user.id);
             const updatedUser = {
               id: session.user.id,
@@ -50,6 +52,7 @@ export const useAuthSubscription = (
               avatarUrl: profile?.avatarUrl
             };
             
+            console.log("Setting user with role:", updatedUser.role);
             setUser(updatedUser);
             setIsAuthenticated(true);
             
@@ -72,6 +75,7 @@ export const useAuthSubscription = (
           }
         }, 0);
       } else {
+        console.log("No session in auth state change, setting user to null");
         setUser(null);
         setIsAuthenticated(false);
         saveUserProfileToStorage(null);
