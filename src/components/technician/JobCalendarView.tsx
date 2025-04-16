@@ -42,32 +42,6 @@ export const JobCalendarView = ({
   const datesWithJobs = Object.keys(jobsByDate)
     .map(dateStr => new Date(dateStr));
   
-  // Custom function to modify the calendar day rendering
-  const modifyDay = (date: Date) => {
-    const dateStr = format(date, "yyyy-MM-dd");
-    const hasJobs = jobsByDate[dateStr] && jobsByDate[dateStr].length > 0;
-    
-    if (hasJobs) {
-      return (
-        <div className="relative flex h-full w-full items-center justify-center">
-          <div className="absolute bottom-1">
-            <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-          </div>
-        </div>
-      );
-    }
-    
-    return <div className="h-full w-full" />;
-  };
-  
-  // Get customer name based on ID
-  const getCustomerName = (customerId: string) => {
-    if (customerId === "d5aaa3a4-b5a0-4485-b579-b868e0dd1d32") {
-      return "ABC Denver";
-    }
-    return customerId;
-  };
-
   return (
     <div className="space-y-8">
       {/* In Progress Jobs */}
@@ -124,20 +98,30 @@ export const JobCalendarView = ({
                 selected={selectedDate}
                 onSelect={(date) => date && setSelectedDate(date)}
                 className="rounded-md border p-3"
+                modifiers={{
+                  hasJobs: datesWithJobs
+                }}
+                modifiersStyles={{
+                  hasJobs: {
+                    position: 'relative'
+                  }
+                }}
                 components={{
-                  Day: ({ date, ...props }) => (
-                    <div
-                      {...props}
-                      className={`${props.className} relative`}
-                    >
-                      {date.getDate()}
-                      {format(date, "yyyy-MM-dd") in jobsByDate && (
-                        <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
-                          <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                        </div>
-                      )}
-                    </div>
-                  ),
+                  Day: ({ day, displayMonth, ...props }) => {
+                    const dateStr = format(day, "yyyy-MM-dd");
+                    const hasJobs = jobsByDate[dateStr] && jobsByDate[dateStr].length > 0;
+                    
+                    return (
+                      <div {...props}>
+                        {day.getDate()}
+                        {hasJobs && (
+                          <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
+                            <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
                 }}
               />
             </div>
@@ -207,4 +191,12 @@ export const JobCalendarView = ({
       </Card>
     </div>
   );
+};
+
+// Get customer name based on ID
+const getCustomerName = (customerId: string) => {
+  if (customerId === "d5aaa3a4-b5a0-4485-b579-b868e0dd1d32") {
+    return "ABC Denver";
+  }
+  return customerId;
 };
