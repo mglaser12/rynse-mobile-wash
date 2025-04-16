@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +22,8 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
   // Detect if running in standalone mode (added to home screen)
   useEffect(() => {
     // Check if the app is running in standalone mode (PWA mode)
-    const isInStandaloneMode = window.navigator.standalone === true || 
+    // Type-safe check for standalone property
+    const isInStandaloneMode = ('standalone' in window.navigator && window.navigator.standalone === true) || 
       window.matchMedia('(display-mode: standalone)').matches;
     
     setIsStandaloneMode(isInStandaloneMode);
@@ -89,7 +89,7 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
               // iOS standalone mode optimizations
               autoCapitalize="none"
               autoCorrect="off"
-              spellCheck="false"
+              spellCheck={false}
             />
           </div>
           <div className="space-y-2">
@@ -110,7 +110,7 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
               // iOS standalone mode optimizations
               autoCapitalize="none"
               autoCorrect="off"
-              spellCheck="false"
+              spellCheck={false}
             />
           </div>
           <Button type="submit" className="w-full" disabled={isLoading || authLoading}>

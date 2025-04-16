@@ -8,7 +8,10 @@ const App = () => {
   useEffect(() => {
     // Fix for iOS viewport height issues in standalone mode
     const setIOSAppHeight = () => {
-      if (window.navigator.standalone) {
+      // Type-safe check for standalone property
+      const isInStandaloneMode = 'standalone' in window.navigator && window.navigator.standalone === true;
+      
+      if (isInStandaloneMode) {
         // Set a CSS variable with the actual viewport height
         document.documentElement.style.setProperty(
           '--app-height', 
