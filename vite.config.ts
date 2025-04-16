@@ -13,8 +13,6 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react({
       jsxImportSource: 'react',
-      // Force React refresh to ensure proper hooks initialization
-      refresh: true,
     }),
     mode === 'development' &&
     componentTagger(),
