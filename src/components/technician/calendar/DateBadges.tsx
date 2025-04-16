@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { format, isSameDay } from "date-fns";
+import { format, isSameDay, isPast, isToday } from "date-fns";
 import { WashRequest } from "@/models/types";
 
 interface DateBadgesProps {
@@ -15,17 +15,23 @@ export const DateBadges = ({
   selectedDate,
   onSelectDate
 }: DateBadgesProps) => {
+  const sortedDates = Object.keys(jobsByDate)
+    .map(dateStr => new Date(dateStr))
+    .sort((a, b) => a.getTime() - b.getTime());
+    
   return (
     <div className="flex flex-wrap gap-2 justify-center mt-4">
-      {Object.keys(jobsByDate).map(dateStr => {
-        const date = new Date(dateStr);
+      {sortedDates.map(date => {
+        const dateStr = format(date, "yyyy-MM-dd");
         const jobCount = jobsByDate[dateStr].length;
+        const isPastDate = isPast(date) && !isToday(date);
+        const isCurrentDay = isToday(date);
         
         return (
           <Badge 
             key={dateStr}
             variant={isSameDay(date, selectedDate) ? "default" : "outline"}
-            className="cursor-pointer"
+            className={`cursor-pointer ${isPastDate ? 'opacity-70' : ''} ${isCurrentDay ? 'border-primary' : ''}`}
             onClick={() => onSelectDate(date)}
           >
             {format(date, "MMM d")}

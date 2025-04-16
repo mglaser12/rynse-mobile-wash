@@ -3,6 +3,7 @@ import React from "react";
 import { format } from "date-fns";
 import { WashRequest } from "@/models/types";
 import { Card, CardContent } from "@/components/ui/card";
+import { Calendar } from "lucide-react";
 
 interface SelectedDateJobsProps {
   selectedDate: Date;
@@ -47,8 +48,9 @@ export const SelectedDateJobs = ({
             </Card>
           ))
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            No jobs scheduled for this day
+          <div className="text-center py-12 text-muted-foreground flex flex-col items-center">
+            <Calendar className="h-10 w-10 text-gray-400 mb-3" />
+            <p>No jobs scheduled for this day</p>
           </div>
         )}
       </div>
