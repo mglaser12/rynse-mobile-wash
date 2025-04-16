@@ -25,6 +25,7 @@ export default defineConfig(({ mode }) => ({
   },
   // Ensure we don't get duplicate React instances
   optimizeDeps: {
-    force: true
+    force: true,
+    include: ['react', 'react-dom']
   }
 }));

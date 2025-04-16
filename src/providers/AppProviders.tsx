@@ -25,22 +25,20 @@ interface AppProvidersProps {
 
 export function AppProviders({ children }: AppProvidersProps) {
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <BrowserRouter>
-            <AuthProvider>
-              <VehicleProvider>
-                <WashProvider>
-                  <Toaster />
-                  <Sonner />
-                  {children}
-                </WashProvider>
-              </VehicleProvider>
-            </AuthProvider>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <VehicleProvider>
+              <WashProvider>
+                <Toaster />
+                <Sonner />
+                {children}
+              </WashProvider>
+            </VehicleProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
