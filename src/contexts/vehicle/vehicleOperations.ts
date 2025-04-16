@@ -1,4 +1,3 @@
-
 import { Vehicle } from "@/models/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -31,6 +30,22 @@ export async function addVehicle(
   try {
     const { customerId, make, model, year, licensePlate, color, type, vinNumber, image, organizationId } = vehicleData;
     
+    // Get the user's organization ID if not explicitly provided
+    let vehicleOrgId = organizationId || user.organizationId;
+    
+    if (!vehicleOrgId) {
+      // If no organization ID provided and user doesn't have one, fetch from profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', user.id)
+        .single();
+        
+      if (profileData?.organization_id) {
+        vehicleOrgId = profileData.organization_id;
+      }
+    }
+    
     // Convert base64 image to file and upload to storage if present
     let imageUrl = null;
     if (image && image.startsWith('data:image')) {
@@ -55,14 +70,11 @@ export async function addVehicle(
       imageUrl = image;
     }
 
-    // Use the organization ID from the user if not explicitly provided
-    const vehicleOrgId = organizationId || user.organizationId;
-
     // Insert new vehicle in Supabase
     const { data, error } = await supabase
       .from('vehicles')
       .insert({
-        user_id: user.id,
+        user_id: user.id, // Always use the current user ID as the creator
         make,
         model,
         year,
@@ -71,7 +83,7 @@ export async function addVehicle(
         type,
         vin_number: vinNumber,
         image_url: imageUrl,
-        organization_id: vehicleOrgId
+        organization_id: vehicleOrgId  // Use the organization ID (might be null if user has no org)
       })
       .select('*')
       .single();
@@ -161,7 +173,8 @@ export async function updateVehicle(
 
     console.log("Updating vehicle with data:", updateData);
 
-    // Update in Supabase
+    // Update in Supabase - note that we don't need to check user_id or organization_id
+    // since we're allowing all users in the same org to edit any vehicle in their org
     const { error } = await supabase
       .from('vehicles')
       .update(updateData)
@@ -184,7 +197,8 @@ export async function updateVehicle(
 
 export async function removeVehicle(id: string): Promise<boolean> {
   try {
-    // Delete from Supabase
+    // Delete from Supabase - no need to check user_id or organization_id
+    // since we're allowing all users in the same org to delete any vehicle in their org
     const { error } = await supabase
       .from('vehicles')
       .delete()

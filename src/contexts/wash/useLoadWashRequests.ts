@@ -19,6 +19,21 @@ export function useLoadWashRequests(userId?: string, userRole?: string) {
     try {
       console.log(`Loading wash requests for user ${userId} with role ${userRole}`);
       
+      // First, get the user's organization ID
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', userId)
+        .single();
+
+      if (userError) {
+        console.error("Error loading user profile:", userError);
+        return;
+      }
+
+      const organizationId = userData?.organization_id;
+      console.log(`User organization ID: ${organizationId}`);
+      
       let query = supabase
         .from('wash_requests')
         .select(`
@@ -30,16 +45,28 @@ export function useLoadWashRequests(userId?: string, userRole?: string) {
           vehicle_wash_statuses(*)
         `);
       
-      // Apply filters based on user role
+      // Apply filters based on user role and organization
       if (userRole === 'technician') {
-        // For technicians, show:
-        // - Pending requests (available for claiming)
-        // - Requests assigned to them
-        query = query
-          .or(`technician_id.is.null,technician_id.eq.${userId}`);
+        if (organizationId) {
+          // For technicians in an organization, show:
+          // - All pending requests in their organization
+          // - Requests assigned to them
+          // - All confirmed requests in their organization
+          query = query.or(`organization_id.eq.${organizationId},technician_id.eq.${userId}`);
+        } else {
+          // For technicians without an organization, show:
+          // - Pending requests (available for claiming)
+          // - Requests assigned to them
+          query = query.or(`technician_id.is.null,technician_id.eq.${userId}`);
+        }
       } else {
-        // For customers, only show their requests
-        query = query.eq('user_id', userId);
+        if (organizationId) {
+          // For customers/managers in an organization, show all requests in their organization
+          query = query.eq('organization_id', organizationId);
+        } else {
+          // For customers without an organization, only show their requests
+          query = query.eq('user_id', userId);
+        }
       }
       
       const { data, error } = await query;

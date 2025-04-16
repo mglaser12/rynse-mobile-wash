@@ -41,6 +41,7 @@ export function useWashOperations({
       const result = await updateWashRequest(requestId, {
         status: "confirmed",
         technician: user.id,
+        // No need to update organization_id here since it should already be set
       });
       
       if (result) {
@@ -91,6 +92,7 @@ export function useWashOperations({
           start: scheduledDate,
           end: undefined
         }
+        // No need to update organization_id here since it should already be set
       });
       
       if (result) {
@@ -119,6 +121,9 @@ export function useWashOperations({
       setIsUpdating(false);
     }
   };
+  
+  // The rest of the functions don't need modifications as they only deal with status changes
+  // and don't involve changing user or organization associations
   
   // Handle starting a wash
   const handleStartWash = async (requestId: string) => {
