@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useLocations } from "@/contexts/LocationContext";
@@ -13,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function LocationsPage() {
-  const { locations, isLoading, setDefaultLocation, deleteLocation } = useLocations();
+  const { locations, isLoading, setLocationAsDefault, deleteLocation } = useLocations();
   const [openLocationDialog, setOpenLocationDialog] = useState(false);
   const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -41,7 +40,7 @@ export default function LocationsPage() {
   };
   
   const handleSetDefault = async (location: Location) => {
-    await setDefaultLocation(location.id);
+    await setLocationAsDefault(location.id);
   };
 
   return (

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,7 +32,7 @@ interface LocationContextType {
   createLocation: (locationData: Omit<Location, "id" | "createdAt" | "updatedAt" | "createdBy" | "vehicleCount">) => Promise<Location | null>;
   updateLocation: (id: string, locationData: Partial<Location>) => Promise<boolean>;
   deleteLocation: (id: string) => Promise<boolean>;
-  setDefaultLocation: (id: string) => Promise<boolean>;
+  setLocationAsDefault: (id: string) => Promise<boolean>;
   getLocationById: (id: string) => Location | undefined;
   refreshLocations: () => Promise<void>;
 }
@@ -265,7 +264,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   // Set a location as the default
-  const setDefaultLocation = async (id: string): Promise<boolean> => {
+  const setLocationAsDefault = async (id: string): Promise<boolean> => {
     try {
       // First, unset all locations as default
       const { error: batchError } = await supabase
@@ -327,7 +326,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     createLocation,
     updateLocation,
     deleteLocation,
-    setDefaultLocation,
+    setLocationAsDefault,
     getLocationById,
     refreshLocations
   };
