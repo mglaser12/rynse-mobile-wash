@@ -129,37 +129,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw authError;
       }
 
-      if (authData?.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: authData.user.id,
-              email: email,
-              name: name,
-              role: role,
-            },
-          ]);
-
-        if (profileError) {
-          console.error("Error creating profile:", profileError);
-          toast.error("Failed to create profile");
-          return;
-        }
-
-        const userProfile = {
-          id: authData.user.id,
-          email: email,
-          name: name,
-          role: role,
-        };
-        
-        setUser(userProfile);
-        saveUserProfileToStorage(userProfile);
-        setIsAuthenticated(true);
-        navigate("/");
-        toast.success("Registration successful!");
+      if (!authData.user) {
+        throw new Error("Failed to create user account");
       }
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          email,
+          name,
+          role,
+        });
+
+      if (profileError) {
+        console.error("Error creating profile:", profileError);
+        toast.warning("Account created but profile setup incomplete. Please login to continue.");
+      } else {
+        toast.success("Registration successful! Please login to continue.");
+      }
+      
+      navigate("/auth");
     } catch (error: any) {
       console.error("Registration failed:", error.message);
       toast.error("Registration failed: " + error.message);
@@ -224,7 +214,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return null;
     } catch (error) {
       console.error("Error in loadUserProfile:", error);
-      // Return minimal profile with default values for critical errors
       return {
         id: userId,
         name: "User", 

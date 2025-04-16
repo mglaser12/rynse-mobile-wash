@@ -42,11 +42,10 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
     setIsLoading(true);
     
     try {
-      // Fix: Pass email as the first parameter (email), name as the third parameter (name)
+      // Use the updated register function with correct parameter order
       await register(email, password, name, role);
-      toast.success("Registration successful! Please login to continue.");
-      // Redirect to login view
-      onLoginClick();
+      
+      // onLoginClick is called within register function after successful registration
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Registration error:", error);
