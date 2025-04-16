@@ -75,6 +75,33 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    overscroll-behavior: none;
+  }
+  
+  /* Fix for iOS PWA viewport issues */
+  html {
+    height: -webkit-fill-available;
+  }
+  
+  /* Fix for iOS PWA input zoom issues */
+  input[type="text"],
+  input[type="email"], 
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  textarea {
+    font-size: 16px;
+  }
+  
+  /* Fix for iOS standalone mode */
+  @media all and (display-mode: standalone) {
+    body {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
   }
 }
 
