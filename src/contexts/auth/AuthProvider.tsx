@@ -1,65 +1,13 @@
-
-import React, { createContext, useState, useContext, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { isRunningAsPWA, recoverFromBrokenState } from "@/registerServiceWorker";
-
-// Extend the User type to include organization info
-export type User = {
-  id: string;
-  email?: string;
-  name?: string;
-  role?: string;
-  organizationId?: string;
-  avatarUrl?: string;
-};
-
-export type AuthContextType = {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string, role: string) => Promise<void>;
-  logout: () => Promise<void>;
-};
-
-const AuthContext = createContext<AuthContextType>({
-  isAuthenticated: false,
-  isLoading: true, // Default to true so components know we're checking auth
-  user: null,
-  login: async () => {},
-  register: async () => {},
-  logout: async () => {},
-});
-
-export function useAuth() {
-  return useContext(AuthContext);
-}
-
-// Save user profile to localStorage for offline access
-const saveUserProfileToStorage = (user: User | null) => {
-  try {
-    if (user) {
-      localStorage.setItem('userProfile', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('userProfile');
-    }
-  } catch (error) {
-    console.error('Failed to save user profile to storage:', error);
-  }
-};
-
-// Get user profile from localStorage
-const getUserProfileFromStorage = (): User | null => {
-  try {
-    const storedProfile = localStorage.getItem('userProfile');
-    return storedProfile ? JSON.parse(storedProfile) : null;
-  } catch (error) {
-    console.error('Failed to get user profile from storage:', error);
-    return null;
-  }
-};
+import { User, AuthContextType } from "./types";
+import AuthContext from "./useAuth";
+import { saveUserProfileToStorage, getUserProfileFromStorage } from "./storage";
+import { loadUserProfile } from "./userProfile";
+import { getDefaultOrganization } from "./useOrganization";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -67,27 +15,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Get default organization
-  const getDefaultOrganization = async (): Promise<string | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('organizations')
-        .select('id')
-        .limit(1)
-        .single();
-        
-      if (error) {
-        console.error("Error fetching default organization:", error);
-        return null;
-      }
-      
-      return data?.id || null;
-    } catch (error) {
-      console.error("Error in getDefaultOrganization:", error);
-      return null;
-    }
-  };
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -224,42 +151,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       saveUserProfileToStorage(null);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Load user profile function with better error handling
-  const loadUserProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-        
-      if (error) {
-        console.error("Error loading user profile:", error);
-        return null;
-      }
-      
-      if (data) {
-        return {
-          id: data.id,
-          email: data.email,
-          name: data.name,
-          role: data.role,
-          organizationId: data.organization_id,
-          avatarUrl: data.avatar_url
-        };
-      }
-      
-      return null;
-    } catch (error) {
-      console.error("Error in loadUserProfile:", error);
-      return {
-        id: userId,
-        name: "User", 
-        role: "customer"
-      };
     }
   };
 

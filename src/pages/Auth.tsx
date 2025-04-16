@@ -1,17 +1,15 @@
-
 import React, { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 
 const Auth = () => {
   const { isAuthenticated, user } = useAuth();
   const [currentView, setCurrentView] = useState<"login" | "register">("login");
   const navigate = useNavigate();
 
-  // Use useEffect for navigation to avoid render loops
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/");
@@ -22,7 +20,6 @@ const Auth = () => {
     navigate("/");
   };
 
-  // Don't return Navigate directly in render to avoid render loops
   if (isAuthenticated) {
     return null; // Will redirect in useEffect
   }
