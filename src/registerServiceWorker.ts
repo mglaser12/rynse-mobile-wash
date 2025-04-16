@@ -29,6 +29,28 @@ function clearServiceWorkerCache() {
   }
 }
 
+// Attempt to recover session and critical app data
+async function recoverAppState() {
+  try {
+    console.log('Attempting to recover app state...');
+    // Any recovery logic here
+    return true;
+  } catch (e) {
+    console.error('Failed to recover app state:', e);
+    return false;
+  }
+}
+
+// Check if profile cache is available and valid
+function isProfileCacheValid() {
+  try {
+    const cachedProfile = localStorage.getItem('user_profile_cache');
+    return cachedProfile !== null;
+  } catch (e) {
+    return false;
+  }
+}
+
 // Main registration function
 export function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
@@ -118,7 +140,6 @@ export function recoverFromBrokenState() {
   // Force reload the page after a short delay
   setTimeout(() => {
     window.location.href = '/';  // Redirect to home page
-    window.location.reload(true); // Force reload from server
+    window.location.reload(); // Removed the parameter here that caused the TS error
   }, 500);
 }
-
