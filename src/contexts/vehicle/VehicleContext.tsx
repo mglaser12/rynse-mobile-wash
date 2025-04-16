@@ -1,7 +1,8 @@
 
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { Vehicle } from "@/models/types";
-import { useAuth } from "../AuthContext";
+// Change the relative path to use the absolute path for consistency
+import { useAuth } from "@/contexts/AuthContext";
 import { VehicleContextType } from "./types";
 import { useLoadVehicles } from "./useLoadVehicles";
 import { addVehicle as addVehicleOp, updateVehicle as updateVehicleOp, removeVehicle as removeVehicleOp } from "./vehicleOperations";
