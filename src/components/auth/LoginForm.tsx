@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +20,6 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
   
-  // Fix for iOS focus issues
   useEffect(() => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -31,7 +29,6 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
       
       const handleInputTouch = (e: Event) => {
         const input = e.target as HTMLInputElement;
-        // Small delay seems to help iOS
         setTimeout(() => {
           input.focus();
         }, 10);
@@ -64,10 +61,8 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
       const user = await login(email, password);
       console.log("Login successful, user:", user ? "User obtained" : "No user returned");
       
-      // Only proceed with success callback if we have both a user AND onSuccess handler
       if (user && onSuccess) {
         console.log("Calling onSuccess callback");
-        // Small timeout to allow auth state to fully propagate
         setTimeout(() => {
           onSuccess();
         }, 100);
@@ -79,7 +74,6 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
     }
   };
 
-  // Special handler for iOS inputs
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
   };
@@ -156,3 +150,4 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
       </CardFooter>
     </Card>
   );
+}
