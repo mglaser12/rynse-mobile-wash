@@ -7,7 +7,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/auth";
 
 const Auth = () => {
-  const { isAuthenticated, user, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [currentView, setCurrentView] = useState<"login" | "register">("login");
   const navigate = useNavigate();
 
@@ -15,11 +15,11 @@ const Auth = () => {
     // Only redirect when we're sure authentication is complete and successful
     if (isAuthenticated && !isLoading) {
       console.log("Auth page detected authenticated user, redirecting to home");
-      navigate("/");
+      navigate("/", { replace: true });
     }
   }, [isAuthenticated, navigate, isLoading]);
 
-  // Don't render anything during the loading state or if already authenticated
+  // Don't render anything during the loading state
   if (isLoading) {
     return (
       <AppLayout hideNavigation>
@@ -52,12 +52,12 @@ const Auth = () => {
         {currentView === "login" ? (
           <LoginForm 
             onRegisterClick={() => setCurrentView("register")}
-            onSuccess={() => {}} // We'll handle navigation in the useEffect
+            onSuccess={() => navigate("/", { replace: true })} 
           />
         ) : (
           <RegisterForm 
             onLoginClick={() => setCurrentView("login")}
-            onSuccess={() => {}} // We'll handle navigation in the useEffect
+            onSuccess={() => navigate("/", { replace: true })} 
           />
         )}
       </div>

@@ -22,8 +22,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Setup auth subscription with improved logging
   useAuthSubscription(
     (user) => {
-      console.log("Auth subscription updating user:", user ? "User present" : "No user");
+      console.log("Auth subscription updating user:", user ? `User ${user.id} (${user.role || 'no role'})` : "No user");
       setUser(user);
+      setIsAuthenticated(!!user);
     },
     (isAuth) => {
       console.log("Auth subscription updating authentication state:", isAuth);
