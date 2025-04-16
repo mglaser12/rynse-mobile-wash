@@ -33,16 +33,20 @@ export function MobileNavigation() {
       icon: Calendar,
     },
     {
-      name: "Locations",
-      href: "/locations",
-      icon: MapPin,
-    },
-    {
       name: "Profile",
       href: "/profile",
       icon: User,
     },
   ];
+  
+  // Add Locations item for fleet managers
+  if (isFleetManager) {
+    customerNavItems.splice(3, 0, {
+      name: "Locations",
+      href: "/locations",
+      icon: MapPin,
+    });
+  }
 
   const technicianNavItems: NavigationItem[] = [
     {
@@ -67,12 +71,7 @@ export function MobileNavigation() {
     },
   ];
 
-  // For regular customers, filter out the Locations link if they're not fleet managers
-  const filteredCustomerNavItems = isFleetManager 
-    ? customerNavItems 
-    : customerNavItems.filter(item => item.href !== "/locations");
-
-  const navItems = user?.role === "technician" ? technicianNavItems : filteredCustomerNavItems;
+  const navItems = user?.role === "technician" ? technicianNavItems : customerNavItems;
 
   return (
     <nav className="bottom-navigation bg-white pb-safe-ios">
