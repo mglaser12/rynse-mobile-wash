@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -10,16 +10,20 @@ const Auth = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const [currentView, setCurrentView] = useState<"login" | "register">("login");
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get the intended redirect path from location state, or default to "/"
+  const from = location.state?.from?.pathname || "/";
 
   useEffect(() => {
     // Only redirect when we're sure authentication is complete and successful
     if (isAuthenticated && !isLoading) {
-      console.log("Auth page detected authenticated user, redirecting to home");
-      navigate("/", { replace: true });
+      console.log("Auth page detected authenticated user, redirecting to:", from);
+      navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate, isLoading]);
+  }, [isAuthenticated, isLoading, navigate, from]);
 
-  // Don't render anything during the loading state
+  // Don't render anything during the loading state to prevent flicker
   if (isLoading) {
     return (
       <AppLayout hideNavigation>
@@ -30,10 +34,16 @@ const Auth = () => {
     );
   }
   
-  // Redirect if already authenticated
+  // Redirect immediately if already authenticated
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    console.log("Auth page immediate redirect to:", from);
+    return <Navigate to={from} replace />;
   }
+
+  const handleSuccess = () => {
+    console.log("Auth success, navigating to:", from);
+    navigate(from, { replace: true });
+  };
 
   return (
     <AppLayout hideNavigation>
@@ -52,12 +62,12 @@ const Auth = () => {
         {currentView === "login" ? (
           <LoginForm 
             onRegisterClick={() => setCurrentView("register")}
-            onSuccess={() => navigate("/", { replace: true })} 
+            onSuccess={handleSuccess}
           />
         ) : (
           <RegisterForm 
             onLoginClick={() => setCurrentView("login")}
-            onSuccess={() => navigate("/", { replace: true })} 
+            onSuccess={handleSuccess}
           />
         )}
       </div>

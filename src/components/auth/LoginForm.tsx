@@ -63,9 +63,14 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
       console.log("Attempting login...");
       const user = await login(email, password);
       console.log("Login successful, user:", user ? "User obtained" : "No user returned");
+      
+      // Only proceed with success callback if we have both a user AND onSuccess handler
       if (user && onSuccess) {
         console.log("Calling onSuccess callback");
-        onSuccess();
+        // Small timeout to allow auth state to fully propagate
+        setTimeout(() => {
+          onSuccess();
+        }, 100);
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -151,4 +156,3 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
       </CardFooter>
     </Card>
   );
-}

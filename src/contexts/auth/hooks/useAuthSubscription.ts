@@ -24,16 +24,19 @@ export const useAuthSubscription = (
     console.log("Auth subscription initialized");
     subscriptionInitialized.current = true;
     
+    // Timeout to detect if the auth system is not responding
     const detectBrokenState = () => {
       const loadingTimeout = setTimeout(() => {
+        console.log("Auth state timeout - forcing loading to false");
         setIsLoading(false);
-      }, 10000);
+      }, 5000);
       
       return loadingTimeout;
     };
     
     const loadingTimeout = detectBrokenState();
     
+    // Subscribe to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session ? "Session exists" : "No session");
       
@@ -56,6 +59,7 @@ export const useAuthSubscription = (
           
           saveUserProfileToStorage(updatedUser);
           setIsLoading(false);
+          clearTimeout(loadingTimeout); // Clear the timeout since we've updated the state
         } catch (error) {
           console.error("Error in auth state change handler:", error);
           const fallbackUser = {
@@ -70,6 +74,7 @@ export const useAuthSubscription = (
           
           saveUserProfileToStorage(fallbackUser);
           setIsLoading(false);
+          clearTimeout(loadingTimeout);
         }
       } else {
         console.log("No session in auth state change, setting user to null");
@@ -77,10 +82,11 @@ export const useAuthSubscription = (
         setIsAuthenticated(false);
         saveUserProfileToStorage(null);
         setIsLoading(false);
+        clearTimeout(loadingTimeout);
       }
     });
 
-    // Only call getSession once during initialization
+    // Do an immediate session check in case there's a valid session already
     getSession();
 
     return () => {

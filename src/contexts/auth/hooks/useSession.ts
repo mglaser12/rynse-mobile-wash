@@ -22,6 +22,7 @@ export const useSession = () => {
     console.log("Getting session...");
     sessionCheckInProgress.current = true;
     
+    // Use cached profile for initial render if available
     const cachedProfile = getUserProfileFromStorage();
     if (isRunningAsPWA() && cachedProfile) {
       console.log("Using cached profile while fetching fresh session");
@@ -29,6 +30,7 @@ export const useSession = () => {
       setIsAuthenticated(true);
     }
     
+    // Create a timeout to prevent hanging on network issues
     const timeoutId = setTimeout(() => {
       console.log("Session check timed out");
       
@@ -46,8 +48,10 @@ export const useSession = () => {
     }, 5000);
     
     try {
+      console.log("Fetching session from Supabase");
       const { data, error } = await supabase.auth.getSession();
       
+      // Clear timeout since we got a response
       clearTimeout(timeoutId);
       
       if (error) {
@@ -83,10 +87,12 @@ export const useSession = () => {
             avatarUrl: profile?.avatarUrl
           };
           
+          // Update state immediately to ensure auth check works
           setUser(updatedUser);
           setIsAuthenticated(true);
           
           saveUserProfileToStorage(updatedUser);
+          console.log("Session loaded successfully, authenticated as:", updatedUser.name);
         } catch (profileError) {
           console.error("Error loading profile after session:", profileError);
           
@@ -130,11 +136,15 @@ export const useSession = () => {
     }
   }, []);
 
+  // Set up an initial check for existing sessions when component mounts
   useEffect(() => {
+    // Force session check on initial load
+    getSession();
+    
     return () => {
       console.log("Session hook cleanup");
     };
-  }, []);
+  }, [getSession]);
 
   return {
     isAuthenticated,

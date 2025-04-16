@@ -18,7 +18,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   } = useSession();
   const location = useLocation();
   const initialized = useRef(false);
-
+  
   // Setup auth subscription with improved logging
   useAuthSubscription(
     (user) => {
@@ -30,7 +30,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Auth subscription updating authentication state:", isAuth);
       setIsAuthenticated(isAuth);
     },
-    (loading) => {}, // We manage loading state in useSession
+    (loading) => {
+      // We handle loading state in useSession
+    },
     getSession
   );
 
@@ -50,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, isLoading, user, location]);
 
+  // Provide auth context to all children
   const value = {
     isAuthenticated,
     isLoading,

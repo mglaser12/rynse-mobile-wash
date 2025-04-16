@@ -37,8 +37,6 @@ export const useAuthMethods = () => {
         };
         
         saveUserProfileToStorage(user);
-        // Do NOT navigate here - let the Auth component handle navigation
-        // based on the auth state changes
         toast.success("Logged in successfully!");
         return user;
       }
@@ -89,11 +87,7 @@ export const useAuthMethods = () => {
       if (!authData.user) {
         throw new Error("Failed to create user account");
       }
-
-      // IMPORTANT: Don't insert into profiles table, the database trigger will handle this
-      // The handle_new_user() function will create the profile automatically
       
-      // Just show a success message
       toast.success("Registration successful! Please login to continue.");
       navigate("/auth");
     } catch (error: any) {
