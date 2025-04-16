@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
@@ -12,7 +11,7 @@ import { getDefaultOrganization } from "./useOrganization";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // Start with loading true
+  const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,8 +33,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser({
           id: data.user.id,
           email: data.user.email,
-          name: profile?.name || data.user.email?.split('@')[0], // Fallback to email username if no name
-          role: profile?.role || 'customer', // Default to customer role if none specified
+          name: profile?.name || data.user.email?.split('@')[0],
+          role: profile?.role || 'customer',
           organizationId: profile?.organizationId,
           avatarUrl: profile?.avatarUrl
         });
@@ -43,7 +42,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         navigate("/");
         toast.success("Logged in successfully!");
         
-        // Save profile to localStorage for offline access
         saveUserProfileToStorage({
           id: data.user.id,
           email: data.user.email,
@@ -66,21 +64,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("Registering with role:", role);
       
-      // Map fleet_manager role to customer in the database
-      // This ensures fleet managers are stored as customers in the database
-      let databaseRole = role;
-      if (role === 'fleet_manager') {
-        console.log("Converting fleet_manager role to customer in database");
-        databaseRole = 'customer';
-      }
+      let databaseRole = role === 'fleet_manager' ? 'customer' : role;
+      console.log("Using database role:", databaseRole);
       
-      // Validate that role is one of the accepted values in the database
       if (!['fleet_manager', 'technician', 'admin', 'customer'].includes(role)) {
         console.warn(`Role '${role}' may not be valid in database, defaulting to 'customer'`);
         databaseRole = 'customer';
       }
       
-      // Get the default organization ID
       const defaultOrgId = await getDefaultOrganization();
       console.log("Default organization ID:", defaultOrgId);
       
@@ -90,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           data: {
             name: name,
-            role: role, // Keep the original role in user metadata
+            role: role,
           },
         },
       });
@@ -103,15 +94,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Failed to create user account");
       }
 
-      // Try to create the profile with the valid role and default organization
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
           id: authData.user.id,
           email,
           name,
-          role: databaseRole, // Use the modified role for the database
-          organization_id: defaultOrgId // Assign to default organization
+          role: databaseRole,
+          organization_id: defaultOrgId
         });
 
       if (profileError) {
@@ -140,7 +130,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setIsAuthenticated(false);
       
-      // Clear stored profile
       saveUserProfileToStorage(null);
       
       navigate("/auth");
@@ -149,7 +138,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Logout failed:", error.message);
       toast.error("Logout failed");
       
-      // Even if logout fails, clear local state and storage
       setUser(null);
       setIsAuthenticated(false);
       saveUserProfileToStorage(null);
@@ -158,27 +146,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Get session function with improved error handling and PWA considerations
   const getSession = useCallback(async () => {
     console.log("Getting session...");
     
-    // Check for cached profile first for PWAs to avoid blank screens
     const cachedProfile = getUserProfileFromStorage();
     if (isRunningAsPWA() && cachedProfile) {
       console.log("Using cached profile while fetching fresh session");
-      // Set cached user immediately to avoid blank screen
       setUser(cachedProfile);
       setIsAuthenticated(true);
-      
-      // But don't set isLoading to false yet as we still want to check with Supabase
     }
     
-    // Set up a timeout to prevent indefinite loading state
     const timeoutId = setTimeout(() => {
       console.log("Session check timed out");
       
       if (isRunningAsPWA() && cachedProfile) {
-        // In PWAs, if we have a cached profile, keep using it despite network timeout
         console.log("Continuing with cached profile due to network timeout");
         setIsAuthenticated(true);
         setUser(cachedProfile);
@@ -188,19 +169,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       setIsLoading(false);
-    }, 5000); // 5-second timeout
+    }, 5000);
     
     try {
       const { data, error } = await supabase.auth.getSession();
       
-      // Clear timeout since we got a response
       clearTimeout(timeoutId);
       
       if (error) {
         console.error("Error getting session:", error);
         
         if (isRunningAsPWA() && cachedProfile) {
-          // In PWAs, if we have a cached profile, use it despite API error
           console.log("Using cached profile due to API error");
           setUser(cachedProfile);
           setIsAuthenticated(true);
@@ -232,12 +211,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(updatedUser);
           setIsAuthenticated(true);
           
-          // Update cached profile with fresh data
           saveUserProfileToStorage(updatedUser);
         } catch (profileError) {
           console.error("Error loading profile after session:", profileError);
           
-          // Set minimal user data even if profile fetch fails
           const fallbackUser = {
             id: userId,
             email: data.session.user.email,
@@ -248,13 +225,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(fallbackUser);
           setIsAuthenticated(true);
           
-          // Update cache with minimal data
           saveUserProfileToStorage(fallbackUser);
         }
       } else {
         console.log("No session found");
         
-        // Clear cached profile when no session exists
         saveUserProfileToStorage(null);
         
         setUser(null);
@@ -263,11 +238,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Error getting session:", error);
       
-      // Clear timeout if there's an error
       clearTimeout(timeoutId);
       
       if (isRunningAsPWA() && cachedProfile) {
-        // In PWAs, if we have a cached profile, keep using it despite error
         console.log("Using cached profile due to error getting session");
         setUser(cachedProfile);
         setIsAuthenticated(true);
@@ -276,25 +249,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsAuthenticated(false);
       }
     } finally {
-      // CRITICAL: Always set loading to false when finished, regardless of outcome
       setIsLoading(false);
       console.log("Session check complete, loading set to false");
     }
   }, []);
 
-  // Effect for initialization and session monitoring
   useEffect(() => {
     console.log("Auth provider initialized");
     
-    // Function to detect and recover from broken state
     const detectBrokenState = () => {
-      // If the app has been initialized but we're still loading after 10 seconds
-      // that indicates a potential broken state
       const loadingTimeout = setTimeout(() => {
         if (isLoading) {
           console.warn("App appears to be in a broken state, attempting recovery");
           
-          // Try loading from cache one last time
           const cachedProfile = getUserProfileFromStorage();
           if (cachedProfile) {
             setUser(cachedProfile);
@@ -310,12 +277,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     const loadingTimeout = detectBrokenState();
     
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event);
       
       if (session) {
-        // Use setTimeout to avoid potential deadlock with Supabase client
         setTimeout(async () => {
           try {
             const profile = await loadUserProfile(session.user.id);
@@ -331,11 +296,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(updatedUser);
             setIsAuthenticated(true);
             
-            // Update cached profile
             saveUserProfileToStorage(updatedUser);
           } catch (error) {
             console.error("Error in auth state change handler:", error);
-            // Set minimal user info on error
             const fallbackUser = {
               id: session.user.id,
               email: session.user.email,
@@ -346,7 +309,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(fallbackUser);
             setIsAuthenticated(true);
             
-            // Cache fallback user
             saveUserProfileToStorage(fallbackUser);
           } finally {
             setIsLoading(false);
@@ -355,23 +317,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setUser(null);
         setIsAuthenticated(false);
-        // Clear cached profile
         saveUserProfileToStorage(null);
         setIsLoading(false);
       }
     });
 
-    // Check for existing session
     getSession();
 
-    // Cleanup subscription and timeout on unmount
     return () => {
       subscription.unsubscribe();
       clearTimeout(loadingTimeout);
     };
   }, [getSession, isLoading]);
 
-  // Listen for app visibility changes to refresh session when app comes to foreground
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && isRunningAsPWA()) {
@@ -387,7 +345,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [getSession]);
 
-  // Debug output to help diagnose loading issues
   useEffect(() => {
     console.log("Auth state:", { isAuthenticated, isLoading, user, path: location.pathname });
   }, [isAuthenticated, isLoading, user, location]);
