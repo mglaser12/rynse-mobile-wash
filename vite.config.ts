@@ -21,7 +21,14 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Ensure CSS is correctly processed
     cssCodeSplit: true,
+    cssMinify: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
   },
 }));
