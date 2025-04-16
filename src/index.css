@@ -141,4 +141,21 @@
   .app-card {
     @apply bg-white border border-gray-100 rounded-xl shadow-sm p-4 animate-fade-in;
   }
+  
+  /* Safe area utilities for iOS devices */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 0);
+  }
+  
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 16px); /* Fallback value */
+  }
+  
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 0);
+  }
 }

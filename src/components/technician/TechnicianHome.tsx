@@ -1,15 +1,12 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { useWashRequests } from "@/contexts/WashContext";
 import { Loader2 } from "lucide-react";
 import { TechnicianHeader } from "@/components/technician/TechnicianHeader";
 import { TodaySchedule } from "@/components/technician/TodaySchedule";
 import { JobRequestsTabs } from "@/components/technician/JobRequestsTabs";
 import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
-import { Button } from "@/components/ui/button";
 import { VehicleWashProgressDialog } from "@/components/technician/wash-progress/VehicleWashProgressDialog";
-import { DebugPanel } from "@/components/technician/DebugPanel";
 import { useWashManagement } from "@/hooks/technician/wash-management";
 
 const TechnicianHome = () => {
@@ -29,7 +26,6 @@ const TechnicianHome = () => {
     handleCompleteWash,
     handleWashProgressComplete
   } = useWashManagement();
-  const [isDebugMode, setIsDebugMode] = useState(false);
   
   // Force a refresh of wash requests data when the component mounts
   useEffect(() => {
@@ -57,11 +53,6 @@ const TechnicianHome = () => {
   const activeWashRequest = activeWashId && Array.isArray(washRequests)
     ? washRequests.find(req => req.id === activeWashId)
     : null;
-  
-  // Toggle debug mode
-  const toggleDebugMode = () => {
-    setIsDebugMode(!isDebugMode);
-  };
 
   return (
     <AppLayout>
@@ -74,20 +65,6 @@ const TechnicianHome = () => {
           </div>
         ) : (
           <>
-            {/* Debug information about requests */}
-            {isDebugMode && (
-              <DebugPanel
-                pendingRequests={pendingRequests}
-                assignedRequests={assignedRequests}
-                inProgressRequests={inProgressRequests}
-                washRequests={washRequests}
-                userId={user?.id}
-                userRole={user?.role}
-                localStateRequests={washRequests}
-                onRefresh={loadData}
-              />
-            )}
-            
             {/* Main content */}
             <TodaySchedule
               inProgressRequests={inProgressRequests}
@@ -104,18 +81,6 @@ const TechnicianHome = () => {
               onRequestClick={setSelectedRequestId}
               onStartWash={handleStartWash}
             />
-            
-            {/* Debug toggle button */}
-            <div className="mt-8 flex justify-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleDebugMode}
-                className="text-xs"
-              >
-                {isDebugMode ? "Hide Debug Info" : "Show Debug Info"}
-              </Button>
-            </div>
           </>
         )}
       </div>

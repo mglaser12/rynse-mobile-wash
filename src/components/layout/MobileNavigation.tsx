@@ -64,7 +64,7 @@ export function MobileNavigation() {
   const navItems = user?.role === "technician" ? technicianNavItems : customerNavItems;
 
   return (
-    <nav className="bottom-navigation bg-white">
+    <nav className="bottom-navigation bg-white pb-safe">
       <div className="flex justify-center items-center">
         {navItems.map((item) => (
           <Link
