@@ -6,7 +6,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true, // Default to true so components know we're checking auth
   user: null,
-  login: async () => {},
+  login: async () => null,
   register: async () => {},
   logout: async () => {},
 });

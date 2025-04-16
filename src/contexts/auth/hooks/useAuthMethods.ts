@@ -1,14 +1,17 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "../types";
 import { loadUserProfile } from "../userProfile";
 import { saveUserProfileToStorage } from "../storage";
+import { useNavigate } from "react-router-dom";
 
 export const useAuthMethods = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<User | null> => {
     setIsLoading(true);
     try {
       console.log("Attempting to sign in with email:", email);
@@ -39,6 +42,7 @@ export const useAuthMethods = () => {
         toast.success("Logged in successfully!");
         return user;
       }
+      return null;
     } catch (error: any) {
       console.error("Login failed:", error.message);
       toast.error("Invalid credentials");
@@ -48,7 +52,7 @@ export const useAuthMethods = () => {
     }
   };
 
-  const register = async (email: string, password: string, name: string, role: string) => {
+  const register = async (email: string, password: string, name: string, role: string): Promise<void> => {
     setIsLoading(true);
     try {
       console.log("Registering with role:", role);
@@ -100,7 +104,7 @@ export const useAuthMethods = () => {
     }
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signOut();
