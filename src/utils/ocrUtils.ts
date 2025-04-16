@@ -73,7 +73,12 @@ let worker: Awaited<ReturnType<typeof createWorker>> | null = null;
 // Helper function to initialize the OCR worker
 async function getWorker() {
   if (!worker) {
-    worker = await createWorker('eng');
+    worker = await createWorker({
+      langPath: 'https://tessdata.projectnaptha.com/4.0.0',
+      logger: (m) => console.log(m),
+    });
+    await worker.loadLanguage('eng');
+    await worker.initialize('eng');
     console.log('OCR worker initialized');
   }
   return worker;
