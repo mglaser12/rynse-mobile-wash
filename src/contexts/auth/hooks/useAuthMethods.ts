@@ -61,8 +61,9 @@ export const useAuthMethods = () => {
         databaseRole = 'customer';
       }
       
-      const defaultOrgId = await getDefaultOrganization();
-      console.log("Default organization ID:", defaultOrgId);
+      // Set specific organization ID
+      const organizationId = "7e73b8a3-eb87-4b9f-8534-d85d8dcae642";
+      console.log("Using organization ID:", organizationId);
       
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email,
@@ -90,7 +91,7 @@ export const useAuthMethods = () => {
           email,
           name,
           role: databaseRole,
-          organization_id: defaultOrgId
+          organization_id: organizationId
         });
 
       if (profileError) {
