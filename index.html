@@ -38,13 +38,19 @@
     <!-- Fix for iOS PWA input focus issues -->
     <style>
       @supports (-webkit-touch-callout: none) {
-        input, textarea {
+        input, textarea, select {
           font-size: 16px !important;
         }
         body {
           -webkit-user-select: none;
           -webkit-tap-highlight-color: transparent;
           -webkit-touch-callout: none;
+          cursor: pointer;
+        }
+        input, textarea, select, [contenteditable] {
+          -webkit-user-select: text;
+          user-select: text;
+          cursor: text;
         }
       }
     </style>

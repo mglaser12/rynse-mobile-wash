@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import { AppProviders } from "./providers/AppProviders";
 import AppRoutes from "./routes/AppRoutes";
+import { useIosInputFix } from "./hooks/useIosInputFix";
 
 const App = () => {
   // Fix iOS PWA viewport height issues
@@ -24,6 +25,9 @@ const App = () => {
       window.removeEventListener('orientationchange', setAppHeight);
     };
   }, []);
+  
+  // Apply iOS input fixes
+  useIosInputFix();
   
   return (
     <AppProviders>

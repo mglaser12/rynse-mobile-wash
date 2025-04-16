@@ -91,16 +91,32 @@
   input[type="search"],
   input[type="tel"],
   input[type="url"],
-  textarea {
+  textarea,
+  select {
     font-size: 16px;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: var(--radius);
+  }
+  
+  /* Enhanced iOS PWA text selection */
+  input, textarea, select, [contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
   }
   
   /* Fix for iOS standalone mode */
   @media all and (display-mode: standalone) {
     body {
       -webkit-touch-callout: none;
-      -webkit-user-select: none;
       -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Enable text selection only in inputs */
+    input, textarea, select, [contenteditable] {
+      -webkit-user-select: text;
+      user-select: text;
+      cursor: text;
     }
   }
 }
