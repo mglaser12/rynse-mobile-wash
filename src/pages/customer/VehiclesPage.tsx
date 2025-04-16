@@ -10,12 +10,13 @@ import { DemoVehicleButton } from "@/components/vehicles/DemoVehicleButton";
 import { VehicleInfoSection } from "@/components/vehicles/VehicleInfoSection";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 
 const VehiclesPage = () => {
   const { vehicles, isLoading } = useVehicles();
   const [showAddVehicleDialog, setShowAddVehicleDialog] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const isMobile = useIsMobile();
 
   const handleAddVehicle = () => {
@@ -24,6 +25,10 @@ const VehiclesPage = () => {
 
   const handleSelectVehicle = (id: string) => {
     setSelectedVehicleId(id);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
   };
 
   if (isLoading) {
@@ -62,6 +67,8 @@ const VehiclesPage = () => {
           <VehicleList 
             onAddVehicle={handleAddVehicle} 
             onSelectVehicle={handleSelectVehicle}
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
           />
           
           <DemoVehicleButton isVisible={vehicles.length === 0} />

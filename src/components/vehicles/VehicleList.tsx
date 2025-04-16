@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useVehicles } from "@/contexts/VehicleContext";
@@ -7,6 +7,7 @@ import { VehicleCard } from "./VehicleCard";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Vehicle } from "@/models/types";
+import { SearchVehicles } from "./SearchVehicles";
 
 interface VehicleListProps {
   onAddVehicle: () => void;
@@ -14,6 +15,8 @@ interface VehicleListProps {
   selectedVehicleIds?: string[];
   selectionMode?: boolean;
   vehicles?: Vehicle[];
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
 }
 
 export function VehicleList({ 
@@ -21,12 +24,30 @@ export function VehicleList({
   onSelectVehicle,
   selectedVehicleIds = [],
   selectionMode = false,
-  vehicles: propVehicles
+  vehicles: propVehicles,
+  searchQuery = "",
+  onSearchChange
 }: VehicleListProps) {
   const { vehicles: contextVehicles, isLoading } = useVehicles();
   
   // Use provided vehicles or fall back to context vehicles
-  const vehicles = propVehicles || contextVehicles;
+  const allVehicles = propVehicles || contextVehicles;
+  
+  // Filter vehicles based on search query
+  const filteredVehicles = searchQuery.trim() !== "" 
+    ? allVehicles.filter(vehicle => {
+        const query = searchQuery.toLowerCase();
+        return (
+          vehicle.make.toLowerCase().includes(query) ||
+          vehicle.model.toLowerCase().includes(query) ||
+          vehicle.year.toLowerCase().includes(query) ||
+          (vehicle.licensePlate && vehicle.licensePlate.toLowerCase().includes(query)) ||
+          (vehicle.color && vehicle.color.toLowerCase().includes(query)) ||
+          (vehicle.type && vehicle.type.toLowerCase().includes(query)) ||
+          (vehicle.vinNumber && vehicle.vinNumber.toLowerCase().includes(query))
+        );
+      })
+    : allVehicles;
 
   if (isLoading) {
     return (
@@ -58,10 +79,18 @@ export function VehicleList({
         </Button>
       </div>
       
+      {/* Add search component if onSearchChange is provided */}
+      {onSearchChange && (
+        <SearchVehicles 
+          searchQuery={searchQuery} 
+          onSearchChange={onSearchChange} 
+        />
+      )}
+      
       {/* Remove ScrollArea and let parent handle scrolling */}
       <div className="space-y-3">
-        {vehicles.length > 0 ? (
-          vehicles.map((vehicle) => (
+        {filteredVehicles.length > 0 ? (
+          filteredVehicles.map((vehicle) => (
             <VehicleCard
               key={vehicle.id}
               vehicle={vehicle}
@@ -72,12 +101,21 @@ export function VehicleList({
           ))
         ) : (
           <div className="py-8 text-center">
-            <h3 className="text-muted-foreground mb-2">No vehicles found</h3>
-            <p className="text-sm text-muted-foreground mb-4">Add your first vehicle to get started</p>
-            <Button onClick={onAddVehicle}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Vehicle
-            </Button>
+            {searchQuery.trim() !== "" ? (
+              <div>
+                <h3 className="text-muted-foreground mb-2">No vehicles match your search</h3>
+                <p className="text-sm text-muted-foreground">Try a different search term</p>
+              </div>
+            ) : (
+              <>
+                <h3 className="text-muted-foreground mb-2">No vehicles found</h3>
+                <p className="text-sm text-muted-foreground mb-4">Add your first vehicle to get started</p>
+                <Button onClick={onAddVehicle}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Vehicle
+                </Button>
+              </>
+            )}
           </div>
         )}
       </div>
