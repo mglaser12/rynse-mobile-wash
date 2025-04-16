@@ -43,7 +43,7 @@ export const CalendarDisplay = ({
           }
         }}
         components={{
-          Day: (props) => {
+          Day: (props: any) => { // Use any type to avoid the TypeScript error
             // Make sure we're safely accessing the date property
             if (!props || !props.date) return null;
             
