@@ -7,6 +7,7 @@ import Auth from "../pages/Auth";
 import CustomerHome from "../pages/customer/CustomerHome";
 import VehiclesPage from "../pages/customer/VehiclesPage";
 import BookingsPage from "../pages/customer/BookingsPage";
+import LocationsPage from "../pages/customer/LocationsPage";
 import TechnicianHome from "../pages/technician/TechnicianHome";
 import TechnicianJobsPage from "../pages/technician/TechnicianJobsPage";
 import TechnicianHistoryPage from "../pages/technician/TechnicianHistoryPage";
@@ -43,7 +44,7 @@ export const RoleRoute = ({
   allowedRole 
 }: { 
   children: React.ReactNode;
-  allowedRole: "customer" | "technician" | "admin";
+  allowedRole: "customer" | "technician" | "admin" | "fleet_manager";
 }) => {
   const { user, isLoading } = useAuth();
   
@@ -58,7 +59,12 @@ export const RoleRoute = ({
     );
   }
   
-  if (user?.role !== allowedRole) {
+  // If the allowed role is fleet_manager, also allow customers since fleet managers are a type of customer
+  if (allowedRole === "fleet_manager") {
+    if (user?.role !== "fleet_manager") {
+      return <Navigate to="/" replace />;
+    }
+  } else if (user?.role !== allowedRole) {
     return <Navigate to="/" replace />;
   }
   
@@ -119,6 +125,18 @@ const AppRoutes = () => {
           <PrivateRoute>
             <RoleRoute allowedRole="customer">
               <BookingsPage />
+            </RoleRoute>
+          </PrivateRoute>
+        } 
+      />
+      
+      {/* Fleet Manager Routes */}
+      <Route 
+        path="/locations" 
+        element={
+          <PrivateRoute>
+            <RoleRoute allowedRole="fleet_manager">
+              <LocationsPage />
             </RoleRoute>
           </PrivateRoute>
         } 

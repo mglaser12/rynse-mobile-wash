@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Car, Calendar, User, Clock } from "lucide-react";
+import { Home, Car, Calendar, User, Clock, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -14,7 +14,8 @@ interface NavigationItem {
 export function MobileNavigation() {
   const { pathname } = useLocation();
   const { user } = useAuth();
-
+  const isFleetManager = user?.role === "fleet_manager";
+  
   const customerNavItems: NavigationItem[] = [
     {
       name: "Home",
@@ -31,6 +32,13 @@ export function MobileNavigation() {
       href: "/bookings",
       icon: Calendar,
     },
+    ...(isFleetManager ? [
+      {
+        name: "Locations",
+        href: "/locations",
+        icon: MapPin,
+      }
+    ] : []),
     {
       name: "Profile",
       href: "/profile",

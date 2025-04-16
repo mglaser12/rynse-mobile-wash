@@ -9,6 +9,101 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      location_vehicles: {
+        Row: {
+          created_at: string
+          id: string
+          location_id: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location_id: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location_id?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_vehicles_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "location_vehicles_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locations: {
+        Row: {
+          address: string
+          city: string
+          created_at: string
+          created_by: string
+          id: string
+          is_default: boolean | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+          notes: string | null
+          organization_id: string | null
+          state: string
+          updated_at: string
+          zip_code: string
+        }
+        Insert: {
+          address: string
+          city: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_default?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          notes?: string | null
+          organization_id?: string | null
+          state: string
+          updated_at?: string
+          zip_code: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_default?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          notes?: string | null
+          organization_id?: string | null
+          state?: string
+          updated_at?: string
+          zip_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
@@ -278,6 +373,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          location_detail_id: string | null
           location_id: string
           notes: string | null
           organization_id: string | null
@@ -292,6 +388,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          location_detail_id?: string | null
           location_id: string
           notes?: string | null
           organization_id?: string | null
@@ -306,6 +403,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          location_detail_id?: string | null
           location_id?: string
           notes?: string | null
           organization_id?: string | null
@@ -318,6 +416,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "wash_requests_location_detail_id_fkey"
+            columns: ["location_detail_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "wash_requests_location_id_fkey"
             columns: ["location_id"]

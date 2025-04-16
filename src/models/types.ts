@@ -49,6 +49,8 @@ export type WashRequest = {
       lng: number;
     };
   };
+  locationId?: string; // Reference to location ID 
+  locationDetail?: Location; // Full location details
 };
 
 // New type to track the wash status for each vehicle
@@ -62,6 +64,25 @@ export type VehicleWashStatus = {
   notes?: string;
   createdAt?: Date;
   updatedAt?: Date;
+};
+
+// New Location type
+export type Location = {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  latitude?: number;
+  longitude?: number;
+  notes?: string;
+  isDefault: boolean;
+  organizationId?: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  vehicleCount?: number; // Number of vehicles at this location (computed)
 };
 
 export type Organization = {
@@ -108,6 +129,8 @@ export type SupabaseWashRequest = {
   created_at: string;
   updated_at: string;
   organization_id?: string;
+  location_id?: string;
+  location_detail_id?: string;
 };
 
 export type SupabaseWashRequestVehicle = {
@@ -145,4 +168,28 @@ export type SupabaseOrganization = {
   name: string;
   created_at: string;
   updated_at: string;
+};
+
+export type SupabaseLocation = {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  latitude: number | null;
+  longitude: number | null;
+  notes: string | null;
+  is_default: boolean | null;
+  organization_id: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SupabaseLocationVehicle = {
+  id: string;
+  location_id: string;
+  vehicle_id: string;
+  created_at: string;
 };
