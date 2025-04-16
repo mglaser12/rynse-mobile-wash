@@ -26,8 +26,12 @@ export const DateBadges = ({
       {sortedDates.map(date => {
         const dateStr = format(date, "yyyy-MM-dd");
         const jobs = jobsByDate[dateStr];
-        // Make sure jobs exist before accessing length
+        // Make sure jobs exist before accessing length and only show badges for dates with jobs
         const jobCount = jobs ? jobs.length : 0;
+        
+        // Skip rendering badges for dates with no jobs
+        if (jobCount === 0) return null;
+        
         const isPastDate = isPast(date) && !isToday(date);
         const isCurrentDay = isToday(date);
         

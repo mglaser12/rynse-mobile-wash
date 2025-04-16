@@ -29,6 +29,11 @@ export const JobCalendarView = ({
     datesWithJobs
   } = useCalendarData(assignedRequests);
   
+  // Force refresh of selectedDateJobs when date changes
+  const handleSelectDate = (date: Date) => {
+    setSelectedDate(date);
+  };
+  
   return (
     <div className="space-y-8">
       {/* In Progress Jobs */}
@@ -48,7 +53,7 @@ export const JobCalendarView = ({
             {/* Calendar Component */}
             <CalendarDisplay 
               selectedDate={selectedDate}
-              onSelectDate={(date) => date && setSelectedDate(date)}
+              onSelectDate={handleSelectDate}
               datesWithJobs={datesWithJobs}
               jobsByDate={jobsByDate}
             />
@@ -64,7 +69,7 @@ export const JobCalendarView = ({
             <DateBadges
               jobsByDate={jobsByDate}
               selectedDate={selectedDate}
-              onSelectDate={setSelectedDate}
+              onSelectDate={handleSelectDate}
             />
           </div>
         </CardContent>
