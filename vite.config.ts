@@ -13,6 +13,8 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react({
       jsxImportSource: 'react',
+      // Force React refresh to ensure proper hooks initialization
+      refresh: true,
     }),
     mode === 'development' &&
     componentTagger(),
@@ -20,6 +22,11 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "react": path.resolve(__dirname, "./node_modules/react"),
     },
   },
+  // Ensure we don't get duplicate React instances
+  optimizeDeps: {
+    force: true
+  }
 }));
