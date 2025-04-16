@@ -60,6 +60,7 @@
     "supabase": "^2.20.12",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
+    "tesseract.js": "^4.1.1",
     "uuid": "^9.0.1",
     "vaul": "^0.9.3",
     "zod": "^3.23.8"

@@ -1,17 +1,19 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Vehicle } from "@/models/types";
 import { useVehicles } from "@/contexts/VehicleContext";
 import { 
   processVinImage, 
   processLicensePlateImage, 
-  detectVehicleFromImage 
+  detectVehicleFromImage,
+  cleanupOCRWorker
 } from "@/utils/ocrUtils";
-import { Loader2, Upload, Camera, Check, X } from "lucide-react";
+import { Loader2, Upload, Camera, Check, X, ScanLine } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { VehicleFormFields } from "./VehicleFormFields";
+import { VehicleImageUploader } from "./VehicleImageUploader";
 
 interface AddVehicleFormProps {
   onCancel: () => void;
@@ -31,6 +33,13 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
     type: "",
     color: "",
   });
+
+  // Clean up OCR worker when component unmounts
+  useEffect(() => {
+    return () => {
+      cleanupOCRWorker();
+    };
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -90,6 +99,8 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
               type: result.data?.type || prev.type,
             }));
             toast.success("VIN processed successfully!");
+          } else {
+            toast.error(result.error || "Could not extract VIN information");
           }
           break;
           
@@ -102,6 +113,8 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
               licensePlate: result.data?.licensePlate || prev.licensePlate,
             }));
             toast.success("License plate processed successfully!");
+          } else {
+            toast.error(result.error || "Could not extract license plate");
           }
           break;
           
@@ -112,8 +125,13 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
             setVehicleData((prev) => ({
               ...prev,
               type: result.data?.type || prev.type,
+              make: result.data?.make || prev.make, 
+              model: result.data?.model || prev.model,
+              year: result.data?.year || prev.year,
             }));
-            toast.success("Vehicle type detected!");
+            toast.success("Vehicle information detected!");
+          } else {
+            toast.error(result.error || "Could not detect vehicle information");
           }
           break;
       }
@@ -139,91 +157,26 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
     <div>
       <h3 className="text-lg font-medium mb-4">Add New Vehicle</h3>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="make">Make*</Label>
-            <Input
-              id="make"
-              name="make"
-              value={vehicleData.make}
-              onChange={handleInputChange}
-              disabled={isLoading}
-              placeholder="Toyota"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="model">Model*</Label>
-            <Input
-              id="model"
-              name="model"
-              value={vehicleData.model}
-              onChange={handleInputChange}
-              disabled={isLoading}
-              placeholder="Camry"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="year">Year*</Label>
-            <Input
-              id="year"
-              name="year"
-              value={vehicleData.year}
-              onChange={handleInputChange}
-              disabled={isLoading}
-              placeholder="2023"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="color">Color</Label>
-            <Input
-              id="color"
-              name="color"
-              value={vehicleData.color}
-              onChange={handleInputChange}
-              disabled={isLoading}
-              placeholder="Blue"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="type">Type</Label>
-            <Input
-              id="type"
-              name="type"
-              value={vehicleData.type}
-              onChange={handleInputChange}
-              disabled={isLoading}
-              placeholder="Sedan, SUV, etc."
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="licensePlate">License Plate</Label>
-            <Input
-              id="licensePlate"
-              name="licensePlate"
-              value={vehicleData.licensePlate}
-              onChange={handleInputChange}
-              disabled={isLoading}
-              placeholder="ABC123"
-            />
-          </div>
-        </div>
+        <VehicleFormFields 
+          vehicleData={vehicleData}
+          onInputChange={handleInputChange}
+          disabled={isLoading}
+        />
+        
+        <VehicleImageUploader
+          currentImage={vehicleData.image}
+          onImageChange={(image) => setVehicleData(prev => ({ ...prev, image }))}
+          disabled={isLoading}
+        />
         
         <div className="space-y-2">
-          <Label>Use OCR to Auto-Fill</Label>
+          <label className="text-sm font-medium">Use OCR to Auto-Fill</label>
           
           <div className="flex flex-wrap gap-2">
             <div className="flex-1 min-w-[120px]">
               <label htmlFor="vinUpload" className="cursor-pointer">
                 <div className="border border-dashed border-gray-300 rounded-md p-4 text-center hover:bg-muted transition-colors">
-                  <Upload className="h-5 w-5 mx-auto mb-2" />
+                  <ScanLine className="h-5 w-5 mx-auto mb-2" />
                   <span className="text-sm font-medium">Scan VIN</span>
                 </div>
                 <input
