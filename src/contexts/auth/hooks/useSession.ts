@@ -14,6 +14,7 @@ export const useSession = () => {
   const sessionCheckAttempts = useRef(0);
   const MAX_SESSION_CHECK_ATTEMPTS = 3;
   const cachedProfileApplied = useRef(false);
+  const lastSessionId = useRef<string | null>(null);
 
   const getSession = useCallback(async () => {
     // Prevent concurrent session checks
@@ -85,6 +86,17 @@ export const useSession = () => {
       }
       
       if (data?.session) {
+        // Check if this is the same session we already processed
+        if (lastSessionId.current === data.session.access_token) {
+          console.log("Session already processed, no changes needed");
+          setIsLoading(false);
+          sessionCheckInProgress.current = false;
+          return;
+        }
+        
+        // Store the current session ID to avoid duplicate processing
+        lastSessionId.current = data.session.access_token;
+        
         console.log("Session found, loading user profile");
         const userId = data.session.user.id;
         

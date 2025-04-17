@@ -16,7 +16,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
-  const { login, isLoading: authLoading } = useAuth();
+  const { login, refreshSession, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -84,6 +84,10 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
         if (successCallbackTimeoutRef.current) {
           clearTimeout(successCallbackTimeoutRef.current);
         }
+        
+        // Force a session refresh before redirecting
+        await refreshSession();
+        console.log("Session refreshed after successful login");
         
         // Set a safety timeout to ensure we don't get stuck
         successCallbackTimeoutRef.current = setTimeout(() => {

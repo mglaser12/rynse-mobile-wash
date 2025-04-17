@@ -22,7 +22,7 @@ export const useAuthMethods = () => {
       await supabase.auth.signOut({ scope: 'local' });
       
       // Add a small delay to allow signOut to complete
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email,
@@ -46,6 +46,9 @@ export const useAuthMethods = () => {
       }
 
       console.log("Login successful, fetching profile for user:", data.user.id);
+      // Store session directly to ensure it's available immediately
+      localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
+      
       try {
         const profile = await loadUserProfile(data.user.id);
         const user: User = {
@@ -59,6 +62,10 @@ export const useAuthMethods = () => {
         
         saveUserProfileToStorage(user);
         toast.success("Logged in successfully!");
+        
+        // Force a session refresh here
+        await refreshSession();
+        
         return user;
       } catch (profileError: any) {
         console.error("Error loading profile after login:", profileError);
@@ -71,6 +78,10 @@ export const useAuthMethods = () => {
         
         toast.warning("Logged in but couldn't load full profile");
         saveUserProfileToStorage(fallbackUser);
+        
+        // Force a session refresh here
+        await refreshSession();
+        
         return fallbackUser;
       }
     } catch (error: any) {
@@ -81,6 +92,22 @@ export const useAuthMethods = () => {
       return null;
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const refreshSession = async (): Promise<void> => {
+    try {
+      console.log("Manually refreshing session state...");
+      const { data, error } = await supabase.auth.refreshSession();
+      if (error) {
+        console.error("Session refresh error:", error.message);
+      } else if (data.session) {
+        console.log("Session refreshed successfully");
+      } else {
+        console.log("No session found during refresh");
+      }
+    } catch (error) {
+      console.error("Error during session refresh:", error);
     }
   };
 
@@ -169,5 +196,6 @@ export const useAuthMethods = () => {
     login,
     register,
     logout,
+    refreshSession,
   };
 };

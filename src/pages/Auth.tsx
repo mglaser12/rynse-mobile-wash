@@ -7,9 +7,10 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/auth";
 import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, refreshSession } = useAuth();
   const [currentView, setCurrentView] = useState<"login" | "register">("login");
   const [authError, setAuthError] = useState<string | null>(null);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
@@ -19,6 +20,33 @@ const Auth = () => {
 
   // Get the intended redirect path from location state, or default to "/"
   const from = location.state?.from?.pathname || "/";
+
+  // Check for existing session on component mount
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      console.log("Auth page: Checking for existing session");
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Error checking existing session:", error);
+          return;
+        }
+        
+        if (data?.session) {
+          console.log("Auth page: Existing session found, refreshing auth state");
+          await refreshSession();
+        } else {
+          console.log("Auth page: No existing session found");
+        }
+      } catch (err) {
+        console.error("Error in session check:", err);
+      } finally {
+        authCheckCompleted.current = true;
+      }
+    };
+    
+    checkExistingSession();
+  }, [refreshSession]);
 
   useEffect(() => {
     // Only redirect when we're sure authentication is complete and successful
@@ -70,7 +98,10 @@ const Auth = () => {
     return <Navigate to={from} replace />;
   }
 
-  const handleSuccess = () => {
+  const handleSuccess = async () => {
+    console.log("Auth success, forcing session refresh before navigation");
+    // Force a session refresh
+    await refreshSession();
     console.log("Auth success, navigating to:", from);
     navigate(from, { replace: true });
   };

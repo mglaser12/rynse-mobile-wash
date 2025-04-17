@@ -8,7 +8,15 @@ import { useAuthSubscription } from "./hooks/useAuthSubscription";
 import { logAuthError } from "./errors/authErrorHandler";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { isLoading: authMethodsLoading, login, register, logout, lastError } = useAuthMethods();
+  const { 
+    isLoading: authMethodsLoading, 
+    login, 
+    register, 
+    logout, 
+    lastError, 
+    refreshSession 
+  } = useAuthMethods();
+  
   const { 
     isAuthenticated, 
     isLoading: sessionLoading, 
@@ -17,9 +25,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated, 
     getSession 
   } = useSession();
+  
   const [authError, setAuthError] = useState<string | null>(null);
   const location = useLocation();
   const initialized = useRef(false);
+  const authStateUpdateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Track auth errors for debugging
   useEffect(() => {
@@ -29,13 +39,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [lastError]);
   
-  // Setup auth subscription
+  // Setup auth subscription with better error handling
   useAuthSubscription(
     (user) => {
       console.log("Auth subscription updating user:", user ? `User ${user.id} (${user.role || 'no role'})` : "No user");
-      setUser(user);
-      setIsAuthenticated(!!user);
-      if (user) setAuthError(null);
+      
+      // Clear any pending timeout
+      if (authStateUpdateTimer.current) {
+        clearTimeout(authStateUpdateTimer.current);
+      }
+      
+      // Schedule an immediate update but use setTimeout to avoid race conditions
+      authStateUpdateTimer.current = setTimeout(() => {
+        setUser(user);
+        setIsAuthenticated(!!user);
+        if (user) setAuthError(null);
+        console.log("Auth state updated successfully via subscription");
+      }, 0);
     },
     (isAuth) => {
       console.log("Auth subscription updating authentication state:", isAuth);
@@ -51,6 +71,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Combine loading states
   const isLoading = authMethodsLoading || sessionLoading;
 
+  // Force a session check when route changes
+  useEffect(() => {
+    if (location.pathname) {
+      console.log("Route changed to:", location.pathname, "- checking session");
+      refreshSession().catch(error => {
+        console.error("Failed to refresh session on route change:", error);
+      });
+    }
+  }, [location.pathname, refreshSession]);
+  
   // Debug logging - only log once per route change
   useEffect(() => {
     if (!initialized.current || location.pathname) {
@@ -71,10 +101,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn("Auth provider safety timeout triggered - forcing loading to false");
         setIsAuthenticated(!!user);
       }
-    }, 20000); // Increased from 10000 to 20000
+    }, 20000);
     
     return () => {
       clearTimeout(safetyTimeoutId);
+      if (authStateUpdateTimer.current) {
+        clearTimeout(authStateUpdateTimer.current);
+      }
     };
   }, [isAuthenticated, isLoading, user, location.pathname, setIsAuthenticated, authError]);
 
@@ -86,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     register,
     logout,
+    refreshSession,
     authError
   };
 
