@@ -6,7 +6,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { formatAuthError } from "@/contexts/auth/errors/authErrorHandler";
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -20,6 +22,7 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [loginAttempted, setLoginAttempted] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginAttempts, setLoginAttempts] = useState(0);
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
   const loginAttemptRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -63,6 +66,7 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
     setIsLoading(true);
     setLoginAttempted(true);
     setLoginError(null);
+    setLoginAttempts(prev => prev + 1);
     
     try {
       console.log("Attempting login with email:", email);
@@ -92,12 +96,10 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
       } else {
         console.log("Login failed, no user returned");
         setLoginError("Login failed. Please check your credentials and try again.");
-        toast.error("Login failed. Please check your credentials and try again.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
-      setLoginError("An unexpected error occurred. Please try again.");
-      toast.error("Something went wrong. Please try again.");
+      setLoginError(formatAuthError(error));
     } finally {
       setIsLoading(false);
     }
@@ -122,6 +124,17 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
     setLoginError(null);
+  };
+
+  const renderErrorMessage = () => {
+    if (!loginError) return null;
+    
+    return (
+      <Alert variant="destructive" className="mt-4">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>{loginError}</AlertDescription>
+      </Alert>
+    );
   };
 
   return (
@@ -174,11 +187,7 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
             />
           </div>
           
-          {loginError && (
-            <div className="text-sm text-red-500 py-1 px-2 bg-red-50 rounded border border-red-100">
-              {loginError}
-            </div>
-          )}
+          {renderErrorMessage()}
           
           <Button type="submit" className="w-full" disabled={isLoading || authLoading}>
             {isLoading ? (
@@ -188,9 +197,9 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
             ) : "Sign In"}
           </Button>
           
-          {loginAttempted && !isLoading && (
-            <p className="text-sm text-center text-muted-foreground">
-              If you're experiencing issues logging in, please try refreshing the page.
+          {loginAttempts > 2 && (
+            <p className="text-sm text-center text-amber-600">
+              Having trouble logging in? Try clearing your browser cache and cookies, then try again.
             </p>
           )}
         </form>

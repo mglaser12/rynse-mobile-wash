@@ -1,13 +1,14 @@
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import AuthContext from "./useAuth";
 import { useAuthMethods } from "./hooks/useAuthMethods";
 import { useSession } from "./hooks/useSession";
 import { useAuthSubscription } from "./hooks/useAuthSubscription";
+import { logAuthError } from "./errors/authErrorHandler";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { isLoading: authMethodsLoading, login, register, logout } = useAuthMethods();
+  const { isLoading: authMethodsLoading, login, register, logout, lastError } = useAuthMethods();
   const { 
     isAuthenticated, 
     isLoading: sessionLoading, 
@@ -16,8 +17,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated, 
     getSession 
   } = useSession();
+  const [authError, setAuthError] = useState<string | null>(null);
   const location = useLocation();
   const initialized = useRef(false);
+  
+  // Track auth errors for debugging
+  useEffect(() => {
+    if (lastError) {
+      setAuthError(lastError);
+      logAuthError("AuthProvider detected error", lastError);
+    }
+  }, [lastError]);
   
   // Setup auth subscription
   useAuthSubscription(
@@ -25,10 +35,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Auth subscription updating user:", user ? `User ${user.id} (${user.role || 'no role'})` : "No user");
       setUser(user);
       setIsAuthenticated(!!user);
+      if (user) setAuthError(null);
     },
     (isAuth) => {
       console.log("Auth subscription updating authentication state:", isAuth);
       setIsAuthenticated(isAuth);
+      if (isAuth) setAuthError(null);
     },
     (loading) => {
       // We handle loading state in useSession
@@ -46,7 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated, 
         isLoading, 
         user: user ? `User ${user.id} (${user.role})` : null, 
-        path: location.pathname 
+        path: location.pathname,
+        authError 
       });
       initialized.current = true;
     }
@@ -63,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       clearTimeout(safetyTimeoutId);
     };
-  }, [isAuthenticated, isLoading, user, location.pathname, setIsAuthenticated]);
+  }, [isAuthenticated, isLoading, user, location.pathname, setIsAuthenticated, authError]);
 
   // Provide auth context to all children
   const value = {
@@ -73,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     register,
     logout,
+    authError
   };
 
   return (

@@ -1,18 +1,27 @@
 
 import { createContext, useContext } from "react";
-import { AuthContextType } from "./types";
+import { User } from "./types";
+
+interface AuthContextType {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: User | null;
+  authError: string | null;
+  login: (email: string, password: string) => Promise<User | null>;
+  register: (email: string, password: string, name: string, role: string) => Promise<void>;
+  logout: () => Promise<void>;
+}
 
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
-  isLoading: true, // Default to true so components know we're checking auth
+  isLoading: true,
   user: null,
+  authError: null,
   login: async () => null,
   register: async () => {},
   logout: async () => {},
 });
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => useContext(AuthContext);
 
 export default AuthContext;

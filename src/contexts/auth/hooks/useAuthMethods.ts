@@ -9,10 +9,12 @@ import { useNavigate } from "react-router-dom";
 
 export const useAuthMethods = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const login = async (email: string, password: string): Promise<User | null> => {
     setIsLoading(true);
+    setLastError(null);
     try {
       console.log("Attempting to sign in with email:", email);
       
@@ -29,12 +31,18 @@ export const useAuthMethods = () => {
 
       if (error) {
         console.error("Login error:", error.message);
+        const errorMessage = error.message === "Email not confirmed" 
+          ? "Your email has not been verified. Please check your inbox." 
+          : error.message;
+        setLastError(errorMessage);
         throw error;
       }
 
       if (!data?.user) {
+        const noUserError = "Authentication failed: No user returned";
         console.error("Login failed: No user returned from signInWithPassword");
-        throw new Error("Authentication failed");
+        setLastError(noUserError);
+        throw new Error(noUserError);
       }
 
       console.log("Login successful, fetching profile for user:", data.user.id);
@@ -52,7 +60,7 @@ export const useAuthMethods = () => {
         saveUserProfileToStorage(user);
         toast.success("Logged in successfully!");
         return user;
-      } catch (profileError) {
+      } catch (profileError: any) {
         console.error("Error loading profile after login:", profileError);
         const fallbackUser: User = {
           id: data.user.id,
@@ -61,13 +69,15 @@ export const useAuthMethods = () => {
           role: 'customer'
         };
         
+        toast.warning("Logged in but couldn't load full profile");
         saveUserProfileToStorage(fallbackUser);
-        toast.success("Logged in successfully!");
         return fallbackUser;
       }
     } catch (error: any) {
       console.error("Login failed:", error.message);
-      toast.error(error.message || "Invalid credentials");
+      const errorMsg = error.message || "Invalid credentials";
+      setLastError(errorMsg);
+      toast.error(errorMsg);
       return null;
     } finally {
       setIsLoading(false);
@@ -76,6 +86,7 @@ export const useAuthMethods = () => {
 
   const register = async (email: string, password: string, name: string, role: string): Promise<void> => {
     setIsLoading(true);
+    setLastError(null);
     try {
       console.log("Registering with role:", role);
       
@@ -105,18 +116,23 @@ export const useAuthMethods = () => {
       });
 
       if (authError) {
+        setLastError(authError.message);
         throw authError;
       }
 
       if (!authData.user) {
-        throw new Error("Failed to create user account");
+        const noUserError = "Failed to create user account";
+        setLastError(noUserError);
+        throw new Error(noUserError);
       }
       
       toast.success("Registration successful! Please login to continue.");
       navigate("/auth");
     } catch (error: any) {
       console.error("Registration failed:", error.message);
-      toast.error("Registration failed: " + error.message);
+      const errorMsg = error.message || "Registration failed";
+      setLastError(errorMsg);
+      toast.error("Registration failed: " + errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -124,9 +140,11 @@ export const useAuthMethods = () => {
 
   const logout = async (): Promise<void> => {
     setIsLoading(true);
+    setLastError(null);
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
+        setLastError(error.message);
         throw error;
       }
       
@@ -135,7 +153,10 @@ export const useAuthMethods = () => {
       toast.success("Logged out successfully!");
     } catch (error: any) {
       console.error("Logout failed:", error.message);
-      toast.error("Logout failed");
+      const errorMsg = error.message || "Logout failed";
+      setLastError(errorMsg);
+      toast.error(errorMsg);
+      // Force clear storage even on error
       saveUserProfileToStorage(null);
     } finally {
       setIsLoading(false);
@@ -144,6 +165,7 @@ export const useAuthMethods = () => {
 
   return {
     isLoading,
+    lastError,
     login,
     register,
     logout,

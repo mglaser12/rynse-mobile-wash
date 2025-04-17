@@ -6,10 +6,13 @@ import { RegisterForm } from "@/components/auth/RegisterForm";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/auth";
 import { Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Auth = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const [currentView, setCurrentView] = useState<"login" | "register">("login");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const authCheckCompleted = React.useRef(false);
@@ -28,6 +31,16 @@ const Auth = () => {
     if (!isLoading) {
       authCheckCompleted.current = true;
     }
+
+    // Set a timeout to detect if authentication takes too long
+    const timeoutId = setTimeout(() => {
+      if (isLoading) {
+        console.log("Auth check taking longer than expected");
+        setLoadingTimeout(true);
+      }
+    }, 5000);
+
+    return () => clearTimeout(timeoutId);
   }, [isAuthenticated, isLoading, navigate, from]);
 
   // Don't render anything during the initial loading state to prevent flicker
@@ -38,6 +51,13 @@ const Auth = () => {
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
             <p className="text-muted-foreground">Loading authentication...</p>
+            {loadingTimeout && (
+              <Alert className="mt-4 max-w-md mx-auto">
+                <AlertDescription>
+                  Authentication is taking longer than expected. Please be patient...
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         </div>
       </AppLayout>
@@ -55,6 +75,12 @@ const Auth = () => {
     navigate(from, { replace: true });
   };
 
+  // Track auth flow errors
+  const handleAuthError = (error: string) => {
+    setAuthError(error);
+    console.error("Authentication error:", error);
+  };
+
   return (
     <AppLayout hideNavigation>
       <div className="car-wash-container pt-10">
@@ -69,14 +95,26 @@ const Auth = () => {
           <p className="text-muted-foreground">Mobile wash services</p>
         </div>
         
+        {authError && (
+          <Alert variant="destructive" className="mb-6 max-w-md mx-auto">
+            <AlertDescription>{authError}</AlertDescription>
+          </Alert>
+        )}
+        
         {currentView === "login" ? (
           <LoginForm 
-            onRegisterClick={() => setCurrentView("register")}
+            onRegisterClick={() => {
+              setCurrentView("register");
+              setAuthError(null);
+            }}
             onSuccess={handleSuccess}
           />
         ) : (
           <RegisterForm 
-            onLoginClick={() => setCurrentView("login")}
+            onLoginClick={() => {
+              setCurrentView("login");
+              setAuthError(null);
+            }}
             onSuccess={handleSuccess}
           />
         )}

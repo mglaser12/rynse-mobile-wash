@@ -8,8 +8,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/contexts/auth";
 import { UserRole } from "@/models/types";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { formatAuthError } from "@/contexts/auth/errors/authErrorHandler";
 
 interface RegisterFormProps {
   onSuccess?: () => void;
@@ -24,22 +26,32 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState<UserRole>("fleet_manager");
   const [isLoading, setIsLoading] = useState(false);
+  const [registerError, setRegisterError] = useState<string | null>(null);
   const navigate = useNavigate();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name || !email || !password) {
+      setRegisterError("Please fill in all required fields");
       toast.error("Please fill in all required fields");
       return;
     }
     
     if (password !== confirmPassword) {
+      setRegisterError("Passwords do not match");
       toast.error("Passwords do not match");
       return;
     }
     
+    if (password.length < 6) {
+      setRegisterError("Password must be at least 6 characters long");
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+    
     setIsLoading(true);
+    setRegisterError(null);
     
     try {
       // Pass the role directly - our updated register function will validate it
@@ -47,11 +59,23 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
       
       // Success handling and redirection happens in the register function
       if (onSuccess) onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Registration error:", error);
+      setRegisterError(formatAuthError(error));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const renderErrorMessage = () => {
+    if (!registerError) return null;
+    
+    return (
+      <Alert variant="destructive" className="mt-4">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>{registerError}</AlertDescription>
+      </Alert>
+    );
   };
 
   return (
@@ -77,7 +101,10 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
               id="name"
               placeholder="John Smith"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                setRegisterError(null);
+              }}
               disabled={isLoading}
               className="w-full"
             />
@@ -89,7 +116,10 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
               type="email"
               placeholder="john@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setRegisterError(null);
+              }}
               disabled={isLoading}
               className="w-full"
             />
@@ -100,7 +130,10 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setRegisterError(null);
+              }}
               disabled={isLoading}
               className="w-full"
             />
@@ -111,7 +144,10 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
               id="confirmPassword"
               type="password"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                setRegisterError(null);
+              }}
               disabled={isLoading}
               className="w-full"
             />
@@ -133,6 +169,9 @@ export function RegisterForm({ onSuccess, onLoginClick }: RegisterFormProps) {
               </div>
             </RadioGroup>
           </div>
+          
+          {renderErrorMessage()}
+          
           <Button type="submit" className="w-full" disabled={isLoading || authLoading}>
             {isLoading ? (
               <>
