@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { WashStatus } from "@/models/types";
+import { WashStatus, Vehicle } from "@/models/types";
 import { toast } from "sonner";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabaseApi";
 
@@ -170,7 +169,7 @@ export const getFullWashRequest = async (washRequestId: string) => {
       .from('wash_requests')
       .select(`
         *,
-        location:locations(*)
+        location:location_id(*)
       `)
       .eq('id', washRequestId)
       .single();
@@ -194,12 +193,31 @@ export const getFullWashRequest = async (washRequestId: string) => {
       return null;
     }
 
+    // Map the raw vehicle data from Supabase to our Vehicle type
+    const vehicleDetails: Vehicle[] = washVehicles.map(v => {
+      const vehicleData = v.vehicles;
+      return {
+        id: vehicleData.id,
+        customerId: vehicleData.user_id,
+        type: vehicleData.type || 'Unknown',
+        make: vehicleData.make,
+        model: vehicleData.model,
+        year: vehicleData.year,
+        licensePlate: vehicleData.license_plate || 'Unknown',
+        color: vehicleData.color || 'Unknown',
+        image: vehicleData.image_url || undefined,
+        vinNumber: vehicleData.vin_number || undefined,
+        dateAdded: new Date(vehicleData.created_at),
+        organizationId: vehicleData.organization_id || undefined
+      };
+    });
+
     // Format the data to match our application models
     const formattedRequest = {
       id: washRequest.id,
       customerId: washRequest.user_id,
       vehicles: washVehicles.map(v => v.vehicle_id),
-      vehicleDetails: washVehicles.map(v => v.vehicles),
+      vehicleDetails: vehicleDetails,
       preferredDates: {
         start: new Date(washRequest.preferred_date_start),
         end: washRequest.preferred_date_end ? new Date(washRequest.preferred_date_end) : undefined
