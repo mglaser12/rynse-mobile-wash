@@ -1,11 +1,9 @@
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import AuthContext from "./useAuth";
 import { useAuthMethods } from "./hooks/useAuthMethods";
 import { useSession } from "./hooks/useSession";
-import { useAuthSubscription } from "./hooks/useAuthSubscription";
-import { logAuthError } from "./errors/authErrorHandler";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { isLoading: authMethodsLoading, login, register, logout } = useAuthMethods();
