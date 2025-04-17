@@ -99,13 +99,13 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
       } else {
         // Create new location
         await createLocation({
-          ...data,
-          // Ensure required fields are provided
           name: data.name,
           address: data.address,
           city: data.city,
           state: data.state,
           zipCode: data.zipCode,
+          notes: data.notes,
+          isDefault: data.isDefault,
           organizationId: user?.organizationId || ""
         });
       }
