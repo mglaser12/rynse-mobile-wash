@@ -7,4 +7,4 @@ export {
   getLocationId, 
   getUserOrganizationId, 
   createVehicleAssociations 
-} from './washRequestApi';
+} from './api';

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CreateWashRequestData } from "../types";
 import { WashRequest, WashStatus } from "@/models/types";
 import { toast } from "sonner";
-import { getFullWashRequest } from "./washRequestApi";
+import { getFullWashRequest } from "./api/washRequestDetails";
 
 /**
  * Create a new wash request in the database
