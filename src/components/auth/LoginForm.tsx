@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loginAttempted, setLoginAttempted] = useState(false);
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
   const loginAttemptRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -56,26 +58,36 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
     }
     
     setIsLoading(true);
+    setLoginAttempted(true);
     
     try {
-      console.log("Attempting login...");
+      console.log("Attempting login with email:", email);
       const user = await login(email, password);
-      console.log("Login successful, user:", user ? "User obtained" : "No user returned");
+      console.log("Login result:", user ? "User obtained" : "No user returned");
       
-      if (user && onSuccess) {
-        console.log("Calling onSuccess callback");
+      if (user) {
+        console.log("Login successful, calling onSuccess callback");
+        
+        // Clear any existing timeout
+        if (loginAttemptRef.current) {
+          clearTimeout(loginAttemptRef.current);
+        }
         
         // Set a safety timeout to ensure we don't get stuck
         loginAttemptRef.current = setTimeout(() => {
           console.log("Login success timeout triggered - forcing callback");
-          onSuccess();
+          if (onSuccess) onSuccess();
         }, 2000);
         
         // Call immediately but also have the safety timeout
-        onSuccess();
+        if (onSuccess) onSuccess();
+      } else {
+        console.log("Login failed, no user returned");
+        toast.error("Login failed. Please check your credentials and try again.");
       }
     } catch (error) {
       console.error("Login error:", error);
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -153,6 +165,12 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
               </>
             ) : "Sign In"}
           </Button>
+          
+          {loginAttempted && !isLoading && (
+            <p className="text-sm text-center text-muted-foreground">
+              If you're experiencing issues logging in, please try refreshing the page.
+            </p>
+          )}
         </form>
       </CardContent>
       <CardFooter className="flex flex-col space-y-4">

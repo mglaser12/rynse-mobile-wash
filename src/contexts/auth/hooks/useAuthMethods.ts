@@ -15,17 +15,27 @@ export const useAuthMethods = () => {
     setIsLoading(true);
     try {
       console.log("Attempting to sign in with email:", email);
+      
+      // Clear any previous auth errors or sessions first
+      await supabase.auth.signOut({ scope: 'local' });
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email,
         password: password,
       });
 
       if (error) {
+        console.error("Login error:", error.message);
         throw error;
       }
 
-      if (data?.user) {
-        console.log("Login successful, fetching profile for user:", data.user.id);
+      if (!data?.user) {
+        console.error("Login failed: No user returned from signInWithPassword");
+        throw new Error("Authentication failed");
+      }
+
+      console.log("Login successful, fetching profile for user:", data.user.id);
+      try {
         const profile = await loadUserProfile(data.user.id);
         const user: User = {
           id: data.user.id,
@@ -39,8 +49,19 @@ export const useAuthMethods = () => {
         saveUserProfileToStorage(user);
         toast.success("Logged in successfully!");
         return user;
+      } catch (profileError) {
+        console.error("Error loading profile after login:", profileError);
+        const fallbackUser: User = {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.email?.split('@')[0],
+          role: 'customer'
+        };
+        
+        saveUserProfileToStorage(fallbackUser);
+        toast.success("Logged in successfully!");
+        return fallbackUser;
       }
-      return null;
     } catch (error: any) {
       console.error("Login failed:", error.message);
       toast.error("Invalid credentials");

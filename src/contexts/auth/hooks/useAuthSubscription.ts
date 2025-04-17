@@ -37,6 +37,9 @@ export const useAuthSubscription = (
       
       authUpdateInProgress.current = true;
       
+      // Set loading state immediately
+      setIsLoading(true);
+      
       try {
         if (session) {
           try {
@@ -56,7 +59,6 @@ export const useAuthSubscription = (
             setIsAuthenticated(true);
             
             saveUserProfileToStorage(updatedUser);
-            setIsLoading(false);
           } catch (error) {
             console.error("Error in auth state change handler:", error);
             const fallbackUser = {
@@ -70,6 +72,7 @@ export const useAuthSubscription = (
             setIsAuthenticated(true);
             
             saveUserProfileToStorage(fallbackUser);
+          } finally {
             setIsLoading(false);
           }
         } else {
