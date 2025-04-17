@@ -75,7 +75,7 @@ export function useAddVehicleForm({ onSuccess }: UseAddVehicleFormProps) {
       // Extract locationId for separate handling
       const { locationId, ...vehicleFormData } = vehicleData;
       
-      // Add vehicle using the core vehicle data
+      // Add vehicle using the core vehicle data - pass locationId as a separate parameter
       await addVehicle({
         ...vehicleFormData,
         customerId: user.id,
@@ -83,9 +83,8 @@ export function useAddVehicleForm({ onSuccess }: UseAddVehicleFormProps) {
         color: vehicleFormData.color || "",
         type: vehicleFormData.type || "",
         licensePlate: vehicleFormData.licensePlate || "",
-        locationId: locationId, // Pass locationId to the vehicle operations function
-        organizationId: user.organizationId
-      });
+        organizationId: user.organizationId,
+      }, locationId);  // Pass locationId as a separate parameter
       
       if (onSuccess) onSuccess();
     } catch (error) {

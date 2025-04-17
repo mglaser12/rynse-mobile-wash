@@ -24,8 +24,8 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
   }, [loadedVehicles]);
 
   // Add a new vehicle
-  const addVehicle = async (vehicleData: Omit<Vehicle, "id" | "dateAdded">) => {
-    const newVehicle = await addVehicleOp(user, vehicleData);
+  const addVehicle = async (vehicleData: Omit<Vehicle, "id" | "dateAdded">, locationId?: string) => {
+    const newVehicle = await addVehicleOp(user, { ...vehicleData, locationId });
     if (newVehicle) {
       setVehicles(prev => [...prev, newVehicle]);
     }
