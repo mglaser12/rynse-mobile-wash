@@ -26,7 +26,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
   const [washRequests, setWashRequests] = useState<WashRequest[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   
-  const { safeRefreshData, forceRefreshRef, lastUpdateTimestampRef } = useRefreshData(refreshData);
+  const { safeRefreshData, forceRefreshRef, lastUpdateTimestampRef, pendingRefreshRef } = useRefreshData(refreshData);
   
   // Update local state when loaded wash requests change
   useEffect(() => {
@@ -34,7 +34,9 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
       console.log("Updating wash requests from loaded data:", loadedWashRequests);
       setWashRequests(loadedWashRequests);
       // Reset force refresh flag when data is actually loaded
-      forceRefreshRef.current = false;
+      if (forceRefreshRef) {
+        forceRefreshRef.current = false;
+      }
     } else {
       // If we get undefined or null, keep existing state
       console.log("Received non-array wash requests data:", loadedWashRequests);
@@ -44,7 +46,7 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
   // Set up a timer to handle deferred refreshes due to throttling
   useEffect(() => {
     const checkPendingRefresh = () => {
-      if (forceRefreshRef.current) {
+      if (forceRefreshRef && forceRefreshRef.current) {
         const now = Date.now();
         if (now - lastUpdateTimestampRef.current >= 3000) {
           console.log("Executing pending refresh");

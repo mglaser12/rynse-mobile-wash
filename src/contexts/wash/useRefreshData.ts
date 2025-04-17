@@ -4,11 +4,18 @@ import { useCallback, useRef } from "react";
 export function useRefreshData(refreshData: Function) {
   const lastUpdateTimestampRef = useRef<number>(0);
   const pendingRefreshRef = useRef<boolean>(false);
+  const forceRefreshRef = useRef<boolean>(false);
   const THROTTLE_INTERVAL = 5000; // 5 second throttle
   
   // Safe refresh data with throttling
   const safeRefreshData = useCallback(async () => {
     const now = Date.now();
+    
+    // Override throttling if force refresh is requested
+    if (forceRefreshRef.current) {
+      console.log("Forcing data refresh");
+      forceRefreshRef.current = false;
+    }
     
     // Throttle refresh calls to prevent flooding
     if (now - lastUpdateTimestampRef.current < THROTTLE_INTERVAL) {
@@ -50,6 +57,7 @@ export function useRefreshData(refreshData: Function) {
   return {
     safeRefreshData,
     lastUpdateTimestampRef,
-    pendingRefreshRef
+    pendingRefreshRef,
+    forceRefreshRef
   };
 }
