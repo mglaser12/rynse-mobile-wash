@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -101,7 +100,13 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
         // Create new location
         await createLocation({
           ...data,
-          organizationId: user?.organizationId
+          // Ensure required fields are provided
+          name: data.name,
+          address: data.address,
+          city: data.city,
+          state: data.state,
+          zipCode: data.zipCode,
+          organizationId: user?.organizationId || ""
         });
       }
       onSuccess();
