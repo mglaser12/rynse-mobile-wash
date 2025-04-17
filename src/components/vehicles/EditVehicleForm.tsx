@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Vehicle } from "@/models/types";
 import { useVehicles } from "@/contexts/VehicleContext";
-import { useLocations } from "@/contexts/LocationContext";
 import { Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { VehicleImageUploader } from "./VehicleImageUploader";
@@ -23,7 +22,6 @@ export function EditVehicleForm({ vehicle, onCancel, onSuccess }: EditVehicleFor
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [currentLocationId, setCurrentLocationId] = useState<string>("");
   
   const [vehicleData, setVehicleData] = useState<VehicleFormData & {image?: string}>({
     make: vehicle.make,
@@ -47,7 +45,7 @@ export function EditVehicleForm({ vehicle, onCancel, onSuccess }: EditVehicleFor
         .maybeSingle();
       
       if (data && data.location_id) {
-        setCurrentLocationId(data.location_id);
+        console.log("Current location ID:", data.location_id);
         setVehicleData(prev => ({ ...prev, locationId: data.location_id }));
       }
     };
@@ -65,6 +63,7 @@ export function EditVehicleForm({ vehicle, onCancel, onSuccess }: EditVehicleFor
   };
   
   const handleLocationChange = (locationId: string) => {
+    console.log("Location changed to:", locationId);
     setVehicleData(prev => ({ ...prev, locationId }));
   };
 
@@ -79,18 +78,14 @@ export function EditVehicleForm({ vehicle, onCancel, onSuccess }: EditVehicleFor
     
     setIsLoading(true);
     try {
-      // Extract locationId for separate handling
-      const { locationId, ...vehicleUpdateData } = vehicleData;
+      console.log("Submitting with data:", vehicleData);
       
-      if (locationId) {
-        // If locationId is provided, pass it as a separate parameter
-        await updateVehicle(vehicle.id, vehicleUpdateData, locationId);
-      } else {
-        // Otherwise, just update the vehicle data
-        await updateVehicle(vehicle.id, vehicleUpdateData);
+      // Pass the entire object including locationId to updateVehicle
+      const success = await updateVehicle(vehicle.id, vehicleData);
+      
+      if (success && onSuccess) {
+        onSuccess();
       }
-      
-      if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Error updating vehicle:", error);
     } finally {

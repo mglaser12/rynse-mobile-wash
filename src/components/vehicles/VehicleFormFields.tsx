@@ -35,6 +35,13 @@ export function VehicleFormFields({
 }: VehicleFormFieldsProps) {
   const { locations } = useLocations();
 
+  const handleLocationChange = (value: string) => {
+    console.log("Location selected in form field:", value);
+    if (onLocationChange) {
+      onLocationChange(value);
+    }
+  };
+
   return (
     <>
       {onLocationChange && showLocation && (
@@ -44,7 +51,7 @@ export function VehicleFormFields({
           </Label>
           <Select
             value={vehicleData.locationId || ""}
-            onValueChange={onLocationChange}
+            onValueChange={handleLocationChange}
             disabled={disabled}
           >
             <SelectTrigger id="location" className={!vehicleData.locationId && locationRequired ? "ring-1 ring-red-400" : ""}>

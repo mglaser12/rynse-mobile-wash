@@ -32,8 +32,9 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Update an existing vehicle
-  const updateVehicle = async (id: string, data: Partial<Vehicle>, locationId?: string) => {
-    const success = await updateVehicleOp(id, { ...data, locationId });
+  const updateVehicle = async (id: string, data: Partial<Vehicle> & { locationId?: string }) => {
+    console.log("Updating vehicle in context:", id, data);
+    const success = await updateVehicleOp(id, data);
     if (success) {
       // If image was removed or changed, update the local state
       if (data.image === undefined) {
@@ -45,17 +46,19 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
         // If the image is a base64 string, this means it was changed
         // We'll update it with the URL that comes back from Supabase in the next fetch
         // For now, just update the other fields
-        const { image, ...otherData } = data;
+        const { image, locationId, ...otherData } = data;
         setVehicles(prev => prev.map(vehicle => 
           vehicle.id === id ? { ...vehicle, ...otherData } : vehicle
         ));
       } else {
-        // Normal update
+        // Normal update (excluding locationId which doesn't belong in the Vehicle type)
+        const { locationId, ...vehicleData } = data;
         setVehicles(prev => prev.map(vehicle => 
-          vehicle.id === id ? { ...vehicle, ...data } : vehicle
+          vehicle.id === id ? { ...vehicle, ...vehicleData } : vehicle
         ));
       }
     }
+    return success;
   };
 
   // Remove a vehicle

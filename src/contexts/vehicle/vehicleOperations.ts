@@ -1,3 +1,4 @@
+
 import { Vehicle } from "@/models/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -219,7 +220,11 @@ export async function updateVehicle(
           .update({ location_id: locationId })
           .eq('vehicle_id', id);
 
-        if (updateLocError) throw updateLocError;
+        if (updateLocError) {
+          console.error("Error updating location association:", updateLocError);
+          toast.error("Vehicle updated, but location update failed");
+          return false;
+        }
       } else {
         // Create new location association
         const { error: insertLocError } = await supabase
@@ -229,8 +234,16 @@ export async function updateVehicle(
             vehicle_id: id
           });
 
-        if (insertLocError) throw insertLocError;
+        if (insertLocError) {
+          console.error("Error creating location association:", insertLocError);
+          toast.error("Vehicle updated, but location assignment failed");
+          return false;
+        }
       }
+      
+      toast.success("Vehicle and location updated successfully!");
+    } else {
+      toast.success("Vehicle updated successfully!");
     }
 
     return true;
