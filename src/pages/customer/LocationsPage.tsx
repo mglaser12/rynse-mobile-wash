@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useLocations } from "@/contexts/LocationContext";
@@ -10,7 +9,7 @@ import { LocationDialog } from "@/components/location/LocationDialog";
 import { ConfirmDeleteDialog } from "@/components/location/ConfirmDeleteDialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function LocationsPage() {
   const {
@@ -52,21 +51,14 @@ export default function LocationsPage() {
   return (
     <AppLayout>
       <header className="bg-white p-4 border-b sticky top-0 z-10">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <img 
-              src="/lovable-uploads/3d6deccc-d4a2-4bfb-9acc-18c6e46f5b73.png" 
-              alt="Rynse Logo" 
-              className="h-8 mr-3" 
-            />
-            <div>
-              <h1 className="text-xl font-bold">Locations</h1>
-              <p className="text-sm text-muted-foreground">
-                Manage your service locations
-              </p>
-            </div>
+        <div className="flex justify-between items-center max-w-lg mx-auto">
+          <div>
+            <h1 className="text-xl font-semibold">Locations</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage your service locations
+            </p>
           </div>
-          <Button onClick={handleAddLocation}>
+          <Button onClick={handleAddLocation} variant="default">
             <PlusCircle className="h-4 w-4 mr-2" />
             Add Location
           </Button>
@@ -92,57 +84,50 @@ export default function LocationsPage() {
             </div>
           ) : (
             <ScrollArea className="h-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex flex-col space-y-4 max-w-lg mx-auto">
                 {locations.map(location => (
-                  <Card key={location.id} className="relative group hover:shadow-md transition-shadow">
-                    {location.isDefault && (
-                      <div className="absolute -top-2 -right-2 z-10">
-                        <Badge variant="default" className="bg-yellow-500 flex items-center py-1 shadow-sm px-[7px]">
-                          <Star className="h-3 w-3 mr-1" /> Default
-                        </Badge>
-                      </div>
-                    )}
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="flex items-center">
-                            <MapPin className="h-4 w-4 mr-2 text-primary" />
-                            {location.name}
-                          </CardTitle>
-                          <CardDescription>
-                            {location.address}, {location.city}, {location.state} {location.zipCode}
-                          </CardDescription>
+                  <Card key={location.id} className="overflow-hidden transition-all duration-200">
+                    <CardContent className="p-0">
+                      <div className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1">
+                            <div className="flex items-center">
+                              <MapPin className="h-4 w-4 text-primary mr-2" />
+                              <h3 className="font-semibold">{location.name}</h3>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {location.address}, {location.city}, {location.state} {location.zipCode}
+                            </p>
+                            {location.notes && (
+                              <p className="text-sm text-muted-foreground mt-2">
+                                {location.notes}
+                              </p>
+                            )}
+                          </div>
+                          {location.isDefault && (
+                            <Badge variant="default" className="bg-yellow-500 flex items-center py-1 shadow-sm px-[7px]">
+                              <Star className="h-3 w-3 mr-1" /> Default
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="flex justify-between items-center mt-4">
+                          <Button variant="outline" size="sm" onClick={() => handleEditLocation(location)}>
+                            <Edit className="h-4 w-4 mr-2" /> Edit
+                          </Button>
+                          <div className="flex space-x-2">
+                            {!location.isDefault && (
+                              <Button variant="secondary" size="sm" onClick={() => handleSetDefault(location)}>
+                                <Star className="h-4 w-4 mr-2" /> Set Default
+                              </Button>
+                            )}
+                            <Button variant="destructive" size="sm" onClick={() => handleDeleteLocation(location)}>
+                              <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center mb-2">
-                        <Home className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span className="text-sm">
-                          {location.vehicleCount} {location.vehicleCount === 1 ? 'vehicle' : 'vehicles'} at this location
-                        </span>
-                      </div>
-                      {location.notes && (
-                        <p className="text-sm text-muted-foreground mt-2">
-                          {location.notes}
-                        </p>
-                      )}
                     </CardContent>
-                    <CardFooter className="flex justify-between pt-0">
-                      <Button variant="outline" size="sm" onClick={() => handleEditLocation(location)}>
-                        <Edit className="h-4 w-4 mr-2" /> Edit
-                      </Button>
-                      <div className="flex space-x-2">
-                        {!location.isDefault && (
-                          <Button variant="secondary" size="sm" onClick={() => handleSetDefault(location)}>
-                            <Star className="h-4 w-4 mr-2" /> Set Default
-                          </Button>
-                        )}
-                        <Button variant="destructive" size="sm" onClick={() => handleDeleteLocation(location)}>
-                          <Trash2 className="h-4 w-4 mr-2" /> Delete
-                        </Button>
-                      </div>
-                    </CardFooter>
                   </Card>
                 ))}
               </div>
