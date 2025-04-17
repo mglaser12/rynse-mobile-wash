@@ -33,6 +33,19 @@ export const RequestActions = ({
   const isAssignedTechnician = userId && washRequest.technician === userId;
 
   if (washRequest.status === "pending") {
+    // Create a function to check if a date is within the allowed range
+    const isDateDisabled = (date: Date) => {
+      const startDate = washRequest.preferredDates.start;
+      const endDate = washRequest.preferredDates.end || startDate;
+      
+      // Reset hours to compare dates properly
+      const compareDate = new Date(date.setHours(0, 0, 0, 0));
+      const compareStart = new Date(startDate.setHours(0, 0, 0, 0));
+      const compareEnd = new Date(endDate.setHours(0, 0, 0, 0));
+      
+      return compareDate < compareStart || compareDate > compareEnd;
+    };
+
     return (
       <div className="space-y-4">
         <div className="space-y-2">
@@ -43,6 +56,7 @@ export const RequestActions = ({
             onStartDateChange={onDateChange}
             onEndDateChange={() => {}}
             allowRange={false}
+            disabledDates={isDateDisabled}
           />
         </div>
         

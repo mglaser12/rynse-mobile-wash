@@ -5,7 +5,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Calendar as CalendarIcon, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 interface DateRangePickerProps {
   startDate: Date | undefined;
@@ -13,6 +13,7 @@ interface DateRangePickerProps {
   onStartDateChange: (date: Date | undefined) => void;
   onEndDateChange: (date: Date | undefined) => void;
   allowRange?: boolean;
+  disabledDates?: (date: Date) => boolean;
 }
 
 export function DateRangePicker({
@@ -21,6 +22,7 @@ export function DateRangePicker({
   onStartDateChange,
   onEndDateChange,
   allowRange = true,
+  disabledDates
 }: DateRangePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -83,7 +85,7 @@ export function DateRangePicker({
               }
             }}
             initialFocus
-            disabled={(date) => date < new Date()}
+            disabled={disabledDates}
             className={cn("p-3 pointer-events-auto")}
           />
         ) : (
@@ -92,7 +94,7 @@ export function DateRangePicker({
             selected={startDate}
             onSelect={handleSelect}
             initialFocus
-            disabled={(date) => date < new Date()}
+            disabled={disabledDates}
             className={cn("p-3 pointer-events-auto")}
           />
         )}
