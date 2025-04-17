@@ -2,12 +2,13 @@
 import React from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { format, isSameDay, isPast, isToday } from "date-fns";
+import { WashRequest } from "@/models/types";
 
 interface CalendarDisplayProps {
   selectedDate: Date;
   onSelectDate: (date: Date | undefined) => void;
   datesWithJobs: Date[];
-  jobsByDate: Record<string, any[]>;
+  jobsByDate: Record<string, WashRequest[]>;
 }
 
 export const CalendarDisplay = ({ 
@@ -27,6 +28,7 @@ export const CalendarDisplay = ({
           hasJobs: datesWithJobs,
           past: (date) => isPast(date) && !isToday(date),
           today: (date) => isToday(date),
+          selected: (date) => isSameDay(date, selectedDate),
         }}
         modifiersStyles={{
           hasJobs: {
@@ -40,24 +42,32 @@ export const CalendarDisplay = ({
             fontWeight: 'bold',
             borderColor: '#1EAEDB',
             borderWidth: '2px',
+          },
+          selected: {
+            fontWeight: 'bold',
+            backgroundColor: '#9b87f5',
+            color: 'white',
           }
         }}
         components={{
-          Day: (props: any) => { // Use any type to avoid the TypeScript error
-            // Make sure we're safely accessing the date property
+          Day: (props: any) => {
             if (!props || !props.date) return null;
             
             const date = props.date;
             const dateStr = format(date, "yyyy-MM-dd");
             const hasJobs = jobsByDate && jobsByDate[dateStr] && jobsByDate[dateStr].length > 0;
+            const jobCount = jobsByDate && jobsByDate[dateStr] ? jobsByDate[dateStr].length : 0;
             const isPastDay = isPast(date) && !isToday(date);
             const isCurrentDay = isToday(date);
-            const jobCount = jobsByDate && jobsByDate[dateStr] ? jobsByDate[dateStr].length : 0;
+            const isSelectedDay = isSameDay(date, selectedDate);
             
             return (
               <div 
                 {...props} 
-                className={`${props.className} ${hasJobs ? 'cursor-pointer' : ''} ${isPastDay ? 'text-gray-400' : ''} ${isCurrentDay ? 'font-bold' : ''}`}
+                className={`${props.className} ${hasJobs ? 'cursor-pointer' : ''} 
+                  ${isPastDay ? 'text-gray-400' : ''} 
+                  ${isCurrentDay ? 'font-bold' : ''} 
+                  ${isSelectedDay ? 'font-bold bg-primary text-white hover:bg-primary hover:text-white' : ''}`}
               >
                 {date.getDate()}
                 {hasJobs && (
