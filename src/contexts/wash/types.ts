@@ -1,15 +1,15 @@
 
-import { WashRequest } from "@/models/types";
+import { WashRequest, Vehicle } from "@/models/types";
 
 export interface WashContextType {
   washRequests: WashRequest[];
   isLoading: boolean;
-  createWashRequest: (requestData: CreateWashRequestData) => Promise<WashRequest | null>;
-  updateWashRequest: (id: string, data: Partial<WashRequest>) => Promise<boolean>;
+  createWashRequest: (data: CreateWashRequestData) => Promise<WashRequest | null>;
+  cancelWashRequest: (id: string) => Promise<boolean>;
+  updateWashRequest: (id: string, data: any) => Promise<boolean>;
   removeWashRequest: (id: string) => Promise<void>;
   getWashRequestById: (id: string) => WashRequest | undefined;
-  cancelWashRequest: (id: string) => Promise<boolean>;
-  refreshData: () => void;  // Add refreshData function to the interface
+  refreshData: () => Promise<void>;
 }
 
 export interface CreateWashRequestData {
@@ -21,4 +21,5 @@ export interface CreateWashRequestData {
   };
   price: number;
   notes?: string;
+  locationId?: string; // Add locationId field to the wash request data
 }

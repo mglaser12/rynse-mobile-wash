@@ -1,29 +1,44 @@
 
-import { WashRequest } from "@/models/types";
+import { CreateWashRequestData } from "../types";
+import { WashRequest, Vehicle } from "@/models/types";
 import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
 
-/**
- * Handles the creation of a wash request
- */
-export function handleCreateWashRequest(
+// Action creator for creating wash requests
+export const handleCreateWashRequest = (
   user: any,
   washRequests: WashRequest[],
-  setWashRequests: React.Dispatch<React.SetStateAction<WashRequest[]>>,
-  createWashRequest: Function
-) {
-  return async (washRequestData: Omit<WashRequest, "id" | "status" | "createdAt" | "updatedAt">) => {
-    if (!user) return null;
+  setWashRequests: (washRequests: WashRequest[]) => void,
+  createWashRequestOperation: (data: CreateWashRequestData) => Promise<WashRequest | null>
+) => {
+  return async (data: CreateWashRequestData): Promise<WashRequest | null> => {
+    if (!user) {
+      throw new Error("User must be authenticated to create a wash request");
+    }
+    
+    const now = new Date();
+    const { locationId, ...requestData } = data;
     
     try {
-      const newWashRequest = await createWashRequest(user, washRequestData);
+      console.log("Creating wash request with data:", data);
+      
+      // Use the operation to create the wash request
+      const newWashRequest = await createWashRequestOperation(data);
+      
       if (newWashRequest) {
-        setWashRequests(prev => [...prev, newWashRequest]);
+        // Update the client state
+        setWashRequests([...washRequests, newWashRequest]);
+        toast.success("Wash request created successfully");
+        return newWashRequest;
+      } else {
+        // If the operation failed
+        toast.error("Failed to create wash request");
+        return null;
       }
-      return newWashRequest;
     } catch (error) {
       console.error("Error creating wash request:", error);
       toast.error("Failed to create wash request");
-      return null;
+      throw error;
     }
   };
-}
+};

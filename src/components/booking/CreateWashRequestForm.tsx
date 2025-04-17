@@ -1,5 +1,4 @@
-
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { useVehicles } from "@/contexts/VehicleContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,6 +9,9 @@ import { PriceSummary } from "./PriceSummary";
 import { FormActions } from "./FormActions";
 import { useWashRequestForm } from "./useWashRequestForm";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { LocationSelectionSection } from "./LocationSelectionSection";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CreateWashRequestFormProps {
   onSuccess?: () => void;
@@ -27,20 +29,47 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
     startDate,
     endDate,
     notes,
+    selectedLocationId,
+    locations,
     isFormValid,
     setNotes,
     setStartDate,
     setEndDate,
+    setSelectedLocationId,
     handleVehicleSelection,
     handleSubmit
   } = useWashRequestForm(onSuccess);
+
+  const [filteredVehicles, setFilteredVehicles] = useState(vehicles);
+
+  useEffect(() => {
+    if (selectedLocationId) {
+      const fetchVehicleLocations = async () => {
+        const { data } = await supabase
+          .from('location_vehicles')
+          .select('vehicle_id')
+          .eq('location_id', selectedLocationId);
+        
+        if (data && data.length > 0) {
+          const vehicleIds = data.map(item => item.vehicle_id);
+          setFilteredVehicles(vehicles.filter(v => vehicleIds.includes(v.id)));
+        } else {
+          setFilteredVehicles([]);
+        }
+      };
+      
+      fetchVehicleLocations();
+    } else {
+      setFilteredVehicles([]);
+    }
+  }, [selectedLocationId, vehicles]);
 
   return (
     <div className="space-y-6 overflow-hidden flex flex-col h-full max-h-[80vh]">
       <div>
         <h3 className="text-lg font-medium">Request a Mobile Wash</h3>
         <p className="text-sm text-muted-foreground">
-          Select your vehicles and preferred details for your mobile wash.
+          Select a location, vehicles and preferred details for your mobile wash.
         </p>
       </div>
       
@@ -51,19 +80,28 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
         <div ref={formRef} className="pb-4">
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
-              {/* Vehicle Selection */}
+              <div className="form-section">
+                <LocationSelectionSection
+                  locations={locations}
+                  selectedLocationId={selectedLocationId}
+                  onSelectLocation={setSelectedLocationId}
+                />
+              </div>
+
+              <Separator />
+
               <div className="form-section">
                 <VehicleSelectionSection 
-                  vehicles={vehicles}
+                  vehicles={filteredVehicles}
                   selectedVehicleIds={selectedVehicleIds}
                   onSelectVehicle={handleVehicleSelection}
                   onCancel={onCancel}
+                  locationSelected={!!selectedLocationId}
                 />
               </div>
 
               <Separator />
               
-              {/* Date Selection */}
               <div className="form-section">
                 <DateSelectionSection 
                   startDate={startDate}
@@ -75,7 +113,6 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
               
               <Separator />
               
-              {/* Additional Notes */}
               <div className="form-section">
                 <NotesSection 
                   notes={notes}
@@ -85,12 +122,12 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
               
               <Separator />
               
-              {/* Price Summary */}
               <div className="form-section">
                 <PriceSummary vehicleCount={selectedVehicleIds.length} />
               </div>
               
-              {/* Form Actions */}
+              <Separator />
+              
               <FormActions 
                 isLoading={isLoading} 
                 isValid={isFormValid}
@@ -103,4 +140,3 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
     </div>
   );
 }
-

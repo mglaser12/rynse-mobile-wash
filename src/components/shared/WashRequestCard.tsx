@@ -5,14 +5,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { WashRequest } from "@/models/types";
 import { useVehicles } from "@/contexts/VehicleContext";
-import { Calendar, Car } from "lucide-react";
+import { Calendar, Car, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLocations } from "@/contexts/LocationContext";
 
 interface WashRequestCardProps {
   washRequest: WashRequest;
   onClick?: () => void;
   actions?: React.ReactNode;
-  showDetailsButton?: boolean; // Added to optionally show a details button
+  showDetailsButton?: boolean;
 }
 
 export function WashRequestCard({ 
@@ -22,12 +23,20 @@ export function WashRequestCard({
   showDetailsButton = false 
 }: WashRequestCardProps) {
   const { vehicles } = useVehicles();
+  const { locations } = useLocations();
   
   // Use either vehicleDetails from the request or find them in the vehicles context
   // Filter out any null or undefined values to prevent errors
   const requestVehicles = washRequest.vehicleDetails && washRequest.vehicleDetails.length > 0
     ? washRequest.vehicleDetails.filter(vehicle => vehicle !== null && vehicle !== undefined)
     : vehicles.filter(v => washRequest.vehicles && washRequest.vehicles.includes(v.id));
+
+  // Get location information
+  const locationInfo = washRequest.locationId 
+    ? locations.find(loc => loc.id === washRequest.locationId)
+    : washRequest.location?.name 
+      ? { name: washRequest.location.name }
+      : null;
 
   const statusColors: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800",
@@ -77,6 +86,14 @@ export function WashRequestCard({
         </div>
         
         <div className="mt-3 space-y-2 text-sm">
+          {/* Location information */}
+          {locationInfo && (
+            <div className="flex gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+              <span>{locationInfo.name}</span>
+            </div>
+          )}
+          
           <div className="flex gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
             <span>{formatDateRange()}</span>
@@ -104,7 +121,6 @@ export function WashRequestCard({
         
         {actions && <div className="mt-4">{actions}</div>}
         
-        {/* Show a details button if explicitly requested */}
         {showDetailsButton && washRequest.status === "completed" && !onClick && (
           <div className="mt-4">
             <Button 

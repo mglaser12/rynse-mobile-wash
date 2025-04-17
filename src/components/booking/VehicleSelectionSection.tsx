@@ -1,11 +1,12 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Car, Check, ArrowRight } from "lucide-react";
+import { Car, Check, ArrowRight, AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Vehicle } from "@/models/types";
 import { VehicleSelectionTab } from "./VehicleSelectionTab";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface VehicleSelectionSectionProps {
   vehicles: Vehicle[];
@@ -13,6 +14,7 @@ interface VehicleSelectionSectionProps {
   onSelectVehicle: (id: string) => void;
   onCancel: () => void;
   onContinue?: () => void;
+  locationSelected?: boolean;
 }
 
 export function VehicleSelectionSection({
@@ -20,21 +22,52 @@ export function VehicleSelectionSection({
   selectedVehicleIds,
   onSelectVehicle,
   onCancel,
-  onContinue
+  onContinue,
+  locationSelected = false
 }: VehicleSelectionSectionProps) {
   const isMobile = useIsMobile();
   
+  // If no location is selected yet
+  if (!locationSelected) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <Label className="flex items-center">
+            <Car className="h-4 w-4 mr-2" />
+            Select Vehicle(s)
+          </Label>
+          
+          <Alert className="mt-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Please select a location first to view available vehicles
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+  
   if (vehicles.length === 0) {
     return (
-      <div className="text-center py-10">
-        <Car className="mx-auto h-12 w-12 text-muted-foreground" />
-        <h3 className="mt-4 text-lg font-medium">No vehicles found</h3>
-        <p className="text-sm text-muted-foreground mt-2">
-          Please add vehicles to your account first.
-        </p>
-        <Button className="mt-4" onClick={onCancel}>
-          Go Back
-        </Button>
+      <div className="space-y-4">
+        <div>
+          <Label className="flex items-center">
+            <Car className="h-4 w-4 mr-2" />
+            Select Vehicle(s)
+          </Label>
+          
+          <Alert className="mt-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              No vehicles found at this location. Please add vehicles to this location first.
+            </AlertDescription>
+          </Alert>
+          
+          <Button className="mt-4" variant="outline" onClick={onCancel}>
+            Go Back
+          </Button>
+        </div>
       </div>
     );
   }

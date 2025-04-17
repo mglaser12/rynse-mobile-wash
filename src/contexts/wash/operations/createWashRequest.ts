@@ -1,96 +1,60 @@
 
-import { WashRequest } from "@/models/types";
 import { supabase } from "@/integrations/supabase/client";
+import { CreateWashRequestData } from "../types";
+import { WashRequest } from "@/models/types";
 import { toast } from "sonner";
-import { 
-  getLocationId,
-  getUserOrganizationId,
-  insertWashRequestStandard,
-  createVehicleAssociations,
-  insertWashRequestDirect
-} from "./washRequestApi";
-import { mapToWashRequest, prepareWashRequestData } from "./washRequestMappers";
+import { getFullWashRequest } from "./washRequestApi";
 
-export async function createWashRequest(
-  user: { id: string } | null,
-  washRequestData: Omit<WashRequest, "id" | "status" | "createdAt" | "updatedAt">
-): Promise<WashRequest | null> {
-  if (!user) {
-    console.log("No user provided to createWashRequest");
-    toast.error("You must be logged in to create a wash request");
-    return null;
-  }
-
-  console.log("Creating wash request for user:", user.id);
-  console.log("Wash request data:", washRequestData);
-
+/**
+ * Create a new wash request in the database
+ */
+export async function createWashRequest(data: CreateWashRequestData): Promise<WashRequest | null> {
   try {
-    const { vehicles, preferredDates, price, notes, organizationId } = washRequestData;
-    
-    // Get location ID
-    const locationId = await getLocationId();
-    if (!locationId) return null;
-    
-    console.log("Using location ID:", locationId);
-    
-    // Get organization ID
-    const userOrgId = await getUserOrganizationId(user.id, organizationId);
-    console.log("Using organization ID:", userOrgId);
-    
-    // Prepare data for insert
-    const insertData = prepareWashRequestData(
-      user.id,
-      locationId,
-      preferredDates.start,
-      preferredDates.end,
-      price,
-      notes,
-      userOrgId
-    );
+    console.log("Creating wash request with data:", data);
 
-    // Try standard approach first
-    try {
-      const data = await insertWashRequestStandard(insertData);
-      
-      // If we get here, the insert worked successfully
-      console.log("Wash request created:", data);
-      
-      // Create vehicle associations
-      await createVehicleAssociations(data.id, vehicles);
-  
-      // Map to wash request model
-      const newWashRequest = mapToWashRequest(data, user.id, vehicles, userOrgId);
-      
-      console.log("Returning new wash request object:", newWashRequest);
-      toast.success("Wash request created successfully!");
-      return newWashRequest;
-    } 
-    catch (supabaseError: any) {
-      // If the error is related to the audit_log table not existing
-      if (supabaseError.code === '42P01' && supabaseError.message.includes('audit_log')) {
-        console.warn("Audit log error detected, falling back to direct API method");
-        
-        // Get the access token for API call
-        const session = await supabase.auth.getSession();
-        const accessToken = session.data.session?.access_token;
-        
-        // Use direct API call as fallback
-        const data = await insertWashRequestDirect(insertData, accessToken);
-        if (!data) return null;
+    // Insert the wash request
+    const { data: washRequest, error: washError } = await supabase
+      .from('wash_requests')
+      .insert({
+        user_id: data.customerId,
+        preferred_date_start: data.preferredDates.start.toISOString(),
+        preferred_date_end: data.preferredDates.end ? data.preferredDates.end.toISOString() : null,
+        status: 'pending',
+        price: data.price,
+        notes: data.notes || null,
+        location_id: data.locationId || null // Save locationId to the database
+      })
+      .select()
+      .single();
 
-        // Create vehicle associations
-        await createVehicleAssociations(data.id, vehicles);
+    if (washError) {
+      console.error("Error creating wash request:", washError);
+      toast.error("Failed to create wash request");
+      return null;
+    }
 
-        // Map to wash request model
-        const newWashRequest = mapToWashRequest(data, user.id, vehicles, userOrgId);
-        
-        toast.success("Wash request created successfully!");
-        return newWashRequest;
-      } else {
-        // For other errors, just throw them to be handled by the outer catch
-        throw supabaseError;
+    console.log("Wash request created:", washRequest);
+
+    // Insert vehicle associations
+    if (data.vehicles && data.vehicles.length > 0) {
+      const vehicleAssociations = data.vehicles.map(vehicleId => ({
+        wash_request_id: washRequest.id,
+        vehicle_id: vehicleId
+      }));
+
+      const { error: vehicleError } = await supabase
+        .from('wash_request_vehicles')
+        .insert(vehicleAssociations);
+
+      if (vehicleError) {
+        console.error("Error associating vehicles:", vehicleError);
+        toast.error("Failed to associate vehicles with wash request");
+        // Consider deleting the wash request if vehicle association fails
       }
     }
+
+    // Get the full wash request with all associations
+    return await getFullWashRequest(washRequest.id);
   } catch (error) {
     console.error("Error creating wash request:", error);
     toast.error("Failed to create wash request");
