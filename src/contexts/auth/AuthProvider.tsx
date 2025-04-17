@@ -31,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated,
     isLoading: authMethodsLoading || sessionLoading,
     user,
+    authError: null, // Add authError property with a default value of null
     login,
     register,
     logout,

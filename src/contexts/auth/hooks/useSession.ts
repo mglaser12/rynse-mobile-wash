@@ -5,6 +5,7 @@ import { User } from "../types";
 import { loadUserProfile } from "../userProfile";
 import { saveUserProfileToStorage, getUserProfileFromStorage } from "../storage";
 import { isRunningAsPWA } from "@/registerServiceWorker";
+import { AuthChangeEvent } from "@supabase/supabase-js";
 
 export const useSession = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -110,7 +111,7 @@ export const useSession = () => {
     console.log("Setting up auth subscription");
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: AuthChangeEvent, session) => {
         if (!mounted) return;
         
         console.log("Auth state changed:", event, session?.user?.id);

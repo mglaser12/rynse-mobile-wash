@@ -51,6 +51,7 @@ export type WashRequest = {
   };
   locationId?: string; // Reference to location ID 
   locationDetail?: Location; // Full location details
+  photos?: string[]; // Add photos property to store images taken during wash
 };
 
 // New type to track the wash status for each vehicle
