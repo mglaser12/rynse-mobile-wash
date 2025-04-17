@@ -5,3 +5,4 @@ export * from './updateVehicle';
 export * from './removeVehicle';
 export * from './mappers';
 export * from './utils';
+export * from './logging';
