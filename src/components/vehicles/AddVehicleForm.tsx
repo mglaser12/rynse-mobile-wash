@@ -25,6 +25,9 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
     handleLocationChange
   } = useAddVehicleForm({ onSuccess });
 
+  const isNewVehicle = true; // This is always true in the AddVehicleForm
+  const showAllFields = !isNewVehicle || vehicleData.locationId;
+
   return (
     <div>
       <h3 className="text-lg font-medium mb-4">Add New Vehicle</h3>
@@ -37,7 +40,10 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
           locationRequired={true}
         />
         
-        {vehicleData.locationId && (
+        {/* Only for new vehicles, require location selection before showing these sections */}
+        {(isNewVehicle && !vehicleData.locationId) ? (
+          <p className="text-sm text-muted-foreground">Please select a location to continue.</p>
+        ) : (
           <>
             <VehicleImageUploader
               currentImage={vehicleData.image}
@@ -59,7 +65,7 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
           onCancel={onCancel}
           isLoading={isLoading}
           isProcessing={ocrInProgress}
-          submitDisabled={!vehicleData.locationId}
+          submitDisabled={isNewVehicle && !vehicleData.locationId}
         />
       </form>
     </div>

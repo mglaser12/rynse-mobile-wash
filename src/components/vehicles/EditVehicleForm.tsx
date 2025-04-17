@@ -31,6 +31,7 @@ export function EditVehicleForm({ vehicle, onCancel, onSuccess }: EditVehicleFor
     color: vehicle.color,
     vinNumber: vehicle.vinNumber,
     image: vehicle.image,
+    locationId: "", // Initialize with empty string, will be populated if needed
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,6 +41,10 @@ export function EditVehicleForm({ vehicle, onCancel, onSuccess }: EditVehicleFor
 
   const handleImageChange = (image: string | undefined) => {
     setVehicleData((prev) => ({ ...prev, image }));
+  };
+  
+  const handleLocationChange = (locationId: string) => {
+    setVehicleData(prev => ({ ...prev, locationId }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,7 +58,10 @@ export function EditVehicleForm({ vehicle, onCancel, onSuccess }: EditVehicleFor
     
     setIsLoading(true);
     try {
-      await updateVehicle(vehicle.id, vehicleData);
+      const { locationId, ...vehicleUpdateData } = vehicleData;
+      await updateVehicle(vehicle.id, 
+        locationId ? { ...vehicleUpdateData, locationId } : vehicleUpdateData
+      );
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Error updating vehicle:", error);
@@ -81,7 +89,9 @@ export function EditVehicleForm({ vehicle, onCancel, onSuccess }: EditVehicleFor
         <VehicleFormFields 
           vehicleData={vehicleData}
           onInputChange={handleInputChange}
+          onLocationChange={handleLocationChange}
           disabled={isLoading || isDeleting}
+          locationRequired={false}
         />
         
         <div>
