@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "../types";
@@ -23,7 +22,6 @@ export const useSession = () => {
     try {
       console.log("Updating user state for:", userId);
       
-      // If we already have this user's state and they're authenticated, skip the update
       if (lastKnownUserId.current === userId && user?.id === userId && isAuthenticated) {
         console.log("User state already up to date");
         setIsLoading(false);
@@ -105,7 +103,6 @@ export const useSession = () => {
     }
   }, [clearUserState]);
 
-  // Set up auth state listener
   useEffect(() => {
     let mounted = true;
     console.log("Setting up auth subscription");
@@ -125,7 +122,6 @@ export const useSession = () => {
             break;
             
           case 'SIGNED_OUT':
-          case 'USER_DELETED':
             clearUserState();
             break;
             
@@ -150,7 +146,6 @@ export const useSession = () => {
       }
     );
 
-    // Initial session check
     if (!initialCheckDone.current) {
       getSession();
     }
