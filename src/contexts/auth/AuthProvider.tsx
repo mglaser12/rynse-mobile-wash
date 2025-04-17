@@ -52,12 +52,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     // Add safety mechanism to prevent infinite loading state
+    // INCREASED TIMEOUT: from 10 seconds to 20 seconds
     const safetyTimeoutId = setTimeout(() => {
       if (isLoading) {
         console.warn("Auth provider safety timeout triggered - forcing loading to false");
         setIsAuthenticated(!!user);
       }
-    }, 10000);
+    }, 20000); // Increased from 10000 to 20000
     
     return () => {
       clearTimeout(safetyTimeoutId);

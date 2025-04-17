@@ -33,6 +33,7 @@ export const useSession = () => {
     }
     
     // Create a timeout to prevent hanging on network issues
+    // INCREASED TIMEOUT: from 5 seconds to 15 seconds
     const timeoutId = setTimeout(() => {
       console.log("Session check timed out");
       
@@ -47,7 +48,7 @@ export const useSession = () => {
       
       setIsLoading(false);
       sessionCheckInProgress.current = false;
-    }, 5000);
+    }, 15000); // Increased from 5000 to 15000
     
     try {
       console.log("Fetching session from Supabase");
@@ -140,12 +141,13 @@ export const useSession = () => {
     getSession();
     
     // Safety timeout to prevent infinite loading state
+    // INCREASED TIMEOUT: from 8 seconds to 16 seconds
     const safetyTimeoutId = setTimeout(() => {
       if (isLoading) {
         console.log("Safety timeout triggered - forcing loading state to false");
         setIsLoading(false);
       }
-    }, 8000); // 8 seconds max loading time
+    }, 16000); // Increased from 8000 to 16000
     
     return () => {
       console.log("Session hook cleanup");
