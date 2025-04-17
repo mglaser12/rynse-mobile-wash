@@ -3,7 +3,8 @@ import { Vehicle } from "@/models/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Car, MapPin } from "lucide-react";
+import { Car, MapPin, Clock } from "lucide-react";
+import { useVehicleWashHistory } from "@/hooks/useVehicleWashHistory";
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -25,6 +26,36 @@ export function VehicleCard({
   locationName
 }: VehicleCardProps) {
   const isClickable = clickable || !!onClick;
+  const { daysSinceLastWash } = useVehicleWashHistory(vehicle.id);
+  
+  // Determine the badge color based on days since last wash
+  const getWashStatusBadge = () => {
+    if (daysSinceLastWash === null) {
+      return {
+        text: "Never washed",
+        class: "bg-gray-100 text-gray-600"
+      };
+    }
+    
+    if (daysSinceLastWash < 30) {
+      return {
+        text: `${daysSinceLastWash} days ago`,
+        class: "bg-green-50 text-green-700"
+      };
+    } else if (daysSinceLastWash <= 45) {
+      return {
+        text: `${daysSinceLastWash} days ago`,
+        class: "bg-yellow-50 text-yellow-700"
+      };
+    } else {
+      return {
+        text: `${daysSinceLastWash} days ago`,
+        class: "bg-red-50 text-red-700"
+      };
+    }
+  };
+  
+  const washStatus = getWashStatusBadge();
   
   return (
     <Card 
@@ -59,7 +90,13 @@ export function VehicleCard({
               {vehicle.year} • {vehicle.color} • {vehicle.licensePlate}
             </p>
             <div className="mt-1 flex items-center flex-wrap gap-1">
-              {/* Show location badge first if available */}
+              {/* Last wash status badge */}
+              <Badge variant="outline" className={`text-xs flex items-center gap-1 ${washStatus.class}`}>
+                <Clock className="h-3 w-3" />
+                {washStatus.text}
+              </Badge>
+              
+              {/* Show location badge if available */}
               {locationName && (
                 <Badge variant="outline" className="text-xs flex items-center gap-1 bg-blue-50">
                   <MapPin className="h-3 w-3" />

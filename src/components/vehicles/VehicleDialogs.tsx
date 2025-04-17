@@ -1,11 +1,11 @@
 
-import React from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import React, { useState } from "react";
+import { useVehicles } from "@/contexts/VehicleContext";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AddVehicleForm } from "./AddVehicleForm";
 import { EditVehicleForm } from "./EditVehicleForm";
-import { Vehicle } from "@/models/types";
-import { useVehicles } from "@/contexts/VehicleContext";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { DeleteVehicleDialog } from "./DeleteVehicleDialog";
+import { VehicleWashHistory } from "./VehicleWashHistory";
 
 interface VehicleDialogsProps {
   showAddVehicleDialog: boolean;
@@ -18,49 +18,90 @@ export function VehicleDialogs({
   showAddVehicleDialog,
   setShowAddVehicleDialog,
   selectedVehicleId,
-  setSelectedVehicleId
+  setSelectedVehicleId,
 }: VehicleDialogsProps) {
-  const { vehicles } = useVehicles();
-  const isMobile = useIsMobile();
-  
-  const handleCloseEditDialog = () => {
-    setSelectedVehicleId(null);
+  const { getVehicleById } = useVehicles();
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const selectedVehicle = selectedVehicleId ? getVehicleById(selectedVehicleId) : null;
+
+  const handleEditClick = () => {
+    setShowEditForm(true);
   };
-  
-  const selectedVehicle = selectedVehicleId 
-    ? vehicles.find(v => v.id === selectedVehicleId) 
-    : null;
-    
-  const dialogContentClass = isMobile 
-    ? "w-[calc(100%-32px)] max-w-[95vw] max-h-[80vh] overflow-y-auto p-4" 
-    : "w-full max-w-lg overflow-y-auto max-h-[90vh]";
+
+  const handleCloseVehicleDetailsDialog = () => {
+    setSelectedVehicleId(null);
+    setShowEditForm(false);
+  };
+
+  const handleEditFormClose = () => {
+    setShowEditForm(false);
+  };
+
+  const handleShowDeleteDialog = () => {
+    setShowDeleteDialog(true);
+  };
 
   return (
     <>
       {/* Add Vehicle Dialog */}
       <Dialog open={showAddVehicleDialog} onOpenChange={setShowAddVehicleDialog}>
-        <DialogContent className={dialogContentClass}>
-          <DialogTitle className="sr-only">Add Vehicle</DialogTitle>
-          <AddVehicleForm 
-            onSuccess={() => setShowAddVehicleDialog(false)}
-            onCancel={() => setShowAddVehicleDialog(false)}
-          />
+        <DialogContent className="max-w-md">
+          <AddVehicleForm onSuccess={() => setShowAddVehicleDialog(false)} />
         </DialogContent>
       </Dialog>
-      
-      {/* Edit Vehicle Dialog */}
-      <Dialog open={!!selectedVehicleId} onOpenChange={(open) => !open && handleCloseEditDialog()}>
-        <DialogContent className={dialogContentClass}>
-          <DialogTitle className="sr-only">Edit Vehicle</DialogTitle>
+
+      {/* Vehicle Details Dialog */}
+      <Dialog
+        open={!!selectedVehicleId && !showEditForm && !showDeleteDialog}
+        onOpenChange={(open) => {
+          if (!open) handleCloseVehicleDetailsDialog();
+        }}
+      >
+        <DialogContent className="max-w-md">
           {selectedVehicle && (
-            <EditVehicleForm 
-              vehicle={selectedVehicle}
-              onSuccess={handleCloseEditDialog}
-              onCancel={handleCloseEditDialog}
+            <VehicleWashHistory 
+              vehicle={selectedVehicle} 
+              onEditVehicle={handleEditClick} 
             />
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Edit Vehicle Dialog */}
+      <Dialog
+        open={!!selectedVehicleId && showEditForm && !showDeleteDialog}
+        onOpenChange={(open) => {
+          if (!open) handleEditFormClose();
+        }}
+      >
+        <DialogContent className="max-w-md">
+          {selectedVehicle && (
+            <EditVehicleForm
+              vehicle={selectedVehicle}
+              onClose={handleEditFormClose}
+              onDelete={handleShowDeleteDialog}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Vehicle Dialog */}
+      <DeleteVehicleDialog
+        vehicleId={selectedVehicleId}
+        isOpen={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onSuccess={() => {
+          setShowDeleteDialog(false);
+          setSelectedVehicleId(null);
+        }}
+        vehicleName={
+          selectedVehicle
+            ? `${selectedVehicle.make} ${selectedVehicle.model}`
+            : ""
+        }
+      />
     </>
   );
 }
