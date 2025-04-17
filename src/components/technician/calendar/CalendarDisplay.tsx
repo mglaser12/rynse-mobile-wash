@@ -17,12 +17,20 @@ export const CalendarDisplay = ({
   datesWithJobs,
   jobsByDate 
 }: CalendarDisplayProps) => {
+  // Explicitly log when a date is selected to debug
+  const handleDateSelect = (date: Date | undefined) => {
+    console.log("Calendar date selected:", date);
+    if (date) {
+      onSelectDate(date);
+    }
+  };
+  
   return (
     <div className="flex justify-center">
       <Calendar
         mode="single"
         selected={selectedDate}
-        onSelect={(date) => date && onSelectDate(date)}
+        onSelect={handleDateSelect}
         className="rounded-md border p-3 pointer-events-auto"
         modifiers={{
           hasJobs: datesWithJobs,
@@ -61,10 +69,19 @@ export const CalendarDisplay = ({
             const isSelectedDay = isSameDay(date, selectedDate);
             const isCurrentDay = isToday(date);
             
+            // Enhance clickability for days with jobs
+            const handleDayClick = () => {
+              if (hasJobs) {
+                console.log("Day clicked with jobs:", date);
+                onSelectDate(date);
+              }
+            };
+            
             return (
               <div 
                 {...props} 
-                className={`${props.className} ${hasJobs ? 'cursor-pointer' : ''} 
+                onClick={handleDayClick}
+                className={`${props.className} ${hasJobs ? 'cursor-pointer hover:bg-gray-100' : ''} 
                   ${isPastDay ? 'text-gray-400' : ''} 
                   ${isCurrentDay ? 'font-bold border-2 border-primary' : ''} 
                   ${isSelectedDay ? 'font-bold bg-primary text-white hover:bg-primary hover:text-white' : ''}`}

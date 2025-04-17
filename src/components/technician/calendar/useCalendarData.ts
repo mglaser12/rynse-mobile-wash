@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { WashRequest } from "@/models/types";
 import { format, isSameDay, isToday, parseISO } from "date-fns";
 
@@ -35,7 +35,7 @@ export const useCalendarData = (assignedRequests: WashRequest[]) => {
   }, [assignedRequests]);
   
   // Find if there are any jobs for today and set as selected if possible
-  useMemo(() => {
+  useEffect(() => {
     if (Object.keys(jobsByDate).length > 0) {
       // Check if there are jobs for today
       const today = new Date();
@@ -43,7 +43,7 @@ export const useCalendarData = (assignedRequests: WashRequest[]) => {
       
       if (jobsByDate[todayKey] && jobsByDate[todayKey].length > 0) {
         // If there are jobs today and no date is currently selected, select today
-        if (!selectedDate || !isToday(selectedDate)) {
+        if (!isToday(selectedDate)) {
           setSelectedDate(today);
         }
       }
@@ -55,6 +55,7 @@ export const useCalendarData = (assignedRequests: WashRequest[]) => {
     if (!selectedDate) return [];
     
     const dateKey = format(selectedDate, "yyyy-MM-dd");
+    console.log("Looking for jobs on date:", dateKey, "Jobs by date:", jobsByDate);
     return jobsByDate[dateKey] || [];
   }, [selectedDate, jobsByDate]);
   
