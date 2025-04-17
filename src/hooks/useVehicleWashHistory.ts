@@ -72,11 +72,19 @@ export const useVehicleWashHistory = (vehicleId: string | null) => {
         const historyItems = washRequestsData.map(request => {
           const status = washStatusData?.find(status => status.wash_request_id === request.id);
           
-          // Safely access the location name with proper null checking
+          // Safely access the location name with comprehensive null checking
           let locationName = null;
-          if (request.locations && typeof request.locations === 'object') {
-            // First check if locations exists and is an object
-            locationName = 'name' in request.locations ? request.locations.name : null;
+          if (request.locations) {
+            const locationsValue = request.locations as unknown;
+            if (
+              locationsValue && 
+              typeof locationsValue === 'object' && 
+              !Array.isArray(locationsValue) && 
+              'name' in locationsValue
+            ) {
+              // Type assertion to access name safely
+              locationName = (locationsValue as { name: string }).name;
+            }
           }
           
           return {
