@@ -1,35 +1,42 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Check } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface FormActionsProps {
   onCancel: () => void;
-  isLoading: boolean;
-  isProcessing: boolean;
+  isLoading?: boolean;
+  isProcessing?: boolean;
+  submitDisabled?: boolean;
 }
 
 export function FormActions({
   onCancel,
-  isLoading,
-  isProcessing
+  isLoading = false,
+  isProcessing = false,
+  submitDisabled = false
 }: FormActionsProps) {
   return (
-    <div className="flex justify-end space-x-2 pt-4">
-      <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+    <div className="flex justify-end gap-2 mt-4">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onCancel}
+        disabled={isLoading}
+      >
         Cancel
       </Button>
-      <Button type="submit" disabled={isLoading || isProcessing}>
+      <Button
+        type="submit"
+        disabled={isLoading || isProcessing || submitDisabled}
+      >
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Saving...
           </>
         ) : (
-          <>
-            <Check className="mr-2 h-4 w-4" />
-            Save Vehicle
-          </>
+          "Save Vehicle"
         )}
       </Button>
     </div>

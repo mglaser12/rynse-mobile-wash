@@ -21,7 +21,8 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
     handleInputChange,
     handleSubmit,
     updateVehicleData,
-    setVehicleData
+    setVehicleData,
+    handleLocationChange
   } = useAddVehicleForm({ onSuccess });
 
   return (
@@ -31,27 +32,34 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
         <VehicleFormFields 
           vehicleData={vehicleData}
           onInputChange={handleInputChange}
+          onLocationChange={handleLocationChange}
           disabled={isLoading}
+          locationRequired={true}
         />
         
-        <VehicleImageUploader
-          currentImage={vehicleData.image}
-          onImageChange={(image) => setVehicleData(prev => ({ ...prev, image }))}
-          disabled={isLoading}
-        />
-        
-        <OcrSection 
-          onDataUpdate={updateVehicleData}
-          onImageUpdate={(image) => setVehicleData(prev => ({ ...prev, image }))}
-          isProcessing={ocrInProgress}
-          setIsProcessing={setOcrInProgress}
-          disabled={isLoading}
-        />
+        {vehicleData.locationId && (
+          <>
+            <VehicleImageUploader
+              currentImage={vehicleData.image}
+              onImageChange={(image) => setVehicleData(prev => ({ ...prev, image }))}
+              disabled={isLoading}
+            />
+            
+            <OcrSection 
+              onDataUpdate={updateVehicleData}
+              onImageUpdate={(image) => setVehicleData(prev => ({ ...prev, image }))}
+              isProcessing={ocrInProgress}
+              setIsProcessing={setOcrInProgress}
+              disabled={isLoading}
+            />
+          </>
+        )}
         
         <FormActions 
           onCancel={onCancel}
           isLoading={isLoading}
           isProcessing={ocrInProgress}
+          submitDisabled={!vehicleData.locationId}
         />
       </form>
     </div>

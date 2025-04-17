@@ -23,6 +23,7 @@ export function useAddVehicleForm({ onSuccess }: UseAddVehicleFormProps) {
     licensePlate: "",
     type: "",
     color: "",
+    locationId: "",
   });
 
   // Clean up OCR worker when component unmounts
@@ -35,6 +36,10 @@ export function useAddVehicleForm({ onSuccess }: UseAddVehicleFormProps) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setVehicleData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleLocationChange = (locationId: string) => {
+    setVehicleData(prev => ({ ...prev, locationId }));
   };
 
   const updateVehicleData = (newData: Partial<VehicleFormData>) => {
@@ -59,9 +64,9 @@ export function useAddVehicleForm({ onSuccess }: UseAddVehicleFormProps) {
       return;
     }
 
-    // Validate required fields - only Make, Model, and Year
-    if (!vehicleData.make || !vehicleData.model || !vehicleData.year) {
-      toast.error("Please fill in all required fields: Make, Model, and Year");
+    // Validate required fields - Make, Model, Year, and LocationId
+    if (!vehicleData.make || !vehicleData.model || !vehicleData.year || !vehicleData.locationId) {
+      toast.error("Please fill in all required fields: Location, Make, Model, and Year");
       return;
     }
     
@@ -70,11 +75,12 @@ export function useAddVehicleForm({ onSuccess }: UseAddVehicleFormProps) {
       // Make sure all required fields have values, providing defaults for optional ones in the Vehicle type
       await addVehicle({
         ...vehicleData,
-        // Ensure color exists with at least an empty string to satisfy the type constraint
+        customerId: user.id,
+        // Ensure these properties exist with at least empty strings
         color: vehicleData.color || "",
         type: vehicleData.type || "",
         licensePlate: vehicleData.licensePlate || "",
-        customerId: user.id,
+        locationId: vehicleData.locationId,
       });
       
       if (onSuccess) onSuccess();
@@ -94,6 +100,7 @@ export function useAddVehicleForm({ onSuccess }: UseAddVehicleFormProps) {
     handleInputChange,
     handleSubmit,
     updateVehicleData,
-    setVehicleData
+    setVehicleData,
+    handleLocationChange
   };
 }

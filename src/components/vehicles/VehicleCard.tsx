@@ -3,7 +3,7 @@ import { Vehicle } from "@/models/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Car } from "lucide-react";
+import { Car, MapPin } from "lucide-react";
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -11,7 +11,8 @@ interface VehicleCardProps {
   selected?: boolean;
   selectionMode?: boolean;
   className?: string; 
-  clickable?: boolean; // Added to explicitly mark a card as clickable
+  clickable?: boolean;
+  locationName?: string;
 }
 
 export function VehicleCard({ 
@@ -20,7 +21,8 @@ export function VehicleCard({
   selected = false, 
   selectionMode = false,
   className = "",
-  clickable = false
+  clickable = false,
+  locationName
 }: VehicleCardProps) {
   const isClickable = clickable || !!onClick;
   
@@ -56,10 +58,17 @@ export function VehicleCard({
             <p className="text-sm text-muted-foreground">
               {vehicle.year} • {vehicle.color} • {vehicle.licensePlate}
             </p>
-            <div className="mt-1 flex items-center">
+            <div className="mt-1 flex items-center flex-wrap gap-1">
               <Badge variant="outline" className="text-xs">
                 {vehicle.type}
               </Badge>
+              
+              {locationName && (
+                <Badge variant="outline" className="text-xs flex items-center gap-1 bg-blue-50">
+                  <MapPin className="h-3 w-3" />
+                  {locationName}
+                </Badge>
+              )}
             </div>
           </div>
         </div>

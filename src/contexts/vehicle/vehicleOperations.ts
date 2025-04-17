@@ -18,182 +18,211 @@ const base64ToBlob = (base64: string) => {
   return new Blob([uInt8Array], { type: contentType });
 };
 
+// Helper function to map data from the database to our Vehicle type
+export const mapDbVehicleToVehicle = (dbVehicle: SupabaseVehicle): Vehicle => {
+  return {
+    id: dbVehicle.id,
+    customerId: dbVehicle.user_id,
+    make: dbVehicle.make,
+    model: dbVehicle.model,
+    year: dbVehicle.year,
+    licensePlate: dbVehicle.license_plate || '',
+    color: dbVehicle.color || '',
+    type: dbVehicle.type || '',
+    vinNumber: dbVehicle.vin_number,
+    image: dbVehicle.image_url,
+    dateAdded: new Date(dbVehicle.created_at),
+    organizationId: dbVehicle.organization_id
+  };
+};
+
 export async function addVehicle(
   user: { id: string; organizationId?: string } | null, 
-  vehicleData: Omit<Vehicle, "id" | "dateAdded">
+  vehicleData: Omit<Vehicle, "id" | "dateAdded"> & { locationId?: string }
 ): Promise<Vehicle | null> {
   if (!user) {
-    toast.error("You must be logged in to add a vehicle");
+    toast.error("You need to be logged in to add a vehicle");
     return null;
   }
 
   try {
-    const { customerId, make, model, year, licensePlate, color, type, vinNumber, image, organizationId } = vehicleData;
-    
-    // Get the user's organization ID if not explicitly provided
-    let vehicleOrgId = organizationId || user.organizationId;
-    
-    if (!vehicleOrgId) {
-      // If no organization ID provided and user doesn't have one, fetch from profile
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .eq('id', user.id)
-        .single();
-        
-      if (profileData?.organization_id) {
-        vehicleOrgId = profileData.organization_id;
-      }
-    }
-    
-    // Convert base64 image to file and upload to storage if present
-    let imageUrl = null;
-    if (image && image.startsWith('data:image')) {
-      const fileName = `${uuidv4()}.jpg`;
-      const { data: uploadData, error: uploadError } = await supabase
-        .storage
-        .from('vehicle-images')
-        .upload(`public/${fileName}`, base64ToBlob(image), {
-          contentType: 'image/jpeg',
-          cacheControl: '3600'
-        });
-      
-      if (uploadError) {
-        console.error("Error uploading image:", uploadError);
-        toast.error("Failed to upload vehicle image");
-      } else if (uploadData) {
-        const { data } = supabase.storage.from('vehicle-images').getPublicUrl(uploadData.path);
-        imageUrl = data.publicUrl;
-      }
-    } else if (image) {
-      // If image is already a URL, just use it
-      imageUrl = image;
+    // Extract locationId from the vehicleData
+    const { locationId, ...vehicleInsertData } = vehicleData;
+
+    // Convert image to a file for storage if it's a base64 string
+    let imageUrl = vehicleData.image;
+    if (vehicleData.image && vehicleData.image.startsWith('data:image')) {
+      const { path, error: uploadError } = await uploadVehicleImageToStorage(vehicleData.image);
+      if (uploadError) throw uploadError;
+      imageUrl = path;
     }
 
-    // Insert new vehicle in Supabase
-    const { data, error } = await supabase
+    // Prepare data for insertion
+    const insertData = {
+      user_id: user.id,
+      make: vehicleData.make,
+      model: vehicleData.model,
+      year: vehicleData.year,
+      license_plate: vehicleData.licensePlate || null,
+      color: vehicleData.color || null,
+      type: vehicleData.type || null,
+      vin_number: vehicleData.vinNumber || null,
+      image_url: imageUrl || null,
+      organization_id: vehicleData.organizationId || null
+    };
+
+    // Insert the vehicle
+    const { data: vehicleData1, error: insertError } = await supabase
       .from('vehicles')
-      .insert({
-        user_id: user.id, // Always use the current user ID as the creator
-        make,
-        model,
-        year,
-        license_plate: licensePlate,
-        color,
-        type,
-        vin_number: vinNumber,
-        image_url: imageUrl,
-        organization_id: vehicleOrgId  // Use the organization ID (might be null if user has no org)
-      })
+      .insert(insertData)
       .select('*')
       .single();
 
-    if (error) {
-      console.error("Error adding vehicle to Supabase:", error);
-      toast.error("Failed to add vehicle");
-      return null;
+    if (insertError) throw insertError;
+
+    // If locationId is provided, create a location-vehicle association
+    if (locationId) {
+      const { error: locationVehicleError } = await supabase
+        .from('location_vehicles')
+        .insert({
+          location_id: locationId,
+          vehicle_id: vehicleData1.id
+        });
+
+      if (locationVehicleError) {
+        console.error("Error creating location association:", locationVehicleError);
+        toast.error("Vehicle saved, but location assignment failed.");
+      }
     }
 
-    // Return the new vehicle
-    const newVehicle: Vehicle = {
-      id: data.id,
-      customerId: data.user_id,
-      make: data.make,
-      model: data.model,
-      year: data.year,
-      licensePlate: data.license_plate || '',
-      color: data.color || '',
-      type: data.type || '',
-      vinNumber: data.vin_number,
-      image: data.image_url,
-      dateAdded: new Date(data.created_at),
-      organizationId: data.organization_id
+    // Return the vehicle data mapped to our Vehicle type
+    return {
+      id: vehicleData1.id,
+      customerId: vehicleData1.user_id,
+      type: vehicleData1.type || '',
+      make: vehicleData1.make,
+      model: vehicleData1.model,
+      year: vehicleData1.year,
+      licensePlate: vehicleData1.license_plate || '',
+      color: vehicleData1.color || '',
+      image: vehicleData1.image_url || undefined,
+      vinNumber: vehicleData1.vin_number || undefined,
+      dateAdded: new Date(vehicleData1.created_at),
+      organizationId: vehicleData1.organization_id || undefined,
     };
-    
-    toast.success("Vehicle added successfully!");
-    return newVehicle;
   } catch (error) {
     console.error("Error adding vehicle:", error);
     toast.error("Failed to add vehicle");
     return null;
   }
-}
+};
+
+// Upload a vehicle image to storage
+const uploadVehicleImageToStorage = async (base64Image: string): Promise<{ path: string | null; error: Error | null }> => {
+  const fileName = `${uuidv4()}.jpg`;
+  const { data: uploadData, error: uploadError } = await supabase
+    .storage
+    .from('vehicle-images')
+    .upload(`public/${fileName}`, base64ToBlob(base64Image), {
+      contentType: 'image/jpeg',
+      cacheControl: '3600'
+    });
+
+  if (uploadError) {
+    console.error("Error uploading image:", uploadError);
+    toast.error("Failed to upload vehicle image");
+    return { path: null, error: uploadError };
+  } else if (uploadData) {
+    const { data } = supabase.storage.from('vehicle-images').getPublicUrl(uploadData.path);
+    return { path: data.publicUrl, error: null };
+  }
+
+  return { path: null, error: null };
+};
 
 export async function updateVehicle(
   id: string, 
-  data: Partial<Vehicle>
+  data: Partial<Vehicle> & { locationId?: string }
 ): Promise<boolean> {
   try {
-    let imageUrl = data.image;
+    // Extract locationId from the update data
+    const { locationId, ...vehicleUpdateData } = data;
 
-    // If image is new and in base64 format, upload it
+    // Handle image updates
+    let imageUrl = data.image;
+    
     if (data.image && data.image.startsWith('data:image')) {
-      const fileName = `${uuidv4()}.jpg`;
-      const { data: uploadData, error: uploadError } = await supabase
-        .storage
-        .from('vehicle-images')
-        .upload(`public/${fileName}`, base64ToBlob(data.image), {
-          contentType: 'image/jpeg',
-          cacheControl: '3600'
-        });
-      
-      if (uploadError) {
-        console.error("Error uploading image:", uploadError);
-        toast.error("Failed to upload vehicle image");
-      } else if (uploadData) {
-        const { data } = supabase.storage.from('vehicle-images').getPublicUrl(uploadData.path);
-        imageUrl = data.publicUrl;
+      const { path, error: uploadError } = await uploadVehicleImageToStorage(data.image);
+      if (uploadError) throw uploadError;
+      imageUrl = path;
+    }
+
+    // Prepare data for update
+    const updateData: any = {};
+    if (vehicleUpdateData.make !== undefined) updateData.make = vehicleUpdateData.make;
+    if (vehicleUpdateData.model !== undefined) updateData.model = vehicleUpdateData.model;
+    if (vehicleUpdateData.year !== undefined) updateData.year = vehicleUpdateData.year;
+    if (vehicleUpdateData.licensePlate !== undefined) updateData.license_plate = vehicleUpdateData.licensePlate || null;
+    if (vehicleUpdateData.color !== undefined) updateData.color = vehicleUpdateData.color || null;
+    if (vehicleUpdateData.type !== undefined) updateData.type = vehicleUpdateData.type || null;
+    if (vehicleUpdateData.vinNumber !== undefined) updateData.vin_number = vehicleUpdateData.vinNumber || null;
+    if (vehicleUpdateData.organizationId !== undefined) updateData.organization_id = vehicleUpdateData.organizationId;
+    
+    // Handle image explicitly
+    if (imageUrl !== undefined) {
+      if (imageUrl === null) {
+        updateData.image_url = null;
+      } else if (!imageUrl.startsWith('data:image')) {
+        updateData.image_url = imageUrl;
       }
     }
 
-    // Map our data model to Supabase model
-    const updateData: any = {
-      make: data.make,
-      model: data.model,
-      year: data.year,
-      license_plate: data.licensePlate,
-      color: data.color,
-      type: data.type,
-      vin_number: data.vinNumber,
-      organization_id: data.organizationId,
-      updated_at: new Date()
-    };
-    
-    // Handle image removal explicitly
-    if (data.image === undefined) {
-      updateData.image_url = null; // Set to null in database when image is removed
-    } else if (imageUrl) {
-      updateData.image_url = imageUrl; // Only update if we have a new image URL
-    }
-
-    // Remove undefined fields
-    Object.keys(updateData).forEach(key => 
-      updateData[key] === undefined && delete updateData[key]
-    );
-
-    console.log("Updating vehicle with data:", updateData);
-
-    // Update in Supabase - note that we don't need to check user_id or organization_id
-    // since we're allowing all users in the same org to edit any vehicle in their org
-    const { error } = await supabase
+    // Update the vehicle data
+    const { error: updateError } = await supabase
       .from('vehicles')
       .update(updateData)
       .eq('id', id);
 
-    if (error) {
-      console.error("Error updating vehicle in Supabase:", error);
-      toast.error("Failed to update vehicle");
-      return false;
+    if (updateError) throw updateError;
+
+    // Handle location assignment if provided
+    if (locationId) {
+      // First check if vehicle already has a location
+      const { data: existingLocations, error: fetchError } = await supabase
+        .from('location_vehicles')
+        .select('location_id')
+        .eq('vehicle_id', id);
+
+      if (fetchError) throw fetchError;
+
+      if (existingLocations && existingLocations.length > 0) {
+        // Update existing location
+        const { error: updateLocError } = await supabase
+          .from('location_vehicles')
+          .update({ location_id: locationId })
+          .eq('vehicle_id', id);
+
+        if (updateLocError) throw updateLocError;
+      } else {
+        // Create new location association
+        const { error: insertLocError } = await supabase
+          .from('location_vehicles')
+          .insert({
+            location_id: locationId,
+            vehicle_id: id
+          });
+
+        if (insertLocError) throw insertLocError;
+      }
     }
-    
-    toast.success("Vehicle updated successfully!");
+
     return true;
   } catch (error) {
     console.error("Error updating vehicle:", error);
     toast.error("Failed to update vehicle");
     return false;
   }
-}
+};
 
 export async function removeVehicle(id: string): Promise<boolean> {
   try {
