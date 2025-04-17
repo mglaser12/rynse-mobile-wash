@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,9 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useVehicleWashHistory, VehicleWashHistoryItem } from "@/hooks/useVehicleWashHistory";
-import { Vehicle } from "@/models/types";
+import { Vehicle, WashRequest } from "@/models/types";
+import { CompletedWashDialog } from "@/components/wash/CompletedWashDialog";
+import { useWashContext } from "@/contexts/wash/useWashContext";
 
 interface VehicleWashHistoryProps {
   vehicle: Vehicle;
@@ -18,6 +20,11 @@ interface VehicleWashHistoryProps {
 
 export function VehicleWashHistory({ vehicle, onEditVehicle }: VehicleWashHistoryProps) {
   const { history, isLoading } = useVehicleWashHistory(vehicle.id);
+  const [selectedWashId, setSelectedWashId] = useState<string | null>(null);
+  const { getWashRequestById } = useWashContext();
+
+  // Get the selected wash request details
+  const selectedWashRequest = selectedWashId ? getWashRequestById(selectedWashId) : null;
 
   return (
     <div className="space-y-4">
@@ -51,51 +58,59 @@ export function VehicleWashHistory({ vehicle, onEditVehicle }: VehicleWashHistor
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             {history.map((item) => (
-              <WashHistoryItem key={item.id} item={item} />
+              <Card
+                key={item.id}
+                className="cursor-pointer hover:border-primary transition-colors"
+                onClick={() => setSelectedWashId(item.washRequestId)}
+              >
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-sm font-medium">
+                      {format(item.date, "MMMM d, yyyy")}
+                    </CardTitle>
+                    <Badge variant="outline">{format(item.date, "h:mm a")}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {item.location && (
+                    <div className="flex items-start space-x-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <span className="text-sm">{item.location}</span>
+                    </div>
+                  )}
+                  
+                  {item.notes && (
+                    <div className="flex items-start space-x-2">
+                      <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <span className="text-sm">{item.notes}</span>
+                    </div>
+                  )}
+                  
+                  {item.photoUrl && (
+                    <div className="mt-2">
+                      <img 
+                        src={item.photoUrl} 
+                        alt="After wash" 
+                        className="rounded-md w-full h-auto max-h-40 object-cover" 
+                      />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             ))}
           </div>
         </ScrollArea>
       )}
-    </div>
-  );
-}
 
-function WashHistoryItem({ item }: { item: VehicleWashHistoryItem }) {
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-sm font-medium">
-            {format(item.date, "MMMM d, yyyy")}
-          </CardTitle>
-          <Badge variant="outline">{format(item.date, "h:mm a")}</Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {item.location && (
-          <div className="flex items-start space-x-2">
-            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-            <span className="text-sm">{item.location}</span>
-          </div>
-        )}
-        
-        {item.notes && (
-          <div className="flex items-start space-x-2">
-            <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
-            <span className="text-sm">{item.notes}</span>
-          </div>
-        )}
-        
-        {item.photoUrl && (
-          <div className="mt-2">
-            <img 
-              src={item.photoUrl} 
-              alt="After wash" 
-              className="rounded-md w-full h-auto max-h-40 object-cover" 
-            />
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      {selectedWashRequest && (
+        <CompletedWashDialog
+          washRequest={selectedWashRequest}
+          open={!!selectedWashId}
+          onOpenChange={(open) => {
+            if (!open) setSelectedWashId(null);
+          }}
+        />
+      )}
+    </div>
   );
 }
