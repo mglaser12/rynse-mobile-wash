@@ -39,6 +39,9 @@ const VehiclesPage = () => {
     );
   }
 
+  // Make sure vehicles is always an array
+  const safeVehicles = vehicles || [];
+
   return (
     <AppLayout>
       <header className="bg-white p-4 border-b sticky top-0 z-10">
@@ -71,7 +74,7 @@ const VehiclesPage = () => {
             onSearchChange={handleSearchChange}
           />
           
-          <DemoVehicleButton isVisible={vehicles.length === 0} />
+          <DemoVehicleButton isVisible={safeVehicles.length === 0} />
           
           <Separator className="my-6" />
           

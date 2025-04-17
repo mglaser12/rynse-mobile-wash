@@ -1,10 +1,10 @@
 
-import React from "react";
-import { ScanLine, Camera, Upload, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import React, { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { OCRResult } from "@/utils/ocrUtils";
 
-interface OcrImageUploaderProps {
+export interface OcrImageUploaderProps {
   onImageProcessed: (result: OCRResult, imageDataUrl?: string) => void;
   onProcessingStateChange: (isProcessing: boolean) => void;
   processingFunction: (file: File) => Promise<OCRResult>;
@@ -25,62 +25,79 @@ export function OcrImageUploader({
   isProcessing = false,
   capture
 }: OcrImageUploaderProps) {
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const file = files[0];
-    onProcessingStateChange(true);
-    
+  const handleClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     try {
-      // Process the image using provided function
-      toast.info(`Processing ${label} image...`);
-      const result = await processingFunction(file);
+      onProcessingStateChange(true);
+
+      // Get image as data URL for preview
+      const reader = new FileReader();
+      let imageDataUrl: string | undefined;
       
-      if (result.success) {
-        // Create a preview of the image
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            onImageProcessed(result, e.target?.result as string);
-          } else {
-            onImageProcessed(result);
+      reader.onload = async (event) => {
+        if (event.target?.result) {
+          imageDataUrl = event.target.result as string;
+          
+          // Process the image with OCR
+          const result = await processingFunction(file);
+          
+          // Send the result and optionally the image data URL
+          onImageProcessed(result, imageDataUrl);
+          
+          // Reset the file input
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
           }
-        };
-        reader.readAsDataURL(file);
-        
-        toast.success(`${label} processed successfully!`);
-      } else {
-        onImageProcessed(result);
-        toast.error(result.error || `Could not extract ${label} information`);
-      }
+        }
+      };
+      
+      reader.readAsDataURL(file);
     } catch (error) {
-      console.error(`${label} processing error:`, error);
-      toast.error(`Error processing ${label} image`);
+      console.error("Error processing image:", error);
+      onImageProcessed({
+        success: false,
+        error: "Failed to process image"
+      });
     } finally {
       onProcessingStateChange(false);
     }
   };
 
-  const id = `${label.toLowerCase().replace(/\s/g, '')}-upload`;
-
   return (
-    <div className="flex-1 min-w-[120px]">
-      <label htmlFor={id} className="cursor-pointer">
-        <div className="border border-dashed border-gray-300 rounded-md p-4 text-center hover:bg-muted transition-colors">
-          {icon}
-          <span className="text-sm font-medium">{label}</span>
-        </div>
-        <input
-          type="file"
-          id={id}
-          accept="image/*"
-          capture={capture}
-          className="hidden"
-          disabled={disabled || isProcessing}
-          onChange={handleImageUpload}
-        />
-      </label>
+    <div className="flex-1 text-center">
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+        disabled={disabled || isProcessing}
+        capture={capture}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full h-24 flex flex-col items-center justify-center"
+        onClick={handleClick}
+        disabled={disabled || isProcessing}
+      >
+        {isProcessing ? (
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        ) : (
+          icon
+        )}
+        <span className="text-sm">{isProcessing ? "Processing..." : label}</span>
+      </Button>
     </div>
   );
 }

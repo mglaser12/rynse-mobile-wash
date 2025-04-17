@@ -15,57 +15,31 @@ export type OCRResult = {
   error?: string;
 };
 
-// Vehicle database for lookup after OCR text extraction
-const vehicleDatabase = [
-  {
-    make: "Toyota",
-    model: "Camry",
-    type: "Sedan",
-    years: ["2018", "2019", "2020", "2021", "2022", "2023"]
-  },
-  {
-    make: "Toyota", 
-    model: "RAV4", 
-    type: "SUV",
-    years: ["2018", "2019", "2020", "2021", "2022", "2023"]
-  },
-  {
-    make: "Honda",
-    model: "Civic",
-    type: "Sedan",
-    years: ["2018", "2019", "2020", "2021", "2022", "2023"]
-  },
-  {
-    make: "Honda",
-    model: "CR-V",
-    type: "SUV",
-    years: ["2018", "2019", "2020", "2021", "2022", "2023"]
-  },
-  {
-    make: "Tesla",
-    model: "Model 3",
-    type: "Sedan",
-    years: ["2018", "2019", "2020", "2021", "2022", "2023"]
-  },
-  {
-    make: "Tesla",
-    model: "Model Y",
-    type: "SUV",
-    years: ["2020", "2021", "2022", "2023"]
-  },
-  {
-    make: "Ford",
-    model: "F-150",
-    type: "Truck",
-    years: ["2018", "2019", "2020", "2021", "2022", "2023"]
-  },
-  {
-    make: "Chevrolet",
-    model: "Silverado",
-    type: "Truck",
-    years: ["2018", "2019", "2020", "2021", "2022", "2023"]
+// Combine all OCR functions into one unified function for image processing
+export const processImageWithOCR = async (imageFile: File): Promise<OCRResult> => {
+  try {
+    // Try different OCR approaches to get the most data
+    const licensePlateResult = await processLicensePlateImage(imageFile);
+    const vinResult = await processVinImage(imageFile);
+    const typeResult = await detectVehicleFromImage(imageFile);
+    
+    // Combine all results
+    return {
+      success: true,
+      data: {
+        ...licensePlateResult.data,
+        ...vinResult.data,
+        ...typeResult.data,
+      }
+    };
+  } catch (error) {
+    console.error('OCR processing error:', error);
+    return {
+      success: false,
+      error: "Failed to process the image"
+    };
   }
-];
+};
 
 // Initialize Tesseract worker with a cache
 let worker: Awaited<ReturnType<typeof createWorker>> | null = null;
@@ -140,35 +114,57 @@ function extractVIN(text: string): string | null {
   return null;
 }
 
-// Process license plate image
-export const processLicensePlateImage = async (imageFile: File): Promise<OCRResult> => {
-  try {
-    const ocrText = await performOCR(imageFile);
-    console.log('License plate OCR raw text:', ocrText);
-    
-    const licensePlate = extractLicensePlate(ocrText);
-    
-    if (licensePlate) {
-      return {
-        success: true,
-        data: {
-          licensePlate
-        }
-      };
-    } else {
-      return {
-        success: false,
-        error: "Could not detect a valid license plate number"
-      };
-    }
-  } catch (error) {
-    console.error('License plate processing error:', error);
-    return {
-      success: false,
-      error: "Error processing license plate image"
-    };
+// Vehicle database for lookup after OCR text extraction
+const vehicleDatabase = [
+  {
+    make: "Toyota",
+    model: "Camry",
+    type: "Sedan",
+    years: ["2018", "2019", "2020", "2021", "2022", "2023"]
+  },
+  {
+    make: "Toyota", 
+    model: "RAV4", 
+    type: "SUV",
+    years: ["2018", "2019", "2020", "2021", "2022", "2023"]
+  },
+  {
+    make: "Honda",
+    model: "Civic",
+    type: "Sedan",
+    years: ["2018", "2019", "2020", "2021", "2022", "2023"]
+  },
+  {
+    make: "Honda",
+    model: "CR-V",
+    type: "SUV",
+    years: ["2018", "2019", "2020", "2021", "2022", "2023"]
+  },
+  {
+    make: "Tesla",
+    model: "Model 3",
+    type: "Sedan",
+    years: ["2018", "2019", "2020", "2021", "2022", "2023"]
+  },
+  {
+    make: "Tesla",
+    model: "Model Y",
+    type: "SUV",
+    years: ["2020", "2021", "2022", "2023"]
+  },
+  {
+    make: "Ford",
+    model: "F-150",
+    type: "Truck",
+    years: ["2018", "2019", "2020", "2021", "2022", "2023"]
+  },
+  {
+    make: "Chevrolet",
+    model: "Silverado",
+    type: "Truck",
+    years: ["2018", "2019", "2020", "2021", "2022", "2023"]
   }
-};
+];
 
 // Find potential vehicle make and model in text
 function findVehicleInfo(text: string): { make?: string; model?: string; year?: string; type?: string } {
@@ -209,6 +205,36 @@ function findVehicleInfo(text: string): { make?: string; model?: string; year?: 
   
   return result;
 }
+
+// Process license plate image
+export const processLicensePlateImage = async (imageFile: File): Promise<OCRResult> => {
+  try {
+    const ocrText = await performOCR(imageFile);
+    console.log('License plate OCR raw text:', ocrText);
+    
+    const licensePlate = extractLicensePlate(ocrText);
+    
+    if (licensePlate) {
+      return {
+        success: true,
+        data: {
+          licensePlate
+        }
+      };
+    } else {
+      return {
+        success: false,
+        error: "Could not detect a valid license plate number"
+      };
+    }
+  } catch (error) {
+    console.error('License plate processing error:', error);
+    return {
+      success: false,
+      error: "Error processing license plate image"
+    };
+  }
+};
 
 // Process VIN image
 export const processVinImage = async (imageFile: File): Promise<OCRResult> => {

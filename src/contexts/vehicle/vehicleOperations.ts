@@ -3,6 +3,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from 'uuid';
 
+// Define the SupabaseVehicle interface
+interface SupabaseVehicle {
+  id: string;
+  user_id: string;
+  make: string;
+  model: string;
+  year: string;
+  license_plate: string | null;
+  color: string | null;
+  type: string | null;
+  vin_number: string | null;
+  image_url: string | null;
+  created_at: string;
+  updated_at: string;
+  organization_id: string | null;
+}
+
 // Helper function to convert base64 to Blob
 const base64ToBlob = (base64: string) => {
   const parts = base64.split(';base64,');

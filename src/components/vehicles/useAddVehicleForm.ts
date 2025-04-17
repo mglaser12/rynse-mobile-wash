@@ -72,15 +72,20 @@ export function useAddVehicleForm({ onSuccess }: UseAddVehicleFormProps) {
     
     setIsLoading(true);
     try {
-      // Make sure all required fields have values, providing defaults for optional ones in the Vehicle type
+      // Extract locationId for separate handling
+      const { locationId, ...vehicleFormData } = vehicleData;
+      
+      // Add vehicle using the core vehicle data
       await addVehicle({
-        ...vehicleData,
+        ...vehicleFormData,
         customerId: user.id,
         // Ensure these properties exist with at least empty strings
-        color: vehicleData.color || "",
-        type: vehicleData.type || "",
-        licensePlate: vehicleData.licensePlate || "",
-        locationId: vehicleData.locationId,
+        color: vehicleFormData.color || "",
+        type: vehicleFormData.type || "",
+        licensePlate: vehicleFormData.licensePlate || "",
+        // Pass locationId separately
+        locationId: locationId,
+        organizationId: user.organizationId
       });
       
       if (onSuccess) onSuccess();
