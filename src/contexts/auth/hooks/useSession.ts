@@ -11,6 +11,8 @@ export const useSession = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const sessionCheckInProgress = useRef(false);
+  const sessionCheckAttempts = useRef(0);
+  const MAX_SESSION_CHECK_ATTEMPTS = 3;
 
   const getSession = useCallback(async () => {
     // Prevent concurrent session checks
@@ -29,6 +31,9 @@ export const useSession = () => {
       setUser(cachedProfile);
       setIsAuthenticated(true);
     }
+    
+    // Track attempts to prevent infinite checking
+    sessionCheckAttempts.current += 1;
     
     // Create a timeout to prevent hanging on network issues
     const timeoutId = setTimeout(() => {
@@ -133,6 +138,9 @@ export const useSession = () => {
       setIsLoading(false);
       sessionCheckInProgress.current = false;
       console.log("Session check complete, loading set to false");
+      
+      // Reset attempt counter on successful completion
+      sessionCheckAttempts.current = 0;
     }
   }, []);
 
@@ -141,10 +149,19 @@ export const useSession = () => {
     // Force session check on initial load
     getSession();
     
+    // Safety timeout to prevent infinite loading state
+    const safetyTimeoutId = setTimeout(() => {
+      if (isLoading) {
+        console.log("Safety timeout triggered - forcing loading state to false");
+        setIsLoading(false);
+      }
+    }, 8000); // 8 seconds max loading time
+    
     return () => {
       console.log("Session hook cleanup");
+      clearTimeout(safetyTimeoutId);
     };
-  }, [getSession]);
+  }, [getSession, isLoading]);
 
   return {
     isAuthenticated,

@@ -5,6 +5,7 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/auth";
+import { Loader2 } from "lucide-react";
 
 const Auth = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -28,7 +29,10 @@ const Auth = () => {
     return (
       <AppLayout hideNavigation>
         <div className="flex items-center justify-center h-screen">
-          <p>Loading...</p>
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-muted-foreground">Loading authentication...</p>
+          </div>
         </div>
       </AppLayout>
     );

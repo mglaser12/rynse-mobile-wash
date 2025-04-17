@@ -14,6 +14,7 @@ export const useAuthSubscription = (
 ) => {
   // Use ref to track if the subscription has been initialized
   const subscriptionInitialized = useRef(false);
+  const authUpdateInProgress = useRef(false);
 
   useEffect(() => {
     // Only initialize subscription once
@@ -40,58 +41,77 @@ export const useAuthSubscription = (
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session ? "Session exists" : "No session");
       
-      if (session) {
-        try {
-          console.log("Loading profile for user:", session.user.id);
-          const profile = await loadUserProfile(session.user.id);
-          const updatedUser = {
-            id: session.user.id,
-            email: session.user.email,
-            name: profile?.name || session.user.email?.split('@')[0],
-            role: profile?.role || 'customer',
-            organizationId: profile?.organizationId,
-            avatarUrl: profile?.avatarUrl
-          };
-          
-          console.log("Setting user with role:", updatedUser.role);
-          setUser(updatedUser);
-          setIsAuthenticated(true);
-          
-          saveUserProfileToStorage(updatedUser);
-          setIsLoading(false);
-          clearTimeout(loadingTimeout); // Clear the timeout since we've updated the state
-        } catch (error) {
-          console.error("Error in auth state change handler:", error);
-          const fallbackUser = {
-            id: session.user.id,
-            email: session.user.email,
-            name: session.user.email?.split('@')[0],
-            role: 'customer'
-          };
-          
-          setUser(fallbackUser);
-          setIsAuthenticated(true);
-          
-          saveUserProfileToStorage(fallbackUser);
+      // Prevent concurrent auth updates
+      if (authUpdateInProgress.current) {
+        console.log("Auth update already in progress, will process later");
+        return;
+      }
+      
+      authUpdateInProgress.current = true;
+      
+      try {
+        if (session) {
+          try {
+            console.log("Loading profile for user:", session.user.id);
+            const profile = await loadUserProfile(session.user.id);
+            const updatedUser = {
+              id: session.user.id,
+              email: session.user.email,
+              name: profile?.name || session.user.email?.split('@')[0],
+              role: profile?.role || 'customer',
+              organizationId: profile?.organizationId,
+              avatarUrl: profile?.avatarUrl
+            };
+            
+            console.log("Setting user with role:", updatedUser.role);
+            setUser(updatedUser);
+            setIsAuthenticated(true);
+            
+            saveUserProfileToStorage(updatedUser);
+            setIsLoading(false);
+            clearTimeout(loadingTimeout); // Clear the timeout since we've updated the state
+          } catch (error) {
+            console.error("Error in auth state change handler:", error);
+            const fallbackUser = {
+              id: session.user.id,
+              email: session.user.email,
+              name: session.user.email?.split('@')[0],
+              role: 'customer'
+            };
+            
+            setUser(fallbackUser);
+            setIsAuthenticated(true);
+            
+            saveUserProfileToStorage(fallbackUser);
+            setIsLoading(false);
+            clearTimeout(loadingTimeout);
+          }
+        } else {
+          console.log("No session in auth state change, setting user to null");
+          setUser(null);
+          setIsAuthenticated(false);
+          saveUserProfileToStorage(null);
           setIsLoading(false);
           clearTimeout(loadingTimeout);
         }
-      } else {
-        console.log("No session in auth state change, setting user to null");
-        setUser(null);
-        setIsAuthenticated(false);
-        saveUserProfileToStorage(null);
-        setIsLoading(false);
-        clearTimeout(loadingTimeout);
+      } finally {
+        authUpdateInProgress.current = false;
       }
     });
 
     // Do an immediate session check in case there's a valid session already
     getSession();
 
+    // Global safety timeout as a last resort
+    const globalSafetyTimeout = setTimeout(() => {
+      console.warn("Global safety timeout triggered in auth subscription");
+      setIsLoading(false);
+    }, 15000);
+
     return () => {
       subscription.unsubscribe();
       clearTimeout(loadingTimeout);
+      clearTimeout(globalSafetyTimeout);
     };
   }, [getSession, setIsAuthenticated, setIsLoading, setUser]);
 

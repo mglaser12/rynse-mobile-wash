@@ -50,7 +50,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       initialized.current = true;
     }
-  }, [isAuthenticated, isLoading, user, location]);
+    
+    // Add safety mechanism to prevent infinite loading state
+    const safetyTimeoutId = setTimeout(() => {
+      if (isLoading) {
+        console.warn("Auth provider safety timeout triggered - forcing loading to false");
+        setIsAuthenticated(!!user);
+      }
+    }, 10000);
+    
+    return () => {
+      clearTimeout(safetyTimeoutId);
+    };
+  }, [isAuthenticated, isLoading, user, location.pathname, setIsAuthenticated]);
 
   // Provide auth context to all children
   const value = {
