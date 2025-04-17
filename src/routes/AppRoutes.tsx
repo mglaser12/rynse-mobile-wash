@@ -38,7 +38,7 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Role-specific route component
+// Role-specific route component - Modified to allow customers to access fleet_manager routes
 export const RoleRoute = ({ 
   children, 
   allowedRole 
@@ -59,9 +59,10 @@ export const RoleRoute = ({
     );
   }
   
-  // If the allowed role is fleet_manager, also allow customers since fleet managers are a type of customer
+  // Modified logic: Allow customer access to both customer and fleet_manager routes
   if (allowedRole === "fleet_manager") {
-    if (user?.role !== "fleet_manager") {
+    // Allow both fleet managers and customers to access fleet_manager routes
+    if (user?.role !== "fleet_manager" && user?.role !== "customer") {
       return <Navigate to="/" replace />;
     }
   } else if (user?.role !== allowedRole) {

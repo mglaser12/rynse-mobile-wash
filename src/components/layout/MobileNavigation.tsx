@@ -14,8 +14,8 @@ interface NavigationItem {
 export function MobileNavigation() {
   const { pathname } = useLocation();
   const { user } = useAuth();
-  const isFleetManager = user?.role === "fleet_manager";
   
+  // Always show Locations for all customers, not just fleet managers
   const customerNavItems: NavigationItem[] = [
     {
       name: "Home",
@@ -32,21 +32,18 @@ export function MobileNavigation() {
       href: "/bookings",
       icon: Calendar,
     },
+    // Always include Locations tab for all customers
+    {
+      name: "Locations",
+      href: "/locations",
+      icon: MapPin,
+    },
     {
       name: "Profile",
       href: "/profile",
       icon: User,
     },
   ];
-  
-  // Add Locations item for fleet managers
-  if (isFleetManager) {
-    customerNavItems.splice(3, 0, {
-      name: "Locations",
-      href: "/locations",
-      icon: MapPin,
-    });
-  }
 
   const technicianNavItems: NavigationItem[] = [
     {
