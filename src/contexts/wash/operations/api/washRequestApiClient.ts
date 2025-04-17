@@ -22,17 +22,23 @@ interface WashRequestInsertData {
 export const insertWashRequestStandard = async (
   data: WashRequestInsertData
 ) => {
-  const { data: result, error } = await supabase
-    .from('wash_requests')
-    .insert(data)
-    .select('*')
-    .single();
+  try {
+    const { data: result, error } = await supabase
+      .from('wash_requests')
+      .insert(data)
+      .select('*')
+      .single();
 
-  if (error) {
-    throw error;
+    if (error) {
+      console.error("Error with standard insert:", error);
+      return null;
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Exception in standard insert:", error);
+    return null;
   }
-
-  return result;
 };
 
 /**
@@ -42,27 +48,32 @@ export const insertWashRequestDirect = async (
   insertData: WashRequestInsertData,
   accessToken: string | undefined
 ) => {
-  const requestId = crypto.randomUUID(); // Generate a UUID for the new request
-  
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests`, {
-    method: 'POST',
-    headers: {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${accessToken || ''}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    },
-    body: JSON.stringify({
-      id: requestId,
-      ...insertData
-    })
-  });
+  try {
+    const requestId = crypto.randomUUID(); // Generate a UUID for the new request
+    
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${accessToken || ''}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        id: requestId,
+        ...insertData
+      })
+    });
 
-  if (!response.ok) {
-    console.error("Direct API insert failed:", await response.text());
-    toast.error("Failed to create wash request");
+    if (!response.ok) {
+      console.error("Direct API insert failed:", await response.text());
+      return null;
+    }
+
+    const responseData = await response.json();
+    return { id: requestId, ...responseData };
+  } catch (error) {
+    console.error("Exception in direct insert:", error);
     return null;
   }
-
-  return { id: requestId, ...await response.json() };
 };

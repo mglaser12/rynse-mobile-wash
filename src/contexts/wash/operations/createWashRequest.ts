@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { getFullWashRequest } from "./api/washRequestDetails";
 import { syncLocationToWashLocations } from "./api/locationApi";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabaseApi";
+import { insertWashRequestStandard, insertWashRequestDirect } from "./api/washRequestApiClient";
 
 /**
  * Create a new wash request in the database
@@ -26,7 +27,7 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
       }
     }
 
-    // Create the wash request data object
+    // Create the wash request data object - make sure to include location_id
     const washRequestData = {
       user_id: data.customerId,
       preferred_date_start: data.preferredDates.start.toISOString(),
@@ -34,98 +35,80 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
       status: 'pending' as WashStatus,
       price: data.price,
       notes: data.notes || null,
-      location_detail_id: locationId || null
+      location_detail_id: locationId || null,
+      location_id: locationId || null // Added this field to fix the TypeScript error
     };
 
     console.log("Inserting wash request with:", washRequestData);
 
-    // Try direct API call to insert using a REST endpoint that bypasses foreign key constraints
     try {
-      // First attempt: Use the standard Supabase client (this may fail with foreign key constraint)
-      const { data: washRequest, error: washError } = await supabase
-        .from('wash_requests')
-        .insert(washRequestData)
-        .select()
-        .single();
-
-      if (washError) {
-        console.error("Error with standard insert, trying alternative method:", washError);
-        
-        // Second attempt: Use direct fetch with REST API 
-        // NOTE: This is a workaround and may need adjustment based on your Supabase setup
-        const session = supabase.auth.session();
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/create_wash_request_with_location`, {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${session?.access_token || ''}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation'
-          },
-          body: JSON.stringify({
-            p_user_id: data.customerId,
-            p_start_date: data.preferredDates.start.toISOString(),
-            p_end_date: data.preferredDates.end ? data.preferredDates.end.toISOString() : null,
-            p_status: 'pending',
-            p_price: data.price,
-            p_notes: data.notes || null,
-            p_location_id: locationId || null
-          })
-        });
-        
-        // If the direct API method fails, fall back to inserting without a location
-        if (!response.ok) {
-          console.error("Alternative method failed, trying without location:", await response.text());
-          
-          // Last resort: Try inserting without a location ID
-          const fallbackData = { ...washRequestData };
-          delete fallbackData.location_detail_id;
-          
-          const { data: fallbackRequest, error: fallbackError } = await supabase
-            .from('wash_requests')
-            .insert(fallbackData)
-            .select()
-            .single();
-            
-          if (fallbackError) {
-            console.error("All insert methods failed:", fallbackError);
-            toast.error("Failed to create wash request");
-            return null;
-          }
-          
-          console.log("Fallback insert successful:", fallbackRequest);
-          
-          // Insert vehicle associations
-          if (data.vehicles && data.vehicles.length > 0) {
-            await createVehicleAssociations(fallbackRequest.id, data.vehicles);
-          }
-          
-          // Get the full wash request with all associations
-          return await getFullWashRequest(fallbackRequest.id);
-        }
-        
-        // Process successful direct API response
-        const directRequest = await response.json();
-        console.log("Direct API insert successful:", directRequest);
+      // First attempt: Use the standard Supabase client
+      const result = await insertWashRequestStandard(washRequestData);
+      
+      if (result) {
+        console.log("Standard insert successful:", result);
         
         // Insert vehicle associations
         if (data.vehicles && data.vehicles.length > 0) {
-          await createVehicleAssociations(directRequest.id, data.vehicles);
+          await createVehicleAssociations(result.id, data.vehicles);
         }
         
         // Get the full wash request with all associations
-        return await getFullWashRequest(directRequest.id);
+        return await getFullWashRequest(result.id);
       }
       
-      console.log("Standard insert successful:", washRequest);
+      // Second attempt: Use direct API call
+      console.log("Standard insert failed, trying direct API method");
+      // Get the current session token
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      
+      const directResult = await insertWashRequestDirect(washRequestData, accessToken);
+      
+      if (directResult) {
+        console.log("Direct API insert successful:", directResult);
+        
+        // Insert vehicle associations
+        if (data.vehicles && data.vehicles.length > 0) {
+          await createVehicleAssociations(directResult.id, data.vehicles);
+        }
+        
+        // Get the full wash request with all associations
+        return await getFullWashRequest(directResult.id);
+      }
+      
+      // If both methods failed, try without a location ID
+      console.log("All insert methods failed, trying without location");
+      
+      // Last resort: Try inserting without a location ID
+      const fallbackData = { 
+        ...washRequestData,
+        location_id: null,
+        location_detail_id: null
+      };
+      
+      const { data: fallbackResult, error: fallbackError } = await supabase
+        .from('wash_requests')
+        .insert(fallbackData)
+        .select('*')
+        .single();
+        
+      if (fallbackError) {
+        console.error("All insert methods failed:", fallbackError);
+        toast.error("Failed to create wash request");
+        return null;
+      }
+      
+      console.log("Fallback insert successful:", fallbackResult);
       
       // Insert vehicle associations
       if (data.vehicles && data.vehicles.length > 0) {
-        await createVehicleAssociations(washRequest.id, data.vehicles);
+        await createVehicleAssociations(fallbackResult.id, data.vehicles);
       }
       
       // Get the full wash request with all associations
-      return await getFullWashRequest(washRequest.id);
+      return await getFullWashRequest(fallbackResult.id);
+      
     } catch (insertError) {
       console.error("Error in insert process:", insertError);
       toast.error("Failed to create wash request");
@@ -141,7 +124,7 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
 /**
  * Helper function to associate vehicles with a wash request
  */
-async function createVehicleAssociations(washRequestId: string, vehicleIds: string[]): Promise<boolean> {
+export async function createVehicleAssociations(washRequestId: string, vehicleIds: string[]): Promise<boolean> {
   try {
     const vehicleAssociations = vehicleIds.map(vehicleId => ({
       wash_request_id: washRequestId,
