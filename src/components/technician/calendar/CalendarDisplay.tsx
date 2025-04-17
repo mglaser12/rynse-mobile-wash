@@ -23,7 +23,7 @@ export const CalendarDisplay = ({
         mode="single"
         selected={selectedDate}
         onSelect={(date) => date && onSelectDate(date)}
-        className="rounded-md border p-3"
+        className="rounded-md border p-3 pointer-events-auto"
         modifiers={{
           hasJobs: datesWithJobs,
           past: (date) => isPast(date) && !isToday(date),
@@ -58,15 +58,15 @@ export const CalendarDisplay = ({
             const hasJobs = jobsByDate && jobsByDate[dateStr] && jobsByDate[dateStr].length > 0;
             const jobCount = jobsByDate && jobsByDate[dateStr] ? jobsByDate[dateStr].length : 0;
             const isPastDay = isPast(date) && !isToday(date);
-            const isCurrentDay = isToday(date);
             const isSelectedDay = isSameDay(date, selectedDate);
+            const isCurrentDay = isToday(date);
             
             return (
               <div 
                 {...props} 
                 className={`${props.className} ${hasJobs ? 'cursor-pointer' : ''} 
                   ${isPastDay ? 'text-gray-400' : ''} 
-                  ${isCurrentDay ? 'font-bold' : ''} 
+                  ${isCurrentDay ? 'font-bold border-2 border-primary' : ''} 
                   ${isSelectedDay ? 'font-bold bg-primary text-white hover:bg-primary hover:text-white' : ''}`}
               >
                 {date.getDate()}

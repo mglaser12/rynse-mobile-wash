@@ -18,7 +18,7 @@ export const SelectedDateJobs = ({
 }: SelectedDateJobsProps) => {
   return (
     <div>
-      <h3 className="font-medium mb-3">
+      <h3 className="text-lg font-semibold mb-4">
         Jobs for {format(selectedDate, "MMMM d, yyyy")}
       </h3>
       <div className="space-y-4">
@@ -32,7 +32,7 @@ export const SelectedDateJobs = ({
           ))
         ) : (
           <Card className="p-8 text-center text-muted-foreground">
-            No jobs scheduled for this day
+            No jobs scheduled for {format(selectedDate, "MMMM d, yyyy")}
           </Card>
         )}
       </div>
