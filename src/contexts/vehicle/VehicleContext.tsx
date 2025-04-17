@@ -32,8 +32,8 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Update an existing vehicle
-  const updateVehicle = async (id: string, data: Partial<Vehicle>) => {
-    const success = await updateVehicleOp(id, data);
+  const updateVehicle = async (id: string, data: Partial<Vehicle>, locationId?: string) => {
+    const success = await updateVehicleOp(id, { ...data, locationId });
     if (success) {
       // If image was removed or changed, update the local state
       if (data.image === undefined) {

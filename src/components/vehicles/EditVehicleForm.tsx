@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -58,10 +57,17 @@ export function EditVehicleForm({ vehicle, onCancel, onSuccess }: EditVehicleFor
     
     setIsLoading(true);
     try {
+      // Extract locationId for separate handling
       const { locationId, ...vehicleUpdateData } = vehicleData;
-      await updateVehicle(vehicle.id, 
-        locationId ? { ...vehicleUpdateData, locationId } : vehicleUpdateData
-      );
+      
+      if (locationId) {
+        // If locationId is provided, pass it as a separate parameter
+        await updateVehicle(vehicle.id, vehicleUpdateData, locationId);
+      } else {
+        // Otherwise, just update the vehicle data
+        await updateVehicle(vehicle.id, vehicleUpdateData);
+      }
+      
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Error updating vehicle:", error);
