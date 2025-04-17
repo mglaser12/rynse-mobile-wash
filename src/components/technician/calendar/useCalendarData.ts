@@ -1,5 +1,5 @@
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { WashRequest } from "@/models/types";
 import { format, isSameDay, isToday, parseISO } from "date-fns";
 
@@ -9,6 +9,9 @@ export const useCalendarData = (assignedRequests: WashRequest[]) => {
     const today = new Date();
     return today;
   });
+  
+  // Track if we've already set the initial date
+  const initialDateSetRef = useRef(false);
   
   // Group jobs by date with null check on assignedRequests
   const jobsByDate = useMemo(() => {
@@ -38,18 +41,29 @@ export const useCalendarData = (assignedRequests: WashRequest[]) => {
   // Only do this on initial load, not every time the date changes
   useEffect(() => {
     // Only run this once on initial mount
+    if (initialDateSetRef.current) {
+      // We've already set the initial date, so don't override user selection
+      console.log("Initial date already set, preserving user selection:", selectedDate);
+      return;
+    }
+    
     const today = new Date();
     const todayKey = format(today, "yyyy-MM-dd");
     
     if (jobsByDate[todayKey] && jobsByDate[todayKey].length > 0) {
+      console.log("Setting initial date to today with jobs");
       setSelectedDate(today);
     } else {
       // If no jobs today, try to find the first date with jobs
       const firstDateWithJobs = Object.keys(jobsByDate).sort()[0];
       if (firstDateWithJobs) {
+        console.log("Setting initial date to first date with jobs:", firstDateWithJobs);
         setSelectedDate(new Date(firstDateWithJobs));
       }
     }
+    
+    // Mark that we've set the initial date
+    initialDateSetRef.current = true;
   }, [jobsByDate]); // Only depend on jobsByDate, not selectedDate
   
   // Get jobs for selected date
