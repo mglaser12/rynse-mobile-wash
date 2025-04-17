@@ -83,8 +83,7 @@ export function useAddVehicleForm({ onSuccess }: UseAddVehicleFormProps) {
         color: vehicleFormData.color || "",
         type: vehicleFormData.type || "",
         licensePlate: vehicleFormData.licensePlate || "",
-        // Pass locationId separately
-        locationId: locationId,
+        locationId: locationId, // Pass locationId to the vehicle operations function
         organizationId: user.organizationId
       });
       
