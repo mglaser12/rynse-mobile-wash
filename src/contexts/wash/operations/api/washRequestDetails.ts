@@ -62,48 +62,50 @@ export const getFullWashRequest = async (washRequestId: string) => {
     
     // Create properly typed location data from the response
     if (washRequest && washRequest.location) {
-      const locationResponse = washRequest.location;
+      // Explicitly cast the location to a known type to help TypeScript
+      const locationResponse = washRequest.location as {
+        id: string;
+        name: string | null;
+        address: string | null;
+        city: string | null;
+        state: string | null;
+        latitude: number | null;
+        longitude: number | null;
+      };
       
-      // Ensure locationResponse is an object and not an error
-      if (locationResponse && 
-          typeof locationResponse === 'object' && 
-          locationResponse !== null && 
-          !('error' in locationResponse)) {
-          
-        // Process location data with proper type checking
-        let locationName = "Unknown Location";
+      // Process location data with proper type checking
+      let locationName = "Unknown Location";
+      
+      if (locationResponse.name) {
+        locationName = locationResponse.name;
+      }
         
-        if (typeof locationResponse.name === 'string') {
-          locationName = locationResponse.name;
-        }
-          
-        // Only create address if all components are available
-        let formattedAddress: string | undefined = undefined;
-        
-        if (typeof locationResponse.address === 'string' && 
-            typeof locationResponse.city === 'string' && 
-            typeof locationResponse.state === 'string') {
-          formattedAddress = `${locationResponse.address}, ${locationResponse.city}, ${locationResponse.state}`;
-        }
-        
-        // Only create coordinates if both latitude and longitude are available
-        let coordinates: { lat: number; lng: number } | undefined = undefined;
-        
-        if (typeof locationResponse.latitude === 'number' && 
-            typeof locationResponse.longitude === 'number') {
-          coordinates = { 
-            lat: locationResponse.latitude, 
-            lng: locationResponse.longitude 
-          };
-        }
-        
-        // Create the location data object with all verified fields
-        locationData = {
-          name: locationName,
-          address: formattedAddress,
-          coordinates
+      // Only create address if all components are available
+      let formattedAddress: string | undefined = undefined;
+      
+      if (locationResponse.address && 
+          locationResponse.city && 
+          locationResponse.state) {
+        formattedAddress = `${locationResponse.address}, ${locationResponse.city}, ${locationResponse.state}`;
+      }
+      
+      // Only create coordinates if both latitude and longitude are available
+      let coordinates: { lat: number; lng: number } | undefined = undefined;
+      
+      if (locationResponse.latitude && 
+          locationResponse.longitude) {
+        coordinates = { 
+          lat: locationResponse.latitude, 
+          lng: locationResponse.longitude 
         };
       }
+      
+      // Create the location data object with all verified fields
+      locationData = {
+        name: locationName,
+        address: formattedAddress,
+        coordinates
+      };
     }
 
     // Format the data to match our application models
