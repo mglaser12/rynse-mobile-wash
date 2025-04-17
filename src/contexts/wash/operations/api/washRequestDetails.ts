@@ -57,6 +57,17 @@ export const getFullWashRequest = async (washRequestId: string) => {
       };
     });
 
+    // Ensure location data is properly formatted or set to undefined
+    const locationData = washRequest.location ? {
+      name: washRequest.location.name || "Unknown Location",
+      address: washRequest.location.address ? 
+        `${washRequest.location.address}, ${washRequest.location.city}, ${washRequest.location.state}` : 
+        undefined,
+      coordinates: (washRequest.location.latitude && washRequest.location.longitude) ? 
+        { lat: washRequest.location.latitude, lng: washRequest.location.longitude } : 
+        undefined
+    } : undefined;
+
     // Format the data to match our application models
     // Ensure status is explicitly cast as WashStatus
     const status = washRequest.status as WashStatus;
@@ -78,7 +89,7 @@ export const getFullWashRequest = async (washRequestId: string) => {
       updatedAt: new Date(washRequest.updated_at),
       organizationId: washRequest.organization_id,
       locationId: washRequest.location_id,
-      location: washRequest.location
+      location: locationData
     };
 
     return formattedRequest;
