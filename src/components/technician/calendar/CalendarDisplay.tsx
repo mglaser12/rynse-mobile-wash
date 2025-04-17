@@ -70,9 +70,10 @@ export const CalendarDisplay = ({
             const isCurrentDay = isToday(date);
             
             // Enhance clickability for days with jobs
-            const handleDayClick = () => {
+            const handleDayClick = (e: React.MouseEvent) => {
+              e.stopPropagation(); // Prevent event bubbling
+              console.log("Day element clicked:", date);
               if (hasJobs) {
-                console.log("Day clicked with jobs:", date);
                 onSelectDate(date);
               }
             };

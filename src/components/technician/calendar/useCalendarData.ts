@@ -35,20 +35,22 @@ export const useCalendarData = (assignedRequests: WashRequest[]) => {
   }, [assignedRequests]);
   
   // Find if there are any jobs for today and set as selected if possible
+  // Only do this on initial load, not every time the date changes
   useEffect(() => {
-    if (Object.keys(jobsByDate).length > 0) {
-      // Check if there are jobs for today
-      const today = new Date();
-      const todayKey = format(today, "yyyy-MM-dd");
-      
-      if (jobsByDate[todayKey] && jobsByDate[todayKey].length > 0) {
-        // If there are jobs today and no date is currently selected, select today
-        if (!isToday(selectedDate)) {
-          setSelectedDate(today);
-        }
+    // Only run this once on initial mount
+    const today = new Date();
+    const todayKey = format(today, "yyyy-MM-dd");
+    
+    if (jobsByDate[todayKey] && jobsByDate[todayKey].length > 0) {
+      setSelectedDate(today);
+    } else {
+      // If no jobs today, try to find the first date with jobs
+      const firstDateWithJobs = Object.keys(jobsByDate).sort()[0];
+      if (firstDateWithJobs) {
+        setSelectedDate(new Date(firstDateWithJobs));
       }
     }
-  }, [jobsByDate, selectedDate]);
+  }, [jobsByDate]); // Only depend on jobsByDate, not selectedDate
   
   // Get jobs for selected date
   const selectedDateJobs = useMemo(() => {

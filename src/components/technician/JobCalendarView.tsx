@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { WashRequest } from "@/models/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InProgressJobs } from "./calendar/InProgressJobs";
@@ -32,8 +32,16 @@ export const JobCalendarView = ({
   // Force refresh of selectedDateJobs when date changes
   const handleSelectDate = (date: Date) => {
     console.log("JobCalendarView - Date selected:", date);
-    setSelectedDate(date);
+    // Make a copy of the date to ensure it's treated as a new object
+    // This can help prevent issues with React not detecting state changes
+    const newDate = new Date(date.getTime());
+    setSelectedDate(newDate);
   };
+  
+  // Debug to see when selectedDate changes
+  useEffect(() => {
+    console.log("Selected date changed to:", selectedDate);
+  }, [selectedDate]);
   
   return <div className="space-y-8">
       {/* In Progress Jobs */}
@@ -47,7 +55,12 @@ export const JobCalendarView = ({
         <CardContent>
           <div className="space-y-6">
             {/* Calendar Component */}
-            <CalendarDisplay selectedDate={selectedDate} onSelectDate={handleSelectDate} datesWithJobs={datesWithJobs} jobsByDate={jobsByDate} />
+            <CalendarDisplay 
+              selectedDate={selectedDate} 
+              onSelectDate={handleSelectDate}
+              datesWithJobs={datesWithJobs} 
+              jobsByDate={jobsByDate} 
+            />
             
             {/* Selected Date Jobs */}
             <SelectedDateJobs selectedDate={selectedDate} selectedDateJobs={selectedDateJobs} onSelectJob={onSelectJob} />
