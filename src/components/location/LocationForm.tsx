@@ -1,6 +1,6 @@
+
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,6 +9,16 @@ import { Location } from "@/models/types";
 import { useLocations } from "@/contexts/LocationContext";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from "@/components/ui/form";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface LocationFormProps {
   location: Location | null;
@@ -16,34 +26,56 @@ interface LocationFormProps {
   onSuccess: () => void;
 }
 
-export interface LocationFormData {
-  name: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  notes?: string;
-  isDefault: boolean;
-}
+// Create a schema for form validation
+const formSchema = z.object({
+  name: z.string().min(1, { message: "Location name is required" }),
+  address: z.string().min(1, { message: "Street address is required" }),
+  city: z.string().min(1, { message: "City is required" }),
+  state: z.string().min(1, { message: "State is required" }),
+  zipCode: z.string().min(1, { message: "Zip code is required" }),
+  notes: z.string().optional(),
+  isDefault: z.boolean().default(false),
+});
+
+// Define the form data type from the schema
+type LocationFormData = z.infer<typeof formSchema>;
 
 export function LocationForm({ location, onCancel, onSuccess }: LocationFormProps) {
   const { createLocation, updateLocation } = useLocations();
   const { user } = useAuth();
-  const { register, handleSubmit, reset, setValue, formState: { errors, isSubmitting } } = useForm<LocationFormData>();
+  
+  // Set up form with zod resolver
+  const form = useForm<LocationFormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      address: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      notes: "",
+      isDefault: false,
+    },
+  });
+  
+  // Destructure form methods
+  const { reset, formState: { isSubmitting } } = form;
   
   // When the dialog opens/closes or location changes, reset the form
   useEffect(() => {
     if (location) {
       // Edit mode - populate form with location data
-      setValue("name", location.name);
-      setValue("address", location.address);
-      setValue("city", location.city);
-      setValue("state", location.state);
-      setValue("zipCode", location.zipCode);
-      setValue("notes", location.notes || "");
-      setValue("isDefault", location.isDefault);
+      reset({
+        name: location.name,
+        address: location.address,
+        city: location.city,
+        state: location.state,
+        zipCode: location.zipCode,
+        notes: location.notes || "",
+        isDefault: location.isDefault,
+      });
     } else {
-      // Add mode - reset form
+      // Add mode - reset form to defaults
       reset({
         name: "",
         address: "",
@@ -51,10 +83,10 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
         state: "",
         zipCode: "",
         notes: "",
-        isDefault: false
+        isDefault: false,
       });
     }
-  }, [location, reset, setValue]);
+  }, [location, reset]);
   
   const onSubmit = async (data: LocationFormData) => {
     try {
@@ -79,124 +111,149 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 mt-2">
-      <div className="space-y-2">
-        <Label htmlFor="name" className={errors.name ? "text-destructive" : ""}>
-          Location Name*
-        </Label>
-        <Input
-          id="name"
-          placeholder="Main Office, Warehouse, etc."
-          {...register("name", { required: "Location name is required" })}
-          className={errors.name ? "border-destructive" : ""}
-        />
-        {errors.name && (
-          <p className="text-sm text-destructive">{errors.name.message}</p>
-        )}
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="address" className={errors.address ? "text-destructive" : ""}>
-          Street Address*
-        </Label>
-        <Input
-          id="address"
-          placeholder="123 Main St."
-          {...register("address", { required: "Street address is required" })}
-          className={errors.address ? "border-destructive" : ""}
-        />
-        {errors.address && (
-          <p className="text-sm text-destructive">{errors.address.message}</p>
-        )}
-      </div>
-      
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-2">
-          <Label htmlFor="city" className={errors.city ? "text-destructive" : ""}>
-            City*
-          </Label>
-          <Input
-            id="city"
-            placeholder="City"
-            {...register("city", { required: "City is required" })}
-            className={errors.city ? "border-destructive" : ""}
-          />
-          {errors.city && (
-            <p className="text-sm text-destructive">{errors.city.message}</p>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 mt-2">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>Location Name*</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Main Office, Warehouse, etc."
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>Street Address*</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="123 Main St."
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div className="grid grid-cols-2 gap-2">
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel>City*</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="City"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="state"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel>State*</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="State"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="state" className={errors.state ? "text-destructive" : ""}>
-            State*
-          </Label>
-          <Input
-            id="state"
-            placeholder="State"
-            {...register("state", { required: "State is required" })}
-            className={errors.state ? "border-destructive" : ""}
-          />
-          {errors.state && (
-            <p className="text-sm text-destructive">{errors.state.message}</p>
+        <FormField
+          control={form.control}
+          name="zipCode"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>Zip Code*</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="12345"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>Notes (Optional)</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Special instructions or details about this location..."
+                  className="resize-none h-16"
+                  {...field}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="isDefault"
+          render={({ field }) => (
+            <FormItem className="flex items-center space-x-2 pt-2">
+              <FormControl>
+                <Checkbox 
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <FormLabel className="cursor-pointer">Set as default location</FormLabel>
+            </FormItem>
+          )}
+        />
+        
+        <div className="flex justify-end space-x-2 pt-2">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                {location ? "Updating..." : "Creating..."}
+              </>
+            ) : (
+              location ? "Save Changes" : "Create Location"
+            )}
+          </Button>
         </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="zipCode" className={errors.zipCode ? "text-destructive" : ""}>
-          Zip Code*
-        </Label>
-        <Input
-          id="zipCode"
-          placeholder="12345"
-          {...register("zipCode", { required: "Zip code is required" })}
-          className={errors.zipCode ? "border-destructive" : ""}
-        />
-        {errors.zipCode && (
-          <p className="text-sm text-destructive">{errors.zipCode.message}</p>
-        )}
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notes (Optional)</Label>
-        <Textarea
-          id="notes"
-          placeholder="Special instructions or details about this location..."
-          className="resize-none h-16"
-          {...register("notes")}
-        />
-      </div>
-      
-      <div className="flex items-center space-x-2 pt-2">
-        <Checkbox 
-          id="isDefault" 
-          {...register("isDefault")} 
-        />
-        <Label htmlFor="isDefault" className="cursor-pointer">
-          Set as default location
-        </Label>
-      </div>
-      
-      <div className="flex justify-end space-x-2 pt-2">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onCancel}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              {location ? "Updating..." : "Creating..."}
-            </>
-          ) : (
-            location ? "Save Changes" : "Create Location"
-          )}
-        </Button>
-      </div>
-    </form>
+      </form>
+    </Form>
   );
 }
