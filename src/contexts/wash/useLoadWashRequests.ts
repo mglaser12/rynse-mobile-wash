@@ -42,7 +42,10 @@ export function useLoadWashRequests(userId?: string, userRole?: string) {
             vehicle_id,
             vehicles:vehicle_id(*)
           ),
-          vehicle_wash_statuses(*)
+          vehicle_wash_statuses(*),
+          location:location_id(
+            id, name, address, city, state, latitude, longitude
+          )
         `);
       
       // Apply filters based on user role and organization
@@ -107,6 +110,38 @@ function processWashRequests(data: any[]): WashRequest[] {
     
     // If this is the first time we're seeing this request
     if (!requestsMap.has(washRequest.id)) {
+      // Process location data safely
+      let locationData = undefined;
+      if (item.location && typeof item.location === 'object' && !('error' in item.location)) {
+        const locationInfo = item.location as {
+          id: string;
+          name: string | null;
+          address: string | null;
+          city: string | null;
+          state: string | null;
+          latitude: number | null;
+          longitude: number | null;
+        };
+        
+        const locationName = locationInfo.name || "Unknown Location";
+        let formattedAddress: string | undefined = undefined;
+        
+        if (locationInfo.address && locationInfo.city && locationInfo.state) {
+          formattedAddress = `${locationInfo.address}, ${locationInfo.city}, ${locationInfo.state}`;
+        }
+        
+        let coordinates: { lat: number; lng: number } | undefined = undefined;
+        if (locationInfo.latitude && locationInfo.longitude) {
+          coordinates = { lat: locationInfo.latitude, lng: locationInfo.longitude };
+        }
+        
+        locationData = {
+          name: locationName,
+          address: formattedAddress,
+          coordinates
+        };
+      }
+      
       // Create a new wash request entry
       requestsMap.set(washRequest.id, {
         id: washRequest.id,
@@ -126,6 +161,8 @@ function processWashRequests(data: any[]): WashRequest[] {
         createdAt: new Date(washRequest.created_at),
         updatedAt: new Date(washRequest.updated_at),
         organizationId: washRequest.organization_id || undefined,
+        locationId: washRequest.location_id || undefined,
+        location: locationData,
         vehicleWashStatuses: item.vehicle_wash_statuses ? mapVehicleWashStatuses(item.vehicle_wash_statuses) : [],
       });
     }
