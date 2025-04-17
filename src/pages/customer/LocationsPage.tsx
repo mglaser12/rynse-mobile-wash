@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useLocations } from "@/contexts/LocationContext";
@@ -10,12 +11,14 @@ import { ConfirmDeleteDialog } from "@/components/location/ConfirmDeleteDialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function LocationsPage() {
   const { locations, isLoading, setLocationAsDefault, deleteLocation } = useLocations();
   const [openLocationDialog, setOpenLocationDialog] = useState(false);
   const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const isMobile = useIsMobile();
   
   const handleAddLocation = () => {
     setSelectedLocation(null);

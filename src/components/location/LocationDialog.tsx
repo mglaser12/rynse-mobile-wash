@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { Location } from "@/models/types";
 import { useLocations } from "@/contexts/LocationContext";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface LocationDialogProps {
   open: boolean;
@@ -31,6 +33,7 @@ export function LocationDialog({ open, onOpenChange, location }: LocationDialogP
   const { createLocation, updateLocation } = useLocations();
   const { user } = useAuth();
   const { register, handleSubmit, reset, setValue, formState: { errors, isSubmitting } } = useForm<LocationForm>();
+  const isMobile = useIsMobile();
   
   // When the dialog opens/closes or location changes, reset the form
   useEffect(() => {
@@ -81,9 +84,14 @@ export function LocationDialog({ open, onOpenChange, location }: LocationDialogP
     }
   };
 
+  // Determine dialog content styles based on device
+  const dialogContentClass = isMobile 
+    ? "sm:max-w-[95%] max-h-[80vh] overflow-y-auto p-4" 
+    : "sm:max-w-[550px] max-h-[85vh] overflow-y-auto";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className={dialogContentClass}>
         <DialogHeader>
           <DialogTitle>{location ? "Edit Location" : "Add New Location"}</DialogTitle>
           <DialogDescription>
@@ -93,7 +101,7 @@ export function LocationDialog({ open, onOpenChange, location }: LocationDialogP
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 mt-2">
           <div className="space-y-2">
             <Label htmlFor="name" className={errors.name ? "text-destructive" : ""}>
               Location Name*
@@ -124,7 +132,7 @@ export function LocationDialog({ open, onOpenChange, location }: LocationDialogP
             )}
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <div className="space-y-2">
               <Label htmlFor="city" className={errors.city ? "text-destructive" : ""}>
                 City*
@@ -176,12 +184,12 @@ export function LocationDialog({ open, onOpenChange, location }: LocationDialogP
             <Textarea
               id="notes"
               placeholder="Special instructions or details about this location..."
-              className="resize-none h-20"
+              className="resize-none h-16"
               {...register("notes")}
             />
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 pt-2">
             <Checkbox 
               id="isDefault" 
               {...register("isDefault")} 
@@ -191,7 +199,7 @@ export function LocationDialog({ open, onOpenChange, location }: LocationDialogP
             </Label>
           </div>
           
-          <div className="flex justify-end space-x-2 pt-4">
+          <div className="flex justify-end space-x-2 pt-2">
             <Button 
               type="button" 
               variant="outline" 
