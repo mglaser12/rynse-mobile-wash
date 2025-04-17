@@ -1,3 +1,4 @@
+
 import React from "react";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
@@ -80,8 +81,8 @@ export function WashRequestCard({
         <div className="mt-3 space-y-2 text-sm">
           {/* Location information */}
           {locationInfo && <div className="flex gap-2">
-              
-              
+              <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+              <span>{locationInfo.name}</span>
             </div>}
           
           <div className="flex gap-2">
