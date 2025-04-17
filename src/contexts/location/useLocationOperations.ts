@@ -1,9 +1,8 @@
-
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Location } from "@/models/types";
-import { mapSupabaseLocationToLocation } from "./mappers";
+import { mapSupabaseLocation } from "./mappers";
 import { getVehiclesForLocation } from "./locationVehicleOperations";
 
 export function useLocationOperations() {
@@ -31,7 +30,7 @@ export function useLocationOperations() {
         locationsData.map(async (location) => {
           // Get vehicle count for this location
           const vehicleIds = await getVehiclesForLocation(location.id);
-          const locationObj = mapSupabaseLocationToLocation(location);
+          const locationObj = mapSupabaseLocation(location);
           return {
             ...locationObj,
             vehicleCount: vehicleIds.length
@@ -79,7 +78,7 @@ export function useLocationOperations() {
       }
 
       // Map Supabase location to our Location type
-      const newLocation = mapSupabaseLocationToLocation(data);
+      const newLocation = mapSupabaseLocation(data);
       
       // If this is the default location, update any other locations to not be default
       if (locationData.isDefault) {
@@ -246,6 +245,6 @@ export function useLocationOperations() {
     deleteLocation,
     setLocationAsDefault,
     getLocationById,
-    refreshLocations,
+    refreshLocations
   };
 }

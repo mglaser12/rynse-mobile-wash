@@ -1,6 +1,5 @@
 
 import React from "react";
-import { Vehicle } from "@/models/types";
 import { VehicleFormFields } from "./VehicleFormFields";
 import { VehicleImageUploader } from "./VehicleImageUploader";
 import { OcrSection } from "./OcrSection";

@@ -1,163 +1,177 @@
-
-import React from "react";
+import React, { ChangeEvent } from "react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { VehicleImageUploader } from "./VehicleImageUploader";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { LocationSelect } from "@/components/location/LocationSelect";
 
-interface VehicleFormFieldsProps {
-  vehicleId?: string;
-  register: any;
-  errors: any;
-  watch: any;
-  setValue: any;
-  imageUrl?: string;
-  handleImageChange: (imageFile: File | null) => void;
-  handleImageRemove: () => void;
-  isUploading: boolean;
+export interface VehicleFormData {
+  make: string;
+  model: string;
+  year: string;
+  color: string;
+  licensePlate?: string;
+  vinNumber?: string;
+  type?: string;
+  image?: string;
 }
 
-export function VehicleFormFields({
-  vehicleId,
-  register,
-  errors,
-  watch,
-  setValue,
-  imageUrl,
-  handleImageChange,
-  handleImageRemove,
-  isUploading,
+export interface VehicleFormFieldsProps {
+  vehicleData: VehicleFormData;
+  onInputChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  disabled: boolean;
+  vehicleId?: string;
+}
+
+export function VehicleFormFields({ 
+  vehicleData, 
+  onInputChange, 
+  disabled,
+  vehicleId 
 }: VehicleFormFieldsProps) {
-  // Current selected vehicle type
-  const vehicleType = watch("type");
+  const handleTypeChange = (value: string) => {
+    const event = {
+      target: {
+        name: "type",
+        value
+      }
+    } as ChangeEvent<HTMLInputElement>;
+    
+    onInputChange(event);
+  };
 
   return (
-    <>
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Make*</label>
-            <Input
-              type="text"
-              placeholder="Toyota, Honda, etc."
-              {...register("make", { required: "Make is required" })}
-              className={errors.make ? "border-red-500" : ""}
-            />
-            {errors.make && (
-              <p className="text-sm text-red-500 mt-1">{errors.make.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Model*</label>
-            <Input
-              type="text"
-              placeholder="Camry, Civic, etc."
-              {...register("model", { required: "Model is required" })}
-              className={errors.model ? "border-red-500" : ""}
-            />
-            {errors.model && (
-              <p className="text-sm text-red-500 mt-1">{errors.model.message}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Year*</label>
-            <Input
-              type="text"
-              placeholder="2023, 2022, etc."
-              {...register("year", { required: "Year is required" })}
-              className={errors.year ? "border-red-500" : ""}
-            />
-            {errors.year && (
-              <p className="text-sm text-red-500 mt-1">{errors.year.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Type*</label>
-            <Select
-              value={vehicleType || ""}
-              onValueChange={(value) => setValue("type", value)}
-            >
-              <SelectTrigger
-                className={errors.type ? "border-red-500" : ""}
-              >
-                <SelectValue placeholder="Select vehicle type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sedan">Sedan</SelectItem>
-                <SelectItem value="suv">SUV</SelectItem>
-                <SelectItem value="truck">Truck</SelectItem>
-                <SelectItem value="van">Van</SelectItem>
-                <SelectItem value="coupe">Coupe</SelectItem>
-                <SelectItem value="convertible">Convertible</SelectItem>
-                <SelectItem value="hatchback">Hatchback</SelectItem>
-                <SelectItem value="wagon">Wagon</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.type && (
-              <p className="text-sm text-red-500 mt-1">{errors.type.message}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Color</label>
-            <Input
-              type="text"
-              placeholder="Blue, Red, etc."
-              {...register("color")}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              License Plate
-            </label>
-            <Input
-              type="text"
-              placeholder="ABC123"
-              {...register("licensePlate")}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">VIN Number</label>
-            <Input
-              type="text"
-              placeholder="Vehicle Identification Number"
-              {...register("vinNumber")}
-            />
-          </div>
-          
-          {/* Add location selector to VehicleFormFields if vehicle ID exists */}
-          {vehicleId && (
-            <div>
-              <label className="block text-sm font-medium mb-1">Location</label>
-              <LocationSelect vehicleId={vehicleId} />
-            </div>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Vehicle Image
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label htmlFor="make" className="text-sm font-medium">
+            Make*
           </label>
-          <VehicleImageUploader
-            imageUrl={imageUrl}
-            onImageChange={handleImageChange}
-            onImageRemove={handleImageRemove}
-            isUploading={isUploading}
+          <Input
+            id="make"
+            name="make"
+            value={vehicleData.make}
+            onChange={onInputChange}
+            placeholder="Toyota, Honda, etc."
+            disabled={disabled}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="model" className="text-sm font-medium">
+            Model*
+          </label>
+          <Input
+            id="model"
+            name="model"
+            value={vehicleData.model}
+            onChange={onInputChange}
+            placeholder="Camry, Civic, etc."
+            disabled={disabled}
+            required
           />
         </div>
       </div>
-    </>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label htmlFor="year" className="text-sm font-medium">
+            Year*
+          </label>
+          <Input
+            id="year"
+            name="year"
+            value={vehicleData.year}
+            onChange={onInputChange}
+            placeholder="2023"
+            disabled={disabled}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="color" className="text-sm font-medium">
+            Color*
+          </label>
+          <Input
+            id="color"
+            name="color"
+            value={vehicleData.color}
+            onChange={onInputChange}
+            placeholder="Black, White, etc."
+            disabled={disabled}
+            required
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label htmlFor="licensePlate" className="text-sm font-medium">
+            License Plate
+          </label>
+          <Input
+            id="licensePlate"
+            name="licensePlate"
+            value={vehicleData.licensePlate || ""}
+            onChange={onInputChange}
+            placeholder="ABC123"
+            disabled={disabled}
+          />
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="vinNumber" className="text-sm font-medium">
+            VIN Number
+          </label>
+          <Input
+            id="vinNumber"
+            name="vinNumber"
+            value={vehicleData.vinNumber || ""}
+            onChange={onInputChange}
+            placeholder="1HGCM82633A123456"
+            disabled={disabled}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="type" className="text-sm font-medium">
+          Vehicle Type
+        </label>
+        <Select
+          value={vehicleData.type || ""}
+          onValueChange={handleTypeChange}
+          disabled={disabled}
+        >
+          <SelectTrigger id="type">
+            <SelectValue placeholder="Select vehicle type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sedan">Sedan</SelectItem>
+            <SelectItem value="suv">SUV</SelectItem>
+            <SelectItem value="truck">Truck</SelectItem>
+            <SelectItem value="van">Van</SelectItem>
+            <SelectItem value="coupe">Coupe</SelectItem>
+            <SelectItem value="convertible">Convertible</SelectItem>
+            <SelectItem value="hatchback">Hatchback</SelectItem>
+            <SelectItem value="wagon">Wagon</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Add LocationSelect if we have a vehicleId */}
+      {vehicleId && (
+        <div className="space-y-2">
+          <label htmlFor="location" className="text-sm font-medium">
+            Location
+          </label>
+          <LocationSelect 
+            vehicleId={vehicleId}
+            className="w-full"
+          />
+          <p className="text-xs text-muted-foreground">
+            Select where this vehicle is located
+          </p>
+        </div>
+      )}
+    </div>
   );
 }

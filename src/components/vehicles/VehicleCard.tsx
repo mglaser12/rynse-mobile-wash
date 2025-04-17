@@ -6,13 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useLocations } from "@/contexts/LocationContext";
 import { getLocationForVehicle } from "@/contexts/location/locationVehicleOperations";
 
-interface VehicleCardProps {
+export interface VehicleCardProps {
   vehicle: Vehicle;
   onClick: () => void;
   isSelected?: boolean;
+  className?: string;
 }
 
-export function VehicleCard({ vehicle, onClick, isSelected = false }: VehicleCardProps) {
+export function VehicleCard({ vehicle, onClick, isSelected = false, className = "" }: VehicleCardProps) {
   const { getLocationById } = useLocations();
   const [locationName, setLocationName] = useState<string | null>(null);
 
@@ -36,7 +37,7 @@ export function VehicleCard({ vehicle, onClick, isSelected = false }: VehicleCar
       onClick={onClick}
       className={`cursor-pointer transition-all hover:shadow-md ${
         isSelected ? 'border-primary border-2' : 'border-gray-200'
-      }`}
+      } ${className}`}
     >
       <div className="relative">
         {vehicle.image ? (

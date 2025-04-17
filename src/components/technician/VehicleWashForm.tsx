@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Vehicle, VehicleWashStatus } from "@/models/types";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
@@ -16,7 +15,7 @@ interface VehicleWashFormProps {
   onStatusUpdate: (status: VehicleWashStatus) => void;
 }
 
-export const VehicleWashForm = ({ vehicle, status, onStatusUpdate }: VehicleWashFormProps) => {
+export function VehicleWashForm({ vehicle, status, onStatusUpdate }: VehicleWashFormProps) {
   const [notes, setNotes] = useState<string>(status.notes || "");
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
   
@@ -44,8 +43,13 @@ export const VehicleWashForm = ({ vehicle, status, onStatusUpdate }: VehicleWash
   };
   
   return (
-    <div className="space-y-4">
-      <VehicleCard vehicle={vehicle} />
+    <div>
+      {vehicle && (
+        <VehicleCard
+          vehicle={vehicle}
+          onClick={() => {}} // Add empty click handler to satisfy the prop requirement
+        />
+      )}
       
       <Card>
         <CardContent className="p-4 space-y-4">
@@ -135,4 +139,4 @@ export const VehicleWashForm = ({ vehicle, status, onStatusUpdate }: VehicleWash
       </Card>
     </div>
   );
-};
+}
