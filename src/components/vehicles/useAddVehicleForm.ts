@@ -1,6 +1,7 @@
 
 import { useState, useCallback, ChangeEvent, FormEvent } from "react";
 import { useVehicles } from "@/contexts/VehicleContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { VehicleFormData } from "./VehicleFormFields";
 
@@ -10,6 +11,7 @@ interface UseAddVehicleFormProps {
 
 export function useAddVehicleForm({ onSuccess }: UseAddVehicleFormProps) {
   const { addVehicle } = useVehicles();
+  const { user } = useAuth(); // Added user from AuthContext
   
   // State for vehicle data
   const [vehicleData, setVehicleData] = useState<VehicleFormData>({
@@ -48,11 +50,17 @@ export function useAddVehicleForm({ onSuccess }: UseAddVehicleFormProps) {
       return;
     }
     
+    if (!user) {
+      toast.error("You must be logged in to add a vehicle");
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
       await addVehicle({
         ...vehicleData,
+        customerId: user.id, // Add the customerId from the user object
         year: vehicleData.year
       });
       
@@ -67,7 +75,7 @@ export function useAddVehicleForm({ onSuccess }: UseAddVehicleFormProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [vehicleData, addVehicle, onSuccess]);
+  }, [vehicleData, addVehicle, onSuccess, user]);
   
   return {
     vehicleData,

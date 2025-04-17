@@ -1,8 +1,10 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Camera } from "lucide-react";
 import { OcrImageUploader } from "./OcrImageUploader";
 import { VehicleFormData } from "./VehicleFormFields";
+import { OCRResult } from "@/utils/ocrUtils";
 
 interface OcrSectionProps {
   onDataUpdate: (data: Partial<VehicleFormData>) => void;
@@ -19,17 +21,19 @@ export function OcrSection({
   setIsProcessing,
   disabled = false
 }: OcrSectionProps) {
-  const handleOcrResult = (data: any) => {
-    // Map OCR data to vehicle data
-    const vehicleData: Partial<VehicleFormData> = {
-      make: data.make || "",
-      model: data.model || "",
-      year: data.year || "",
-      color: data.color || "",
-      licensePlate: data.licensePlate || "",
-      vinNumber: data.vinNumber || "",
-    };
-    onDataUpdate(vehicleData);
+  const handleOcrResult = (result: OCRResult) => {
+    if (result.success && result.data) {
+      // Map OCR data to vehicle data
+      const vehicleData: Partial<VehicleFormData> = {
+        make: result.data.make || "",
+        model: result.data.model || "",
+        year: result.data.year || "",
+        color: result.data.color || "",
+        licensePlate: result.data.licensePlate || "",
+        vinNumber: result.data.vinNumber || "",
+      };
+      onDataUpdate(vehicleData);
+    }
     setIsProcessing(false);
   };
 
@@ -46,7 +50,7 @@ export function OcrSection({
       <OcrImageUploader
         onOcrComplete={handleOcrResult}
         onOcrError={handleOcrError}
-        onImageChange={onImageUpdate}
+        onImageChange={(image) => image && onImageUpdate(image)}
         isProcessing={isProcessing}
         setIsProcessing={setIsProcessing}
         disabled={disabled}
