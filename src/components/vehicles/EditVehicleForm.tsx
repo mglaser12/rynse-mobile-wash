@@ -83,11 +83,17 @@ export function EditVehicleForm({ vehicle, onCancel, onSuccess }: EditVehicleFor
       // Pass the entire object including locationId to updateVehicle
       const success = await updateVehicle(vehicle.id, vehicleData);
       
-      if (success && onSuccess) {
-        onSuccess();
+      if (success) {
+        toast.success("Vehicle updated successfully");
+        if (onSuccess) {
+          onSuccess();
+        }
+      } else {
+        toast.error("Failed to update vehicle");
       }
     } catch (error) {
       console.error("Error updating vehicle:", error);
+      toast.error("An error occurred while updating the vehicle");
     } finally {
       setIsLoading(false);
     }
@@ -97,9 +103,11 @@ export function EditVehicleForm({ vehicle, onCancel, onSuccess }: EditVehicleFor
     setIsDeleting(true);
     try {
       await removeVehicle(vehicle.id);
+      toast.success("Vehicle deleted successfully");
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Error removing vehicle:", error);
+      toast.error("Failed to delete vehicle");
       setIsDeleting(false);
       setShowDeleteDialog(false);
     }

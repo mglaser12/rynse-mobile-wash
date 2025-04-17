@@ -5,7 +5,7 @@ export interface VehicleContextType {
   vehicles: Vehicle[];
   isLoading: boolean;
   addVehicle: (vehicle: Omit<Vehicle, "id" | "dateAdded">, locationId?: string) => Promise<void>;
-  updateVehicle: (id: string, data: Partial<Vehicle>, locationId?: string) => Promise<void>;
+  updateVehicle: (id: string, data: Partial<Vehicle> & { locationId?: string }) => Promise<boolean>;
   removeVehicle: (id: string) => Promise<void>;
   getVehicleById: (id: string) => Vehicle | undefined;
 }

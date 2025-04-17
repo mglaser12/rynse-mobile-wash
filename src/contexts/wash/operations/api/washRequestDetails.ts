@@ -65,17 +65,22 @@ export const getFullWashRequest = async (washRequestId: string) => {
       const locationResponse = washRequest.location;
       
       // Ensure locationResponse is an object and not an error
-      if (typeof locationResponse === 'object' && locationResponse !== null && !('error' in locationResponse)) {
+      if (locationResponse && 
+          typeof locationResponse === 'object' && 
+          locationResponse !== null && 
+          !('error' in locationResponse)) {
+          
         // Process location data with proper type checking
         let locationName = "Unknown Location";
-        if (locationResponse && typeof locationResponse.name === 'string') {
+        
+        if (typeof locationResponse.name === 'string') {
           locationName = locationResponse.name;
         }
           
         // Only create address if all components are available
         let formattedAddress: string | undefined = undefined;
-        if (locationResponse && 
-            typeof locationResponse.address === 'string' && 
+        
+        if (typeof locationResponse.address === 'string' && 
             typeof locationResponse.city === 'string' && 
             typeof locationResponse.state === 'string') {
           formattedAddress = `${locationResponse.address}, ${locationResponse.city}, ${locationResponse.state}`;
@@ -83,8 +88,8 @@ export const getFullWashRequest = async (washRequestId: string) => {
         
         // Only create coordinates if both latitude and longitude are available
         let coordinates: { lat: number; lng: number } | undefined = undefined;
-        if (locationResponse && 
-            typeof locationResponse.latitude === 'number' && 
+        
+        if (typeof locationResponse.latitude === 'number' && 
             typeof locationResponse.longitude === 'number') {
           coordinates = { 
             lat: locationResponse.latitude, 

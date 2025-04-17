@@ -32,7 +32,7 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Update an existing vehicle
-  const updateVehicle = async (id: string, data: Partial<Vehicle> & { locationId?: string }) => {
+  const updateVehicle = async (id: string, data: Partial<Vehicle> & { locationId?: string }): Promise<boolean> => {
     console.log("Updating vehicle in context:", id, data);
     const success = await updateVehicleOp(id, data);
     if (success) {
