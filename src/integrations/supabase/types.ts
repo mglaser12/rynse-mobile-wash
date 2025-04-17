@@ -374,7 +374,7 @@ export type Database = {
           created_at: string
           id: string
           location_detail_id: string | null
-          location_id: string
+          location_id: string | null
           notes: string | null
           organization_id: string | null
           preferred_date_end: string | null
@@ -389,7 +389,7 @@ export type Database = {
           created_at?: string
           id?: string
           location_detail_id?: string | null
-          location_id: string
+          location_id?: string | null
           notes?: string | null
           organization_id?: string | null
           preferred_date_end?: string | null
@@ -404,7 +404,7 @@ export type Database = {
           created_at?: string
           id?: string
           location_detail_id?: string | null
-          location_id?: string
+          location_id?: string | null
           notes?: string | null
           organization_id?: string | null
           preferred_date_end?: string | null
@@ -427,7 +427,7 @@ export type Database = {
             foreignKeyName: "wash_requests_location_id_fkey"
             columns: ["location_id"]
             isOneToOne: false
-            referencedRelation: "wash_locations"
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
@@ -461,7 +461,7 @@ export type Database = {
             foreignKeyName: "wash_requests_location_id_fkey"
             columns: ["location_id"]
             isOneToOne: false
-            referencedRelation: "wash_locations"
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {

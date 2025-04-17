@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { WashStatus } from "@/models/types";
-import { toast } from "sonner";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabaseApi";
 
 interface WashRequestInsertData {
@@ -66,7 +65,8 @@ export const insertWashRequestDirect = async (
     });
 
     if (!response.ok) {
-      console.error("Direct API insert failed:", await response.text());
+      const errorText = await response.text();
+      console.error("Direct API insert failed:", errorText);
       return null;
     }
 

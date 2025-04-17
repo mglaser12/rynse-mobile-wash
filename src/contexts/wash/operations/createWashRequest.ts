@@ -4,8 +4,7 @@ import { CreateWashRequestData } from "../types";
 import { WashRequest, WashStatus } from "@/models/types";
 import { toast } from "sonner";
 import { getFullWashRequest } from "./api/washRequestDetails";
-import { syncLocationToWashLocations } from "./api/locationApi";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabaseApi";
+import { createVehicleAssociations } from "./api/vehicleApi";
 import { insertWashRequestStandard, insertWashRequestDirect } from "./api/washRequestApiClient";
 
 /**
@@ -15,19 +14,7 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
   try {
     console.log("Creating wash request with data:", data);
 
-    // Check if we need to sync locations between tables
-    let locationId = data.locationId;
-    if (locationId) {
-      locationId = await syncLocationToWashLocations(locationId);
-      
-      if (!locationId) {
-        console.error("Failed to sync location");
-        toast.error("Failed to create wash request - location error");
-        return null;
-      }
-    }
-
-    // Create the wash request data object - make sure to include location_id
+    // Create the wash request data object
     const washRequestData = {
       user_id: data.customerId,
       preferred_date_start: data.preferredDates.start.toISOString(),
@@ -35,8 +22,8 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
       status: 'pending' as WashStatus,
       price: data.price,
       notes: data.notes || null,
-      location_detail_id: locationId || null,
-      location_id: locationId || null // Added this field to fix the TypeScript error
+      location_id: data.locationId || null,
+      location_detail_id: data.locationId || null
     };
 
     console.log("Inserting wash request with:", washRequestData);
@@ -118,31 +105,5 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
     console.error("Error creating wash request:", error);
     toast.error("Failed to create wash request");
     return null;
-  }
-}
-
-/**
- * Helper function to associate vehicles with a wash request
- */
-export async function createVehicleAssociations(washRequestId: string, vehicleIds: string[]): Promise<boolean> {
-  try {
-    const vehicleAssociations = vehicleIds.map(vehicleId => ({
-      wash_request_id: washRequestId,
-      vehicle_id: vehicleId
-    }));
-
-    const { error } = await supabase
-      .from('wash_request_vehicles')
-      .insert(vehicleAssociations);
-
-    if (error) {
-      console.error("Error associating vehicles:", error);
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error creating vehicle associations:", error);
-    return false;
   }
 }
