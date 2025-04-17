@@ -42,10 +42,10 @@ export function LocationSelectionSection({
         value={selectedLocationId}
         onValueChange={handleLocationChange}
       >
-        <SelectTrigger className="w-full max-w-full min-w-[250px]">
+        <SelectTrigger className="w-[300px]">
           <SelectValue placeholder={defaultLocation ? `${defaultLocation.name} (Default)` : "Select a location"} />
         </SelectTrigger>
-        <SelectContent className="w-full max-w-full">
+        <SelectContent className="w-[300px]">
           {locations.length === 0 ? (
             <SelectItem value="no-locations" disabled>
               No locations available
