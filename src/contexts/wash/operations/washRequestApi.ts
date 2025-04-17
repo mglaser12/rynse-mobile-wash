@@ -157,3 +157,67 @@ export const insertWashRequestDirect = async (
 
   return { id: requestId, ...await response.json() };
 };
+
+/**
+ * Retrieve a full wash request with all associated data
+ * @param washRequestId The ID of the wash request to retrieve
+ * @returns The wash request with vehicles and other related data
+ */
+export const getFullWashRequest = async (washRequestId: string) => {
+  try {
+    // Get the wash request
+    const { data: washRequest, error: washError } = await supabase
+      .from('wash_requests')
+      .select(`
+        *,
+        location:locations(*)
+      `)
+      .eq('id', washRequestId)
+      .single();
+
+    if (washError) {
+      console.error("Error retrieving wash request:", washError);
+      return null;
+    }
+
+    // Get the vehicles associated with this wash request
+    const { data: washVehicles, error: vehicleError } = await supabase
+      .from('wash_request_vehicles')
+      .select(`
+        vehicle_id,
+        vehicles:vehicle_id(*)
+      `)
+      .eq('wash_request_id', washRequestId);
+
+    if (vehicleError) {
+      console.error("Error retrieving wash request vehicles:", vehicleError);
+      return null;
+    }
+
+    // Format the data to match our application models
+    const formattedRequest = {
+      id: washRequest.id,
+      customerId: washRequest.user_id,
+      vehicles: washVehicles.map(v => v.vehicle_id),
+      vehicleDetails: washVehicles.map(v => v.vehicles),
+      preferredDates: {
+        start: new Date(washRequest.preferred_date_start),
+        end: washRequest.preferred_date_end ? new Date(washRequest.preferred_date_end) : undefined
+      },
+      status: washRequest.status,
+      technician: washRequest.technician_id,
+      price: washRequest.price,
+      notes: washRequest.notes,
+      createdAt: new Date(washRequest.created_at),
+      updatedAt: new Date(washRequest.updated_at),
+      organizationId: washRequest.organization_id,
+      locationId: washRequest.location_id,
+      location: washRequest.location
+    };
+
+    return formattedRequest;
+  } catch (error) {
+    console.error("Error getting full wash request:", error);
+    return null;
+  }
+};
