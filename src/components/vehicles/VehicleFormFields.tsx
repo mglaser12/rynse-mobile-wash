@@ -22,6 +22,7 @@ interface VehicleFormFieldsProps {
   disabled?: boolean;
   onLocationChange?: (locationId: string) => void;
   locationRequired?: boolean;
+  showLocation?: boolean; // New prop to control location visibility
 }
 
 export function VehicleFormFields({
@@ -30,12 +31,13 @@ export function VehicleFormFields({
   disabled = false,
   onLocationChange,
   locationRequired = false,
+  showLocation = true, // Default to showing location
 }: VehicleFormFieldsProps) {
   const { locations } = useLocations();
 
   return (
     <>
-      {onLocationChange && (
+      {onLocationChange && showLocation && (
         <div className="space-y-1.5">
           <Label htmlFor="location" className={locationRequired ? "after:content-['*'] after:text-red-500 after:ml-1" : ""}>
             Location

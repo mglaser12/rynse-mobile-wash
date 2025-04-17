@@ -59,16 +59,17 @@ export function VehicleCard({
               {vehicle.year} • {vehicle.color} • {vehicle.licensePlate}
             </p>
             <div className="mt-1 flex items-center flex-wrap gap-1">
-              <Badge variant="outline" className="text-xs">
-                {vehicle.type}
-              </Badge>
-              
+              {/* Show location badge first if available */}
               {locationName && (
                 <Badge variant="outline" className="text-xs flex items-center gap-1 bg-blue-50">
                   <MapPin className="h-3 w-3" />
                   {locationName}
                 </Badge>
               )}
+              
+              <Badge variant="outline" className="text-xs">
+                {vehicle.type}
+              </Badge>
             </div>
           </div>
         </div>

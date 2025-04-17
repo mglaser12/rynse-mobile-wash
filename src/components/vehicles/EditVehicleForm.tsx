@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Vehicle } from "@/models/types";
 import { useVehicles } from "@/contexts/VehicleContext";
+import { useLocations } from "@/contexts/LocationContext";
 import { Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { VehicleImageUploader } from "./VehicleImageUploader";
 import { VehicleFormFields, VehicleFormData } from "./VehicleFormFields";
 import { DeleteVehicleDialog } from "./DeleteVehicleDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EditVehicleFormProps {
   vehicle: Vehicle;
@@ -20,6 +23,7 @@ export function EditVehicleForm({ vehicle, onCancel, onSuccess }: EditVehicleFor
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [currentLocationId, setCurrentLocationId] = useState<string>("");
   
   const [vehicleData, setVehicleData] = useState<VehicleFormData & {image?: string}>({
     make: vehicle.make,
@@ -30,8 +34,26 @@ export function EditVehicleForm({ vehicle, onCancel, onSuccess }: EditVehicleFor
     color: vehicle.color,
     vinNumber: vehicle.vinNumber,
     image: vehicle.image,
-    locationId: "", // Initialize with empty string, will be populated if needed
+    locationId: "", // Will be populated after fetching
   });
+
+  // Fetch the current location for this vehicle when the component mounts
+  useEffect(() => {
+    const fetchVehicleLocation = async () => {
+      const { data, error } = await supabase
+        .from('location_vehicles')
+        .select('location_id')
+        .eq('vehicle_id', vehicle.id)
+        .maybeSingle();
+      
+      if (data && data.location_id) {
+        setCurrentLocationId(data.location_id);
+        setVehicleData(prev => ({ ...prev, locationId: data.location_id }));
+      }
+    };
+    
+    fetchVehicleLocation();
+  }, [vehicle.id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -98,6 +120,7 @@ export function EditVehicleForm({ vehicle, onCancel, onSuccess }: EditVehicleFor
           onLocationChange={handleLocationChange}
           disabled={isLoading || isDeleting}
           locationRequired={false}
+          showLocation={true}
         />
         
         <div>
