@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { getFullWashRequest } from "./api/washRequestDetails";
 import { createVehicleAssociations } from "./api/vehicleApi";
 import { insertWashRequestStandard, insertWashRequestDirect } from "./api/washRequestApiClient";
+import { getUserOrganizationId } from "./api/organizationApi";
 
 /**
  * Create a new wash request in the database
@@ -13,6 +14,10 @@ import { insertWashRequestStandard, insertWashRequestDirect } from "./api/washRe
 export async function createWashRequest(data: CreateWashRequestData): Promise<WashRequest | null> {
   try {
     console.log("Creating wash request with data:", data);
+
+    // Get the user's organization_id
+    const organizationId = await getUserOrganizationId(data.customerId);
+    console.log("User organization ID for wash request:", organizationId);
 
     // Create the wash request data object
     const washRequestData = {
@@ -23,7 +28,8 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
       price: data.price,
       notes: data.notes || null,
       location_id: data.locationId || null,
-      location_detail_id: data.locationId || null
+      location_detail_id: data.locationId || null,
+      organization_id: organizationId // Add organization_id to wash request data
     };
 
     console.log("Inserting wash request with:", washRequestData);

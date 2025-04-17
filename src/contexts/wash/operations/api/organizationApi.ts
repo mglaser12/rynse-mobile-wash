@@ -1,29 +1,40 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { getDefaultOrganization } from "@/contexts/auth/useOrganization";
 
 /**
  * Get the organization ID for a user
- * @param userId The user ID
- * @param providedOrgId Optional organization ID that may already be provided
- * @returns The organization ID to use
+ * @param userId User ID
+ * @returns Organization ID if found, null otherwise
  */
-export const getUserOrganizationId = async (userId: string, providedOrgId?: string): Promise<string | undefined> => {
-  // If an organization ID is already provided, use it
-  if (providedOrgId) {
-    return providedOrgId;
-  }
-  
+export async function getUserOrganizationId(userId: string): Promise<string | null> {
   try {
-    // Get the user's organization_id from their profile
-    const { data: profileData } = await supabase
+    console.log("Getting organization ID for user:", userId);
+    
+    // Try to get the organization ID from the user's profile
+    const { data: userData, error: userError } = await supabase
       .from('profiles')
       .select('organization_id')
       .eq('id', userId)
       .single();
       
-    return profileData?.organization_id;
+    if (userError) {
+      console.error("Error fetching user profile:", userError);
+      // If there's an error, try to get the default organization
+      return getDefaultOrganization();
+    }
+    
+    // If the user has an organization ID, return it
+    if (userData?.organization_id) {
+      console.log("User organization ID found:", userData.organization_id);
+      return userData.organization_id;
+    }
+    
+    // If the user doesn't have an organization ID, try to get the default organization
+    console.log("User has no organization ID, getting default organization");
+    return getDefaultOrganization();
   } catch (error) {
-    console.error("Error getting user organization ID:", error);
-    return undefined;
+    console.error("Error in getUserOrganizationId:", error);
+    return null;
   }
-};
+}
