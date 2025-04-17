@@ -37,14 +37,25 @@ export function CompletedWashDialog({ washRequest, open, onOpenChange }: Complet
   useEffect(() => {
     const fetchTechnicianName = async () => {
       if (washRequest.technician) {
+        console.log("Fetching technician name for ID:", washRequest.technician);
+        
+        // Fix: Use correct query parameter structure for Supabase client
         const { data, error } = await supabase
           .from('profiles')
           .select('name')
           .eq('id', washRequest.technician)
           .single();
           
+        if (error) {
+          console.error("Error fetching technician name:", error);
+          return;
+        }
+        
         if (data?.name) {
+          console.log("Found technician name:", data.name);
           setTechnicianName(data.name);
+        } else {
+          console.log("No technician name found");
         }
       }
     };
@@ -54,6 +65,11 @@ export function CompletedWashDialog({ washRequest, open, onOpenChange }: Complet
         .from('vehicle_wash_statuses')
         .select('*')
         .eq('wash_request_id', washRequest.id);
+      
+      if (error) {
+        console.error("Error fetching vehicle wash statuses:", error);
+        return;
+      }
       
       if (data) {
         // Map the response data to our VehicleWashStatus type
@@ -83,11 +99,17 @@ export function CompletedWashDialog({ washRequest, open, onOpenChange }: Complet
                 <span>{format(washRequest.updatedAt, "PPp")}</span>
               </div>
               
-              {technicianName && (
+              {technicianName ? (
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
                   <Label className="font-medium">Technician:</Label>
                   <span>{technicianName}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <Label className="font-medium">Technician:</Label>
+                  <span className="text-muted-foreground">Not assigned</span>
                 </div>
               )}
             </CardContent>
