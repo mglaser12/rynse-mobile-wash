@@ -5,3 +5,4 @@ export { getUserOrganizationId } from './organizationApi';
 export { createVehicleAssociations } from './vehicleApi';
 export { insertWashRequestStandard, insertWashRequestDirect } from './washRequestApiClient';
 export { getFullWashRequest } from './washRequestDetails';
+export { handleSupabaseError, handleDirectApiResponse, logApiError } from './apiErrorHandling';

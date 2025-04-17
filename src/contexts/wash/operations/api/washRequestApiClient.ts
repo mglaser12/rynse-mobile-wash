@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { WashStatus } from "@/models/types";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabaseApi";
+import { handleSupabaseError, handleDirectApiResponse } from "./apiErrorHandling";
 
 interface WashRequestInsertData {
   user_id: string;
@@ -29,15 +30,53 @@ export const insertWashRequestStandard = async (
       .single();
 
     if (error) {
-      console.error("Error with standard insert:", error);
-      return null;
+      return handleSupabaseError("standard insert", error);
     }
 
     return result;
   } catch (error) {
-    console.error("Exception in standard insert:", error);
-    return null;
+    return handleSupabaseError("standard insert exception", error);
   }
+};
+
+/**
+ * Generate a UUID for the new request
+ */
+const generateRequestId = (): string => {
+  return crypto.randomUUID();
+};
+
+/**
+ * Prepare headers for direct API request
+ */
+const prepareApiHeaders = (accessToken: string | undefined) => {
+  return {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${accessToken || ''}`,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+  };
+};
+
+/**
+ * Make the direct API request to insert wash request
+ */
+const makeDirectApiRequest = async (
+  requestId: string, 
+  insertData: WashRequestInsertData, 
+  accessToken: string | undefined
+) => {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests`, {
+    method: 'POST',
+    headers: prepareApiHeaders(accessToken),
+    body: JSON.stringify({
+      id: requestId,
+      ...insertData
+    })
+  });
+
+  const result = await handleDirectApiResponse(response, "direct wash request insert");
+  return result ? { id: requestId, ...result } : null;
 };
 
 /**
@@ -48,32 +87,9 @@ export const insertWashRequestDirect = async (
   accessToken: string | undefined
 ) => {
   try {
-    const requestId = crypto.randomUUID(); // Generate a UUID for the new request
-    
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${accessToken || ''}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      },
-      body: JSON.stringify({
-        id: requestId,
-        ...insertData
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Direct API insert failed:", errorText);
-      return null;
-    }
-
-    const responseData = await response.json();
-    return { id: requestId, ...responseData };
+    const requestId = generateRequestId();
+    return await makeDirectApiRequest(requestId, insertData, accessToken);
   } catch (error) {
-    console.error("Exception in direct insert:", error);
-    return null;
+    return handleSupabaseError("direct insert exception", error);
   }
 };
