@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,24 +7,24 @@ import { useVehicles } from "@/contexts/VehicleContext";
 import { Calendar, Car, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocations } from "@/contexts/LocationContext";
+import { CompletedWashDialog } from "@/components/wash/CompletedWashDialog";
+
 interface WashRequestCardProps {
   washRequest: WashRequest;
   onClick?: () => void;
   actions?: React.ReactNode;
   showDetailsButton?: boolean;
 }
+
 export function WashRequestCard({
   washRequest,
   onClick,
   actions,
   showDetailsButton = false
 }: WashRequestCardProps) {
-  const {
-    vehicles
-  } = useVehicles();
-  const {
-    locations
-  } = useLocations();
+  const [showCompletedDialog, setShowCompletedDialog] = useState(false);
+  const { vehicles } = useVehicles();
+  const { locations } = useLocations();
 
   // Use either vehicleDetails from the request or find them in the vehicles context
   // Filter out any null or undefined values to prevent errors
@@ -59,61 +58,92 @@ export function WashRequestCard({
     }
     return `${format(start, "MMM dd")} - ${format(end, "MMM dd, yyyy")}`;
   };
-  return <Card className={`overflow-hidden ${onClick ? "cursor-pointer hover:border-primary transition-colors" : ""}`} onClick={onClick ? onClick : undefined}>
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start">
-          <div className="space-y-1">
-            <Badge className={`${statusColors[washRequest.status]}`}>
-              {statusMessages[washRequest.status]}
-            </Badge>
-            <h4 className="font-medium">
-              {requestVehicles.length} Vehicle{requestVehicles.length !== 1 && "s"}
-            </h4>
-          </div>
-          <div className="text-right">
-            <p className="font-medium">${washRequest.price.toFixed(2)}</p>
-            <p className="text-xs text-muted-foreground">
-              {format(washRequest.createdAt, "MMM dd, yyyy")}
-            </p>
-          </div>
-        </div>
-        
-        <div className="mt-3 space-y-2 text-sm">
-          {/* Location information */}
-          {locationInfo && <div className="flex gap-2">
-              <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-              <span>{locationInfo.name}</span>
-            </div>}
-          
-          <div className="flex gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
-            <span>{formatDateRange()}</span>
-          </div>
-          
-          <div className="flex gap-2">
-            <Car className="h-4 w-4 text-muted-foreground mt-0.5" />
-            <div>
-              {requestVehicles.length > 0 ? <>
-                  {requestVehicles.slice(0, 2).map((vehicle, index) => <span key={vehicle.id || index}>
-                      {vehicle.make} {vehicle.model}
-                      {index < Math.min(requestVehicles.length, 2) - 1 && ", "}
-                    </span>)}
-                  {requestVehicles.length > 2 && ` +${requestVehicles.length - 2} more`}
-                </> : <span>No vehicles</span>}
+
+  const handleClick = () => {
+    if (washRequest.status === "completed") {
+      setShowCompletedDialog(true);
+    } else if (onClick) {
+      onClick();
+    }
+  };
+
+  return (
+    <>
+      <Card 
+        className={`overflow-hidden ${onClick || washRequest.status === "completed" ? "cursor-pointer hover:border-primary transition-colors" : ""}`} 
+        onClick={handleClick}
+      >
+        <CardContent className="p-4">
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <Badge className={`${statusColors[washRequest.status]}`}>
+                {statusMessages[washRequest.status]}
+              </Badge>
+              <h4 className="font-medium">
+                {requestVehicles.length} Vehicle{requestVehicles.length !== 1 && "s"}
+              </h4>
+            </div>
+            <div className="text-right">
+              <p className="font-medium">${washRequest.price.toFixed(2)}</p>
+              <p className="text-xs text-muted-foreground">
+                {format(washRequest.createdAt, "MMM dd, yyyy")}
+              </p>
             </div>
           </div>
-        </div>
-        
-        {actions && <div className="mt-4">{actions}</div>}
-        
-        {showDetailsButton && washRequest.status === "completed" && !onClick && <div className="mt-4">
-            <Button variant="outline" size="sm" className="w-full" onClick={e => {
-          e.stopPropagation();
-          if (typeof onClick === 'function') onClick();
-        }}>
-              View Wash Details
-            </Button>
-          </div>}
-      </CardContent>
-    </Card>;
+          
+          <div className="mt-3 space-y-2 text-sm">
+            {/* Location information */}
+            {locationInfo && <div className="flex gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <span>{locationInfo.name}</span>
+              </div>}
+            
+            <div className="flex gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
+              <span>{formatDateRange()}</span>
+            </div>
+            
+            <div className="flex gap-2">
+              <Car className="h-4 w-4 text-muted-foreground mt-0.5" />
+              <div>
+                {requestVehicles.length > 0 ? <>
+                    {requestVehicles.slice(0, 2).map((vehicle, index) => <span key={vehicle.id || index}>
+                        {vehicle.make} {vehicle.model}
+                        {index < Math.min(requestVehicles.length, 2) - 1 && ", "}
+                      </span>)}
+                    {requestVehicles.length > 2 && ` +${requestVehicles.length - 2} more`}
+                  </> : <span>No vehicles</span>}
+              </div>
+            </div>
+          </div>
+          
+          {actions && <div className="mt-4">{actions}</div>}
+          
+          {showDetailsButton && washRequest.status === "completed" && !onClick && (
+            <div className="mt-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCompletedDialog(true);
+                }}
+              >
+                View Wash Details
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {showCompletedDialog && (
+        <CompletedWashDialog
+          washRequest={washRequest}
+          open={showCompletedDialog}
+          onOpenChange={setShowCompletedDialog}
+        />
+      )}
+    </>
+  );
 }
