@@ -12,6 +12,59 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
   try {
     console.log("Creating wash request with data:", data);
 
+    // Check if we need to sync locations between tables
+    if (data.locationId) {
+      const { data: locationData, error: locationFetchError } = await supabase
+        .from('locations')
+        .select('*')
+        .eq('id', data.locationId)
+        .single();
+        
+      if (locationFetchError) {
+        console.error("Error fetching location:", locationFetchError);
+        toast.error("Failed to create wash request - location not found");
+        return null;
+      }
+      
+      // Check if this location exists in wash_locations table
+      const { data: washLocation, error: washLocationError } = await supabase
+        .from('wash_locations')
+        .select('id')
+        .eq('name', locationData.name)
+        .eq('address', locationData.address)
+        .single();
+        
+      if (washLocationError || !washLocation) {
+        // Location doesn't exist in wash_locations table, create it
+        console.log("Location not found in wash_locations, creating entry");
+        const { data: newWashLocation, error: createError } = await supabase
+          .from('wash_locations')
+          .insert({
+            name: locationData.name,
+            address: locationData.address,
+            city: locationData.city,
+            state: locationData.state,
+            zip_code: locationData.zip_code,
+            latitude: locationData.latitude,
+            longitude: locationData.longitude
+          })
+          .select('id')
+          .single();
+          
+        if (createError) {
+          console.error("Error creating location in wash_locations:", createError);
+          toast.error("Failed to create wash request - couldn't sync location");
+          return null;
+        }
+        
+        // Use the newly created wash_location id instead
+        data.locationId = newWashLocation.id;
+      } else {
+        // Use the existing wash_location id
+        data.locationId = washLocation.id;
+      }
+    }
+
     // Insert the wash request
     const { data: washRequest, error: washError } = await supabase
       .from('wash_requests')
