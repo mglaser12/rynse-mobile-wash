@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { WashStatus, Vehicle } from "@/models/types";
 import { toast } from "sonner";
@@ -213,6 +214,9 @@ export const getFullWashRequest = async (washRequestId: string) => {
     });
 
     // Format the data to match our application models
+    // Ensure status is explicitly cast as WashStatus
+    const status = washRequest.status as WashStatus;
+    
     const formattedRequest = {
       id: washRequest.id,
       customerId: washRequest.user_id,
@@ -222,7 +226,7 @@ export const getFullWashRequest = async (washRequestId: string) => {
         start: new Date(washRequest.preferred_date_start),
         end: washRequest.preferred_date_end ? new Date(washRequest.preferred_date_end) : undefined
       },
-      status: washRequest.status,
+      status: status,
       technician: washRequest.technician_id,
       price: washRequest.price,
       notes: washRequest.notes,

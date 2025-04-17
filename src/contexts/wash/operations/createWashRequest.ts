@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { CreateWashRequestData } from "../types";
-import { WashRequest } from "@/models/types";
+import { WashRequest, WashStatus } from "@/models/types";
 import { toast } from "sonner";
 import { getFullWashRequest } from "./washRequestApi";
 
@@ -19,10 +19,10 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
         user_id: data.customerId,
         preferred_date_start: data.preferredDates.start.toISOString(),
         preferred_date_end: data.preferredDates.end ? data.preferredDates.end.toISOString() : null,
-        status: 'pending',
+        status: 'pending' as WashStatus, // Explicitly type as WashStatus
         price: data.price,
         notes: data.notes || null,
-        location_id: data.locationId || null // Save locationId to the database
+        location_id: data.locationId || null
       })
       .select()
       .single();
