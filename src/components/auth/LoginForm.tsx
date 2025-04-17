@@ -19,6 +19,7 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
+  const loginAttemptRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   useEffect(() => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
@@ -63,9 +64,15 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
       
       if (user && onSuccess) {
         console.log("Calling onSuccess callback");
-        setTimeout(() => {
+        
+        // Set a safety timeout to ensure we don't get stuck
+        loginAttemptRef.current = setTimeout(() => {
+          console.log("Login success timeout triggered - forcing callback");
           onSuccess();
-        }, 100);
+        }, 2000);
+        
+        // Call immediately but also have the safety timeout
+        onSuccess();
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -73,6 +80,14 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (loginAttemptRef.current) {
+        clearTimeout(loginAttemptRef.current);
+      }
+    };
+  }, []);
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);

@@ -32,9 +32,6 @@ export const useSession = () => {
       setIsAuthenticated(true);
     }
     
-    // Track attempts to prevent infinite checking
-    sessionCheckAttempts.current += 1;
-    
     // Create a timeout to prevent hanging on network issues
     const timeoutId = setTimeout(() => {
       console.log("Session check timed out");
@@ -92,10 +89,8 @@ export const useSession = () => {
             avatarUrl: profile?.avatarUrl
           };
           
-          // Update state immediately to ensure auth check works
           setUser(updatedUser);
           setIsAuthenticated(true);
-          
           saveUserProfileToStorage(updatedUser);
           console.log("Session loaded successfully, authenticated as:", updatedUser.name);
         } catch (profileError) {
@@ -110,14 +105,11 @@ export const useSession = () => {
           
           setUser(fallbackUser);
           setIsAuthenticated(true);
-          
           saveUserProfileToStorage(fallbackUser);
         }
       } else {
         console.log("No session found");
-        
         saveUserProfileToStorage(null);
-        
         setUser(null);
         setIsAuthenticated(false);
       }
@@ -138,9 +130,7 @@ export const useSession = () => {
       setIsLoading(false);
       sessionCheckInProgress.current = false;
       console.log("Session check complete, loading set to false");
-      
-      // Reset attempt counter on successful completion
-      sessionCheckAttempts.current = 0;
+      sessionCheckAttempts.current = 0; // Reset attempt counter on successful completion
     }
   }, []);
 

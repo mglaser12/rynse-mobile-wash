@@ -19,7 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const initialized = useRef(false);
   
-  // Setup auth subscription with improved logging
+  // Setup auth subscription
   useAuthSubscription(
     (user) => {
       console.log("Auth subscription updating user:", user ? `User ${user.id} (${user.role || 'no role'})` : "No user");
