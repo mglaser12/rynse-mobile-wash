@@ -4,7 +4,7 @@ import { WashRequest } from "@/models/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Loader2, Calendar, MapPin } from "lucide-react";
+import { AlertTriangle, Loader2, Calendar, MapPin, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { JobScheduler } from "./JobScheduler";
 import { Card } from "@/components/ui/card";
@@ -18,8 +18,9 @@ interface RequestDetailDialogProps {
   onAcceptRequest: (id: string) => void;
   onStartWash: (id: string) => void;
   onCompleteWash: (id: string) => void;
+  onCancelAcceptance?: (id: string) => void; // Add new prop for canceling acceptance
   onScheduleJob?: (requestId: string, scheduledDate: Date) => Promise<boolean>;
-  readOnly?: boolean; // Added readOnly prop as optional
+  readOnly?: boolean;
 }
 
 export const RequestDetailDialog = ({
@@ -31,8 +32,9 @@ export const RequestDetailDialog = ({
   onAcceptRequest,
   onStartWash,
   onCompleteWash,
+  onCancelAcceptance, // Use the new prop
   onScheduleJob,
-  readOnly = false // Default to false for backward compatibility
+  readOnly = false
 }: RequestDetailDialogProps) => {
   const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
 
@@ -141,20 +143,44 @@ export const RequestDetailDialog = ({
                 )}
                 
                 {selectedRequest.status === "confirmed" && isAssignedTechnician && (
-                  <Button 
-                    className="w-full" 
-                    onClick={() => onStartWash(selectedRequest.id)}
-                    disabled={isUpdating}
-                  >
-                    {isUpdating ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Processing...
-                      </>
-                    ) : (
-                      isMockRequest ? "Demo Mode - Start Wash" : "Start Wash"
+                  <div className="space-y-2">
+                    <Button 
+                      className="w-full" 
+                      onClick={() => onStartWash(selectedRequest.id)}
+                      disabled={isUpdating}
+                    >
+                      {isUpdating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Processing...
+                        </>
+                      ) : (
+                        isMockRequest ? "Demo Mode - Start Wash" : "Start Wash"
+                      )}
+                    </Button>
+                    
+                    {/* Add Cancel Acceptance button for confirmed jobs */}
+                    {onCancelAcceptance && (
+                      <Button 
+                        variant="outline" 
+                        className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" 
+                        onClick={() => onCancelAcceptance(selectedRequest.id)}
+                        disabled={isUpdating}
+                      >
+                        {isUpdating ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <X className="h-4 w-4 mr-2" />
+                            Cancel Acceptance
+                          </>
+                        )}
+                      </Button>
                     )}
-                  </Button>
+                  </div>
                 )}
                 
                 {selectedRequest.status === "in_progress" && isAssignedTechnician && (

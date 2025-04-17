@@ -38,9 +38,15 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
       updateData.status = data.status;
     }
     
-    if (data.technician) {
-      console.log("Setting technician_id to:", data.technician);
-      updateData.technician_id = data.technician;
+    // Handle technician assignment/unassignment
+    if (data.technician !== undefined) {
+      if (data.technician === null) {
+        console.log("Clearing technician_id");
+        updateData.technician_id = null;
+      } else {
+        console.log("Setting technician_id to:", data.technician);
+        updateData.technician_id = data.technician;
+      }
     }
     
     if (data.notes) {

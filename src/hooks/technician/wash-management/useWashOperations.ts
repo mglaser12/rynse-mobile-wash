@@ -2,7 +2,8 @@
 import { 
   useAcceptOperations,
   useWashProgressOperations,
-  useViewOperations 
+  useViewOperations,
+  useCancelAcceptanceOperations
 } from './operations';
 
 interface UseWashOperationsProps {
@@ -56,6 +57,13 @@ export function useWashOperations({
     setSelectedRequestId
   });
 
+  const { handleCancelAcceptance } = useCancelAcceptanceOperations({
+    updateWashRequest,
+    loadData,
+    setIsUpdating,
+    setSelectedRequestId
+  });
+
   // Return all operations from a single interface
   return {
     handleAcceptRequest,
@@ -64,6 +72,7 @@ export function useWashOperations({
     handleReopenWash,
     handleCompleteWash,
     handleWashProgressComplete,
-    handleViewJobDetails
+    handleViewJobDetails,
+    handleCancelAcceptance
   };
 }

@@ -23,6 +23,7 @@ const TechnicianJobsPage = () => {
     handleReopenWash,
     handleCompleteWash,
     handleWashProgressComplete,
+    handleCancelAcceptance,
     loadData
   } = useWashManagement();
 
@@ -86,6 +87,7 @@ const TechnicianJobsPage = () => {
         onAcceptRequest={handleAcceptRequest}
         onStartWash={handleStartWash}
         onCompleteWash={handleCompleteWash}
+        onCancelAcceptance={handleCancelAcceptance}
         onScheduleJob={handleScheduleJob}
       />
 

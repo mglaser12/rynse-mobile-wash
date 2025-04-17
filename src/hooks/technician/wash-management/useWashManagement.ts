@@ -34,7 +34,8 @@ export function useWashManagement() {
     handleReopenWash,
     handleCompleteWash,
     handleWashProgressComplete,
-    handleViewJobDetails
+    handleViewJobDetails,
+    handleCancelAcceptance
   } = useWashOperations({
     user,
     updateWashRequest,
@@ -70,6 +71,7 @@ export function useWashManagement() {
     handleReopenWash,
     handleCompleteWash,
     handleWashProgressComplete,
-    handleViewJobDetails
+    handleViewJobDetails,
+    handleCancelAcceptance
   };
 }
