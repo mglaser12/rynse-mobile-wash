@@ -1,177 +1,117 @@
-import React, { ChangeEvent } from "react";
+
+import React from "react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { LocationSelect } from "@/components/location/LocationSelect";
+import { Label } from "@/components/ui/label";
 
 export interface VehicleFormData {
   make: string;
   model: string;
   year: string;
-  color: string;
+  color?: string;
+  type?: string;
   licensePlate?: string;
   vinNumber?: string;
-  type?: string;
-  image?: string;
 }
 
-export interface VehicleFormFieldsProps {
+interface VehicleFormFieldsProps {
   vehicleData: VehicleFormData;
-  onInputChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  disabled: boolean;
-  vehicleId?: string;
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
 }
 
-export function VehicleFormFields({ 
-  vehicleData, 
-  onInputChange, 
-  disabled,
-  vehicleId 
+export function VehicleFormFields({
+  vehicleData,
+  onInputChange,
+  disabled = false
 }: VehicleFormFieldsProps) {
-  const handleTypeChange = (value: string) => {
-    const event = {
-      target: {
-        name: "type",
-        value
-      }
-    } as ChangeEvent<HTMLInputElement>;
-    
-    onInputChange(event);
-  };
-
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label htmlFor="make" className="text-sm font-medium">
-            Make*
-          </label>
-          <Input
-            id="make"
-            name="make"
-            value={vehicleData.make}
-            onChange={onInputChange}
-            placeholder="Toyota, Honda, etc."
-            disabled={disabled}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <label htmlFor="model" className="text-sm font-medium">
-            Model*
-          </label>
-          <Input
-            id="model"
-            name="model"
-            value={vehicleData.model}
-            onChange={onInputChange}
-            placeholder="Camry, Civic, etc."
-            disabled={disabled}
-            required
-          />
-        </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="make">Make*</Label>
+        <Input
+          id="make"
+          name="make"
+          value={vehicleData.make}
+          onChange={onInputChange}
+          disabled={disabled}
+          placeholder="Toyota"
+          required
+        />
       </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label htmlFor="year" className="text-sm font-medium">
-            Year*
-          </label>
-          <Input
-            id="year"
-            name="year"
-            value={vehicleData.year}
-            onChange={onInputChange}
-            placeholder="2023"
-            disabled={disabled}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <label htmlFor="color" className="text-sm font-medium">
-            Color*
-          </label>
-          <Input
-            id="color"
-            name="color"
-            value={vehicleData.color}
-            onChange={onInputChange}
-            placeholder="Black, White, etc."
-            disabled={disabled}
-            required
-          />
-        </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="model">Model*</Label>
+        <Input
+          id="model"
+          name="model"
+          value={vehicleData.model}
+          onChange={onInputChange}
+          disabled={disabled}
+          placeholder="Camry"
+          required
+        />
       </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label htmlFor="licensePlate" className="text-sm font-medium">
-            License Plate
-          </label>
-          <Input
-            id="licensePlate"
-            name="licensePlate"
-            value={vehicleData.licensePlate || ""}
-            onChange={onInputChange}
-            placeholder="ABC123"
-            disabled={disabled}
-          />
-        </div>
-        <div className="space-y-2">
-          <label htmlFor="vinNumber" className="text-sm font-medium">
-            VIN Number
-          </label>
-          <Input
-            id="vinNumber"
-            name="vinNumber"
-            value={vehicleData.vinNumber || ""}
-            onChange={onInputChange}
-            placeholder="1HGCM82633A123456"
-            disabled={disabled}
-          />
-        </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="year">Year*</Label>
+        <Input
+          id="year"
+          name="year"
+          value={vehicleData.year}
+          onChange={onInputChange}
+          disabled={disabled}
+          placeholder="2023"
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="color">Color</Label>
+        <Input
+          id="color"
+          name="color"
+          value={vehicleData.color || ''}
+          onChange={onInputChange}
+          disabled={disabled}
+          placeholder="Blue"
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="type">Type</Label>
+        <Input
+          id="type"
+          name="type"
+          value={vehicleData.type || ''}
+          onChange={onInputChange}
+          disabled={disabled}
+          placeholder="Sedan, SUV, etc."
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="licensePlate">License Plate</Label>
+        <Input
+          id="licensePlate"
+          name="licensePlate"
+          value={vehicleData.licensePlate || ''}
+          onChange={onInputChange}
+          disabled={disabled}
+          placeholder="ABC123"
+        />
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="type" className="text-sm font-medium">
-          Vehicle Type
-        </label>
-        <Select
-          value={vehicleData.type || ""}
-          onValueChange={handleTypeChange}
+        <Label htmlFor="vinNumber">VIN Number</Label>
+        <Input
+          id="vinNumber"
+          name="vinNumber"
+          value={vehicleData.vinNumber || ''}
+          onChange={onInputChange}
           disabled={disabled}
-        >
-          <SelectTrigger id="type">
-            <SelectValue placeholder="Select vehicle type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="sedan">Sedan</SelectItem>
-            <SelectItem value="suv">SUV</SelectItem>
-            <SelectItem value="truck">Truck</SelectItem>
-            <SelectItem value="van">Van</SelectItem>
-            <SelectItem value="coupe">Coupe</SelectItem>
-            <SelectItem value="convertible">Convertible</SelectItem>
-            <SelectItem value="hatchback">Hatchback</SelectItem>
-            <SelectItem value="wagon">Wagon</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
-          </SelectContent>
-        </Select>
+          placeholder="1HGBH41JXMN109186"
+        />
       </div>
-
-      {/* Add LocationSelect if we have a vehicleId */}
-      {vehicleId && (
-        <div className="space-y-2">
-          <label htmlFor="location" className="text-sm font-medium">
-            Location
-          </label>
-          <LocationSelect 
-            vehicleId={vehicleId}
-            className="w-full"
-          />
-          <p className="text-xs text-muted-foreground">
-            Select where this vehicle is located
-          </p>
-        </div>
-      )}
     </div>
   );
 }

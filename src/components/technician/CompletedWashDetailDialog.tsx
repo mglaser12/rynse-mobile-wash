@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { WashRequest, Vehicle, VehicleWashStatus } from "@/models/types";
 import { 
@@ -32,10 +33,12 @@ export const CompletedWashDetailDialog = ({
   
   const { fetchWashStatusesByWashId } = useVehicleWashStatus();
   
+  // Initialize when wash request changes
   useEffect(() => {
     if (washRequest && open) {
       loadWashStatusData();
       
+      // Set active tab to first vehicle if available
       if (washRequest.vehicleDetails && washRequest.vehicleDetails.length > 0) {
         setActiveTab(washRequest.vehicleDetails[0].id);
       }
@@ -47,6 +50,7 @@ export const CompletedWashDetailDialog = ({
     
     setIsLoading(true);
     try {
+      // Fetch wash status data from database
       const statuses = await fetchWashStatusesByWashId(washRequest.id);
       setVehicleStatuses(statuses);
     } catch (e) {
@@ -73,7 +77,7 @@ export const CompletedWashDetailDialog = ({
         </DialogHeader>
         
         {isLoading ? (
-          <div className="flex items-center justify-center p-8">
+          <div className="flex justify-center items-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : washRequest.vehicleDetails.length === 0 ? (
@@ -96,11 +100,7 @@ export const CompletedWashDetailDialog = ({
               return (
                 <TabsContent key={vehicle.id} value={vehicle.id}>
                   <div className="space-y-6">
-                    <VehicleCard 
-                      vehicle={vehicle} 
-                      onClick={() => {}} 
-                      className="cursor-default hover:shadow-none"
-                    />
+                    <VehicleCard vehicle={vehicle} className="mt-2" />
                     
                     {vehicleStatus ? (
                       <Card>

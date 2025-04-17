@@ -4,24 +4,25 @@ import { ScanLine, Camera, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { OCRResult } from "@/utils/ocrUtils";
 
-// Update interface to match how it's being used in OcrSection
-export interface OcrImageUploaderProps {
-  onOcrComplete: (result: OCRResult) => void;
-  onOcrError: (error: string) => void;
-  onImageChange: (imageDataUrl?: string) => void;
-  isProcessing: boolean;
-  setIsProcessing: (isProcessing: boolean) => void;
+interface OcrImageUploaderProps {
+  onImageProcessed: (result: OCRResult, imageDataUrl?: string) => void;
+  onProcessingStateChange: (isProcessing: boolean) => void;
+  processingFunction: (file: File) => Promise<OCRResult>;
+  icon: React.ReactNode;
+  label: string;
   disabled?: boolean;
+  isProcessing?: boolean;
   capture?: "user" | "environment";
 }
 
 export function OcrImageUploader({
-  onOcrComplete,
-  onOcrError,
-  onImageChange,
-  isProcessing,
-  setIsProcessing,
+  onImageProcessed,
+  onProcessingStateChange,
+  processingFunction,
+  icon,
+  label,
   disabled = false,
+  isProcessing = false,
   capture
 }: OcrImageUploaderProps) {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,51 +30,46 @@ export function OcrImageUploader({
     if (!files || files.length === 0) return;
 
     const file = files[0];
-    setIsProcessing(true);
+    onProcessingStateChange(true);
     
     try {
-      // Create a preview of the image
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          onImageChange(e.target?.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
+      // Process the image using provided function
+      toast.info(`Processing ${label} image...`);
+      const result = await processingFunction(file);
       
-      // Mock OCR processing for now (to be implemented)
-      setTimeout(() => {
-        const result: OCRResult = {
-          success: true,
-          data: {
-            make: "Sample",
-            model: "Car"
+      if (result.success) {
+        // Create a preview of the image
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            onImageProcessed(result, e.target?.result as string);
+          } else {
+            onImageProcessed(result);
           }
         };
+        reader.readAsDataURL(file);
         
-        onOcrComplete(result);
-      }, 1500);
-      
+        toast.success(`${label} processed successfully!`);
+      } else {
+        onImageProcessed(result);
+        toast.error(result.error || `Could not extract ${label} information`);
+      }
     } catch (error) {
-      console.error("OCR processing error:", error);
-      onOcrError("Error processing image");
+      console.error(`${label} processing error:`, error);
+      toast.error(`Error processing ${label} image`);
+    } finally {
+      onProcessingStateChange(false);
     }
   };
 
-  const id = `ocr-image-upload`;
+  const id = `${label.toLowerCase().replace(/\s/g, '')}-upload`;
 
   return (
     <div className="flex-1 min-w-[120px]">
       <label htmlFor={id} className="cursor-pointer">
         <div className="border border-dashed border-gray-300 rounded-md p-4 text-center hover:bg-muted transition-colors">
-          {isProcessing ? (
-            <Loader2 className="h-8 w-8 mx-auto animate-spin text-primary" />
-          ) : (
-            <Camera className="h-8 w-8 mx-auto text-primary" />
-          )}
-          <span className="text-sm font-medium block mt-2">
-            {isProcessing ? "Processing..." : "Scan Document"}
-          </span>
+          {icon}
+          <span className="text-sm font-medium">{label}</span>
         </div>
         <input
           type="file"

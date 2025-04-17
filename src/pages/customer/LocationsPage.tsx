@@ -1,10 +1,9 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useLocations } from "@/contexts/LocationContext";
-import { useVehicles } from "@/contexts/VehicleContext";
-import { Location, Vehicle } from "@/models/types";
-import { MapPin, PlusCircle, Edit, Trash2, Star, Home, Building, Car } from "lucide-react";
+import { Location } from "@/models/types";
+import { MapPin, PlusCircle, Edit, Trash2, Star, Home, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { LocationDialog } from "@/components/location/LocationDialog";
@@ -13,55 +12,13 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription 
-} from "@/components/ui/dialog";
-import { 
-  getLocationForVehicle, 
-  assignVehicleToLocation, 
-  removeVehicleFromLocation 
-} from "@/contexts/location/locationVehicleOperations";
 
 export default function LocationsPage() {
-  const { locations, isLoading, setLocationAsDefault, deleteLocation, refreshLocations } = useLocations();
-  const { vehicles } = useVehicles();
+  const { locations, isLoading, setLocationAsDefault, deleteLocation } = useLocations();
   const [openLocationDialog, setOpenLocationDialog] = useState(false);
   const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-  const [openVehicleDialog, setOpenVehicleDialog] = useState(false);
-  const [locationVehicles, setLocationVehicles] = useState<{[locationId: string]: Vehicle[]}>({});
-  const [isManagingVehicles, setIsManagingVehicles] = useState(false);
   const isMobile = useIsMobile();
-  
-  // Load vehicles for each location
-  useEffect(() => {
-    const loadLocationVehicles = async () => {
-      const vehicleMap: {[locationId: string]: Vehicle[]} = {};
-      
-      for (const location of locations) {
-        const vehicleList: Vehicle[] = [];
-        
-        for (const vehicle of vehicles) {
-          const locationId = await getLocationForVehicle(vehicle.id);
-          if (locationId === location.id) {
-            vehicleList.push(vehicle);
-          }
-        }
-        
-        vehicleMap[location.id] = vehicleList;
-      }
-      
-      setLocationVehicles(vehicleMap);
-    };
-    
-    if (locations.length > 0 && vehicles.length > 0) {
-      loadLocationVehicles();
-    }
-  }, [locations, vehicles]);
   
   const handleAddLocation = () => {
     setSelectedLocation(null);
@@ -87,22 +44,6 @@ export default function LocationsPage() {
   
   const handleSetDefault = async (location: Location) => {
     await setLocationAsDefault(location.id);
-  };
-  
-  const handleManageVehicles = (location: Location) => {
-    setSelectedLocation(location);
-    setOpenVehicleDialog(true);
-    setIsManagingVehicles(true);
-  };
-  
-  const handleAssignVehicle = async (vehicleId: string, locationId: string) => {
-    await assignVehicleToLocation(vehicleId, locationId);
-    await refreshLocations();
-  };
-  
-  const handleRemoveVehicle = async (vehicleId: string, locationId: string) => {
-    await removeVehicleFromLocation(vehicleId, locationId);
-    await refreshLocations();
   };
 
   return (
@@ -157,23 +98,11 @@ export default function LocationsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center mb-2">
-                      <Car className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <Home className="h-4 w-4 mr-2 text-muted-foreground" />
                       <span className="text-sm">
-                        {locationVehicles[location.id]?.length || 0} {(locationVehicles[location.id]?.length || 0) === 1 ? 'vehicle' : 'vehicles'} at this location
+                        {location.vehicleCount} {location.vehicleCount === 1 ? 'vehicle' : 'vehicles'} at this location
                       </span>
                     </div>
-                    {locationVehicles[location.id]?.length > 0 && (
-                      <div className="mt-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="w-full"
-                          onClick={() => handleManageVehicles(location)}
-                        >
-                          <Car className="h-4 w-4 mr-2" /> Manage Vehicles
-                        </Button>
-                      </div>
-                    )}
                     {location.notes && (
                       <p className="text-sm text-muted-foreground mt-2">
                         {location.notes}
@@ -202,7 +131,6 @@ export default function LocationsPage() {
                         variant="destructive" 
                         size="sm"
                         onClick={() => handleDeleteLocation(location)}
-                        disabled={locationVehicles[location.id]?.length > 0}
                       >
                         <Trash2 className="h-4 w-4 mr-2" /> Delete
                       </Button>
@@ -229,87 +157,6 @@ export default function LocationsPage() {
         description={`Are you sure you want to delete "${selectedLocation?.name}"? This action cannot be undone, and any associated data will be lost.`}
         confirmText="Delete Location"
       />
-      
-      {/* Vehicle Management Dialog */}
-      <Dialog open={openVehicleDialog} onOpenChange={setOpenVehicleDialog}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle>Manage Vehicles at {selectedLocation?.name}</DialogTitle>
-            <DialogDescription>
-              Add or remove vehicles at this location
-            </DialogDescription>
-          </DialogHeader>
-          
-          {/* Vehicle list for this location */}
-          <div className="space-y-4 mt-4">
-            <h3 className="font-medium">Vehicles at this location</h3>
-            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-              {selectedLocation && locationVehicles[selectedLocation.id]?.length > 0 ? (
-                locationVehicles[selectedLocation.id].map((vehicle) => (
-                  <div key={vehicle.id} className="flex items-center justify-between bg-muted p-3 rounded-md">
-                    <div className="flex items-center">
-                      <Car className="h-5 w-5 mr-2 text-primary" />
-                      <div>
-                        <p className="font-medium">{vehicle.make} {vehicle.model}</p>
-                        <p className="text-sm text-muted-foreground">{vehicle.year} {vehicle.color}</p>
-                      </div>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleRemoveVehicle(vehicle.id, selectedLocation.id)}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-6 text-muted-foreground">
-                  No vehicles assigned to this location
-                </div>
-              )}
-            </div>
-            
-            <div className="mt-6">
-              <h3 className="font-medium mb-2">Add vehicles to this location</h3>
-              <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                {vehicles
-                  .filter(vehicle => {
-                    // Only show vehicles not already at this location
-                    const locationVehicleIds = locationVehicles[selectedLocation?.id || '']?.map(v => v.id) || [];
-                    return !locationVehicleIds.includes(vehicle.id);
-                  })
-                  .map(vehicle => (
-                    <div key={vehicle.id} className="flex items-center justify-between bg-slate-50 p-3 rounded-md">
-                      <div className="flex items-center">
-                        <Car className="h-5 w-5 mr-2" />
-                        <div>
-                          <p className="font-medium">{vehicle.make} {vehicle.model}</p>
-                          <p className="text-sm text-muted-foreground">{vehicle.year} {vehicle.color}</p>
-                        </div>
-                      </div>
-                      {selectedLocation && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleAssignVehicle(vehicle.id, selectedLocation.id)}
-                        >
-                          Add
-                        </Button>
-                      )}
-                    </div>
-                  ))
-                }
-                {vehicles.length === 0 && (
-                  <div className="text-center py-6 text-muted-foreground">
-                    No vehicles available to add
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </AppLayout>
   );
 }

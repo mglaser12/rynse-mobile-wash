@@ -1,16 +1,20 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Camera } from "lucide-react";
+import { ScanLine, Camera, Upload, Loader2 } from "lucide-react";
+import { 
+  processVinImage, 
+  processLicensePlateImage, 
+  detectVehicleFromImage,
+  OCRResult
+} from "@/utils/ocrUtils";
 import { OcrImageUploader } from "./OcrImageUploader";
 import { VehicleFormData } from "./VehicleFormFields";
-import { OCRResult } from "@/utils/ocrUtils";
 
 interface OcrSectionProps {
-  onDataUpdate: (data: Partial<VehicleFormData>) => void;
-  onImageUpdate: (image: string) => void;
+  onDataUpdate: (newData: Partial<VehicleFormData>) => void;
+  onImageUpdate: (image?: string) => void;
   isProcessing: boolean;
-  setIsProcessing: (value: boolean) => void;
+  setIsProcessing: (isProcessing: boolean) => void;
   disabled?: boolean;
 }
 
@@ -21,43 +25,93 @@ export function OcrSection({
   setIsProcessing,
   disabled = false
 }: OcrSectionProps) {
-  const handleOcrResult = (result: OCRResult) => {
+  const handleVinResult = (result: OCRResult, imageDataUrl?: string) => {
     if (result.success && result.data) {
-      // Map OCR data to vehicle data
-      const vehicleData: Partial<VehicleFormData> = {
-        make: result.data.make || "",
-        model: result.data.model || "",
-        year: result.data.year || "",
-        color: result.data.color || "",
-        licensePlate: result.data.licensePlate || "",
-        vinNumber: result.data.vinNumber || "",
-      };
-      onDataUpdate(vehicleData);
+      onDataUpdate({
+        make: result.data.make || '',
+        model: result.data.model || '',
+        year: result.data.year || '',
+        vinNumber: result.data.vinNumber || '',
+        type: result.data.type || '',
+      });
+      
+      if (imageDataUrl) {
+        onImageUpdate(imageDataUrl);
+      }
     }
-    setIsProcessing(false);
   };
 
-  const handleOcrError = (error: string) => {
-    console.error("OCR Error:", error);
-    setIsProcessing(false);
+  const handleLicensePlateResult = (result: OCRResult, imageDataUrl?: string) => {
+    if (result.success && result.data) {
+      onDataUpdate({
+        licensePlate: result.data.licensePlate || '',
+      });
+      
+      if (imageDataUrl) {
+        onImageUpdate(imageDataUrl);
+      }
+    }
+  };
+
+  const handleVehiclePhotoResult = (result: OCRResult, imageDataUrl?: string) => {
+    if (result.success && result.data) {
+      onDataUpdate({
+        type: result.data.type || '',
+        make: result.data.make || '',
+        model: result.data.model || '',
+        year: result.data.year || '',
+      });
+      
+      if (imageDataUrl) {
+        onImageUpdate(imageDataUrl);
+      }
+    }
   };
 
   return (
     <div className="space-y-2">
-      <h4 className="text-sm font-medium">
-        Scan Registration or License Plate
-      </h4>
-      <OcrImageUploader
-        onOcrComplete={handleOcrResult}
-        onOcrError={handleOcrError}
-        onImageChange={(image) => image && onImageUpdate(image)}
-        isProcessing={isProcessing}
-        setIsProcessing={setIsProcessing}
-        disabled={disabled}
-      />
-      <p className="text-xs text-muted-foreground">
-        Upload an image of your vehicle registration or license plate to automatically fill in details
-      </p>
+      <label className="text-sm font-medium">Use OCR to Auto-Fill</label>
+      
+      <div className="flex flex-wrap gap-2">
+        <OcrImageUploader
+          onImageProcessed={handleVinResult}
+          onProcessingStateChange={setIsProcessing}
+          processingFunction={processVinImage}
+          icon={<ScanLine className="h-5 w-5 mx-auto mb-2" />}
+          label="Scan VIN"
+          disabled={disabled}
+          isProcessing={isProcessing}
+          capture="environment"
+        />
+        
+        <OcrImageUploader
+          onImageProcessed={handleLicensePlateResult}
+          onProcessingStateChange={setIsProcessing}
+          processingFunction={processLicensePlateImage}
+          icon={<Camera className="h-5 w-5 mx-auto mb-2" />}
+          label="Scan License"
+          disabled={disabled}
+          isProcessing={isProcessing}
+          capture="environment"
+        />
+        
+        <OcrImageUploader
+          onImageProcessed={handleVehiclePhotoResult}
+          onProcessingStateChange={setIsProcessing}
+          processingFunction={detectVehicleFromImage}
+          icon={<Upload className="h-5 w-5 mx-auto mb-2" />}
+          label="Vehicle Photo"
+          disabled={disabled}
+          isProcessing={isProcessing}
+        />
+      </div>
+      
+      {isProcessing && (
+        <div className="flex items-center justify-center py-2">
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          <span className="text-sm">Processing image...</span>
+        </div>
+      )}
     </div>
   );
 }
