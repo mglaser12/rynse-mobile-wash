@@ -60,52 +60,65 @@ export const getFullWashRequest = async (washRequestId: string) => {
     // Ensure location data is properly formatted or set to undefined
     let locationData = undefined;
     
-    // Create properly typed location data from the response
+    // First, check if washRequest exists and has a location property
     if (washRequest && washRequest.location) {
-      // Explicitly cast the location to a known type to help TypeScript
-      const locationResponse = washRequest.location as {
-        id: string;
-        name: string | null;
-        address: string | null;
-        city: string | null;
-        state: string | null;
-        latitude: number | null;
-        longitude: number | null;
-      };
+      // Check if location is an object and not an error response
+      const locationValue = washRequest.location as unknown;
       
-      // Process location data with proper type checking
-      let locationName = "Unknown Location";
-      
-      if (locationResponse.name) {
-        locationName = locationResponse.name;
-      }
-        
-      // Only create address if all components are available
-      let formattedAddress: string | undefined = undefined;
-      
-      if (locationResponse.address && 
-          locationResponse.city && 
-          locationResponse.state) {
-        formattedAddress = `${locationResponse.address}, ${locationResponse.city}, ${locationResponse.state}`;
-      }
-      
-      // Only create coordinates if both latitude and longitude are available
-      let coordinates: { lat: number; lng: number } | undefined = undefined;
-      
-      if (locationResponse.latitude && 
-          locationResponse.longitude) {
-        coordinates = { 
-          lat: locationResponse.latitude, 
-          lng: locationResponse.longitude 
+      // Only proceed if the location value looks like a valid object
+      if (
+        locationValue && 
+        typeof locationValue === 'object' && 
+        !Array.isArray(locationValue) && 
+        !('error' in locationValue)
+      ) {
+        // Now we can safely cast it to our expected type
+        const locationResponse = locationValue as {
+          id: string;
+          name: string | null;
+          address: string | null;
+          city: string | null;
+          state: string | null;
+          latitude: number | null;
+          longitude: number | null;
         };
+        
+        // Process location data with proper type checking
+        let locationName = "Unknown Location";
+        
+        if (locationResponse.name) {
+          locationName = locationResponse.name;
+        }
+          
+        // Only create address if all components are available
+        let formattedAddress: string | undefined = undefined;
+        
+        if (locationResponse.address && 
+            locationResponse.city && 
+            locationResponse.state) {
+          formattedAddress = `${locationResponse.address}, ${locationResponse.city}, ${locationResponse.state}`;
+        }
+        
+        // Only create coordinates if both latitude and longitude are available
+        let coordinates: { lat: number; lng: number } | undefined = undefined;
+        
+        if (locationResponse.latitude && 
+            locationResponse.longitude) {
+          coordinates = { 
+            lat: locationResponse.latitude, 
+            lng: locationResponse.longitude 
+          };
+        }
+        
+        // Create the location data object with all verified fields
+        locationData = {
+          name: locationName,
+          address: formattedAddress,
+          coordinates
+        };
+      } else {
+        console.warn("Location data is not in expected format:", locationValue);
       }
-      
-      // Create the location data object with all verified fields
-      locationData = {
-        name: locationName,
-        address: formattedAddress,
-        coordinates
-      };
     }
 
     // Format the data to match our application models
