@@ -4,8 +4,8 @@ import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Clock, User, Camera } from "lucide-react";
-import { WashRequest } from "@/models/types";
+import { Clock, User, Camera, FileText } from "lucide-react";
+import { WashRequest, VehicleWashStatus } from "@/models/types";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,6 +17,7 @@ interface CompletedWashDialogProps {
 
 export function CompletedWashDialog({ washRequest, open, onOpenChange }: CompletedWashDialogProps) {
   const [technicianName, setTechnicianName] = useState<string>("");
+  const [vehicleWashStatuses, setVehicleWashStatuses] = useState<VehicleWashStatus[]>([]);
   
   useEffect(() => {
     const fetchTechnicianName = async () => {
@@ -33,8 +34,20 @@ export function CompletedWashDialog({ washRequest, open, onOpenChange }: Complet
       }
     };
     
+    const fetchVehicleWashStatuses = async () => {
+      const { data, error } = await supabase
+        .from('vehicle_wash_statuses')
+        .select('*')
+        .eq('wash_request_id', washRequest.id);
+      
+      if (data) {
+        setVehicleWashStatuses(data);
+      }
+    };
+    
     fetchTechnicianName();
-  }, [washRequest.technician]);
+    fetchVehicleWashStatuses();
+  }, [washRequest.technician, washRequest.id]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -63,9 +76,9 @@ export function CompletedWashDialog({ washRequest, open, onOpenChange }: Complet
             </CardContent>
           </Card>
 
-          {/* Vehicle Details with Photos */}
+          {/* Vehicle Details with Photos and Notes */}
           {washRequest.vehicleDetails?.map(vehicle => {
-            const vehicleStatus = washRequest.vehicleWashStatuses?.find(
+            const vehicleStatus = vehicleWashStatuses.find(
               status => status.vehicleId === vehicle.id
             );
             
@@ -87,6 +100,18 @@ export function CompletedWashDialog({ washRequest, open, onOpenChange }: Complet
                           className="max-h-60 rounded-md border"
                         />
                       </div>
+                      
+                      {vehicleStatus.notes && (
+                        <div className="mt-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                            <Label className="font-medium">Technician Notes</Label>
+                          </div>
+                          <div className="bg-muted p-3 rounded-md text-sm">
+                            {vehicleStatus.notes}
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 )}
@@ -98,3 +123,4 @@ export function CompletedWashDialog({ washRequest, open, onOpenChange }: Complet
     </Dialog>
   );
 }
+
