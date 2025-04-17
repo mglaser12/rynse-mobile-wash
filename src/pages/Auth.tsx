@@ -12,6 +12,7 @@ const Auth = () => {
   const [currentView, setCurrentView] = useState<"login" | "register">("login");
   const navigate = useNavigate();
   const location = useLocation();
+  const authCheckCompleted = React.useRef(false);
 
   // Get the intended redirect path from location state, or default to "/"
   const from = location.state?.from?.pathname || "/";
@@ -22,10 +23,15 @@ const Auth = () => {
       console.log("Auth page detected authenticated user, redirecting to:", from);
       navigate(from, { replace: true });
     }
+    
+    // Mark auth check as completed once loading is done
+    if (!isLoading) {
+      authCheckCompleted.current = true;
+    }
   }, [isAuthenticated, isLoading, navigate, from]);
 
-  // Don't render anything during the loading state to prevent flicker
-  if (isLoading) {
+  // Don't render anything during the initial loading state to prevent flicker
+  if (isLoading && !authCheckCompleted.current) {
     return (
       <AppLayout hideNavigation>
         <div className="flex items-center justify-center h-screen">

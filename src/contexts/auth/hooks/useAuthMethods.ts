@@ -19,6 +19,9 @@ export const useAuthMethods = () => {
       // Clear any previous auth errors or sessions first
       await supabase.auth.signOut({ scope: 'local' });
       
+      // Add a small delay to allow signOut to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email,
         password: password,
@@ -64,7 +67,7 @@ export const useAuthMethods = () => {
       }
     } catch (error: any) {
       console.error("Login failed:", error.message);
-      toast.error("Invalid credentials");
+      toast.error(error.message || "Invalid credentials");
       return null;
     } finally {
       setIsLoading(false);

@@ -13,6 +13,7 @@ export const useSession = () => {
   const sessionCheckInProgress = useRef(false);
   const sessionCheckAttempts = useRef(0);
   const MAX_SESSION_CHECK_ATTEMPTS = 3;
+  const cachedProfileApplied = useRef(false);
 
   const getSession = useCallback(async () => {
     // Prevent concurrent session checks
@@ -24,16 +25,16 @@ export const useSession = () => {
     console.log("Getting session...");
     sessionCheckInProgress.current = true;
     
-    // Use cached profile for initial render if available
+    // Use cached profile for initial render if available and not yet applied
     const cachedProfile = getUserProfileFromStorage();
-    if (isRunningAsPWA() && cachedProfile) {
+    if (!cachedProfileApplied.current && isRunningAsPWA() && cachedProfile) {
       console.log("Using cached profile while fetching fresh session");
       setUser(cachedProfile);
       setIsAuthenticated(true);
+      cachedProfileApplied.current = true;
     }
     
     // Create a timeout to prevent hanging on network issues
-    // INCREASED TIMEOUT: from 5 seconds to 15 seconds
     const timeoutId = setTimeout(() => {
       console.log("Session check timed out");
       
@@ -48,10 +49,18 @@ export const useSession = () => {
       
       setIsLoading(false);
       sessionCheckInProgress.current = false;
-    }, 15000); // Increased from 5000 to 15000
+    }, 15000); // Extended timeout
     
     try {
       console.log("Fetching session from Supabase");
+      
+      // Make sure we have no session lingering in the client
+      if (sessionCheckAttempts.current > 0) {
+        console.log("Performing clean session fetch due to previous attempts");
+        // Add a small delay to allow previous operations to settle
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
       const { data, error } = await supabase.auth.getSession();
       
       // Clear timeout since we got a response
@@ -71,6 +80,7 @@ export const useSession = () => {
         
         setIsLoading(false);
         sessionCheckInProgress.current = false;
+        sessionCheckAttempts.current += 1;
         return;
       }
       
@@ -131,7 +141,13 @@ export const useSession = () => {
       setIsLoading(false);
       sessionCheckInProgress.current = false;
       console.log("Session check complete, loading set to false");
-      sessionCheckAttempts.current = 0; // Reset attempt counter on successful completion
+      
+      // Only retry if we have fewer attempts than the maximum
+      if (sessionCheckAttempts.current < MAX_SESSION_CHECK_ATTEMPTS) {
+        sessionCheckAttempts.current += 1;
+      } else {
+        sessionCheckAttempts.current = 0; // Reset counter on successful completion
+      }
     }
   }, []);
 
@@ -141,13 +157,12 @@ export const useSession = () => {
     getSession();
     
     // Safety timeout to prevent infinite loading state
-    // INCREASED TIMEOUT: from 8 seconds to 16 seconds
     const safetyTimeoutId = setTimeout(() => {
       if (isLoading) {
         console.log("Safety timeout triggered - forcing loading state to false");
         setIsLoading(false);
       }
-    }, 16000); // Increased from 8000 to 16000
+    }, 16000);
     
     return () => {
       console.log("Session hook cleanup");

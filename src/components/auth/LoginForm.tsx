@@ -19,9 +19,11 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [loginAttempted, setLoginAttempted] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
   const loginAttemptRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const successCallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   useEffect(() => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
@@ -53,12 +55,14 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
     e.preventDefault();
     
     if (!email || !password) {
+      setLoginError("Please enter both email and password");
       toast.error("Please enter both email and password");
       return;
     }
     
     setIsLoading(true);
     setLoginAttempted(true);
+    setLoginError(null);
     
     try {
       console.log("Attempting login with email:", email);
@@ -68,25 +72,31 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
       if (user) {
         console.log("Login successful, calling onSuccess callback");
         
-        // Clear any existing timeout
+        // Clear any existing timeouts
         if (loginAttemptRef.current) {
           clearTimeout(loginAttemptRef.current);
         }
         
+        if (successCallbackTimeoutRef.current) {
+          clearTimeout(successCallbackTimeoutRef.current);
+        }
+        
         // Set a safety timeout to ensure we don't get stuck
-        loginAttemptRef.current = setTimeout(() => {
+        successCallbackTimeoutRef.current = setTimeout(() => {
           console.log("Login success timeout triggered - forcing callback");
           if (onSuccess) onSuccess();
-        }, 2000);
+        }, 1000);
         
         // Call immediately but also have the safety timeout
         if (onSuccess) onSuccess();
       } else {
         console.log("Login failed, no user returned");
+        setLoginError("Login failed. Please check your credentials and try again.");
         toast.error("Login failed. Please check your credentials and try again.");
       }
     } catch (error) {
       console.error("Login error:", error);
+      setLoginError("An unexpected error occurred. Please try again.");
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
@@ -98,15 +108,20 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
       if (loginAttemptRef.current) {
         clearTimeout(loginAttemptRef.current);
       }
+      if (successCallbackTimeoutRef.current) {
+        clearTimeout(successCallbackTimeoutRef.current);
+      }
     };
   }, []);
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
+    setLoginError(null);
   };
   
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
+    setLoginError(null);
   };
 
   return (
@@ -158,6 +173,13 @@ export function LoginForm({ onSuccess, onRegisterClick }: LoginFormProps) {
               ref={passwordInputRef}
             />
           </div>
+          
+          {loginError && (
+            <div className="text-sm text-red-500 py-1 px-2 bg-red-50 rounded border border-red-100">
+              {loginError}
+            </div>
+          )}
+          
           <Button type="submit" className="w-full" disabled={isLoading || authLoading}>
             {isLoading ? (
               <>
