@@ -48,7 +48,10 @@ export function VehicleDialogs({
       {/* Add Vehicle Dialog */}
       <Dialog open={showAddVehicleDialog} onOpenChange={setShowAddVehicleDialog}>
         <DialogContent className="max-w-md">
-          <AddVehicleForm onSuccess={() => setShowAddVehicleDialog(false)} />
+          <AddVehicleForm 
+            onSuccess={() => setShowAddVehicleDialog(false)}
+            onCancel={() => setShowAddVehicleDialog(false)}
+          />
         </DialogContent>
       </Dialog>
 
@@ -80,8 +83,10 @@ export function VehicleDialogs({
           {selectedVehicle && (
             <EditVehicleForm
               vehicle={selectedVehicle}
-              onClose={handleEditFormClose}
-              onDelete={handleShowDeleteDialog}
+              onCancel={handleEditFormClose}
+              onSuccess={() => {
+                handleEditFormClose();
+              }}
             />
           )}
         </DialogContent>
@@ -89,13 +94,14 @@ export function VehicleDialogs({
 
       {/* Delete Vehicle Dialog */}
       <DeleteVehicleDialog
-        vehicleId={selectedVehicleId}
         isOpen={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
-        onSuccess={() => {
+        isDeleting={false}
+        onDelete={async () => {
+          // This will be handled by the DeleteVehicleDialog component
           setShowDeleteDialog(false);
           setSelectedVehicleId(null);
         }}
+        onCancel={() => setShowDeleteDialog(false)}
         vehicleName={
           selectedVehicle
             ? `${selectedVehicle.make} ${selectedVehicle.model}`

@@ -48,11 +48,12 @@ export const useVehicleWashHistory = (vehicleId: string | null) => {
         const washRequestIds = washVehiclesData.map(item => item.wash_request_id);
 
         // Get all wash requests with details
+        // Fixed the query to properly reference the location name
         const { data: washRequestsData, error: washRequestsError } = await supabase
           .from('wash_requests')
           .select(`
             *,
-            location:location_id(name)
+            locations:location_id(name)
           `)
           .in('id', washRequestIds)
           .eq('status', 'completed')
@@ -72,13 +73,19 @@ export const useVehicleWashHistory = (vehicleId: string | null) => {
         const historyItems = washRequestsData.map(request => {
           const status = washStatusData?.find(status => status.wash_request_id === request.id);
           
+          // Safely access the location name
+          let locationName = null;
+          if (request.locations && typeof request.locations === 'object' && 'name' in request.locations) {
+            locationName = request.locations.name;
+          }
+          
           return {
             id: request.id,
             date: new Date(request.updated_at),
             status: request.status,
             notes: status?.notes,
             photoUrl: status?.post_wash_photo,
-            location: request.location?.name,
+            location: locationName,
             washRequestId: request.id
           };
         });
