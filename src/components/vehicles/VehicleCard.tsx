@@ -1,67 +1,88 @@
 
+import React, { useState, useEffect } from "react";
+import { Car, MapPin } from "lucide-react";
 import { Vehicle } from "@/models/types";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Car } from "lucide-react";
+import { useLocations } from "@/contexts/LocationContext";
+import { getLocationForVehicle } from "@/contexts/location/locationVehicleOperations";
 
 interface VehicleCardProps {
   vehicle: Vehicle;
-  onClick?: () => void;
-  selected?: boolean;
-  selectionMode?: boolean;
-  className?: string; 
-  clickable?: boolean; // Added to explicitly mark a card as clickable
+  onClick: () => void;
+  isSelected?: boolean;
 }
 
-export function VehicleCard({ 
-  vehicle, 
-  onClick, 
-  selected = false, 
-  selectionMode = false,
-  className = "",
-  clickable = false
-}: VehicleCardProps) {
-  const isClickable = clickable || !!onClick;
-  
+export function VehicleCard({ vehicle, onClick, isSelected = false }: VehicleCardProps) {
+  const { getLocationById } = useLocations();
+  const [locationName, setLocationName] = useState<string | null>(null);
+
+  // Get the location name for this vehicle
+  useEffect(() => {
+    const fetchLocation = async () => {
+      const locationId = await getLocationForVehicle(vehicle.id);
+      if (locationId) {
+        const location = getLocationById(locationId);
+        if (location) {
+          setLocationName(location.name);
+        }
+      }
+    };
+    
+    fetchLocation();
+  }, [vehicle.id, getLocationById]);
+
   return (
     <Card 
-      className={`overflow-hidden transition-all duration-200 ${selected ? 'ring-2 ring-primary' : ''} ${isClickable ? 'cursor-pointer hover:bg-accent' : ''} ${className}`}
-      onClick={isClickable ? onClick : undefined}
+      onClick={onClick}
+      className={`cursor-pointer transition-all hover:shadow-md ${
+        isSelected ? 'border-primary border-2' : 'border-gray-200'
+      }`}
     >
-      <CardContent className="p-0">
-        <div className="flex items-center p-3">
-          <div className="h-14 w-14 rounded-md bg-muted flex items-center justify-center overflow-hidden">
-            {vehicle.image ? (
-              <img 
-                src={vehicle.image} 
-                alt={`${vehicle.make} ${vehicle.model}`} 
-                className="h-full w-full object-cover" 
-              />
-            ) : (
-              <Car className="h-6 w-6 text-muted-foreground" />
+      <div className="relative">
+        {vehicle.image ? (
+          <div className="h-40 w-full relative rounded-t-md overflow-hidden">
+            <img
+              src={vehicle.image}
+              alt={`${vehicle.make} ${vehicle.model}`}
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          </div>
+        ) : (
+          <div className="h-40 bg-slate-100 flex items-center justify-center rounded-t-md">
+            <Car className="h-20 w-20 text-slate-300" />
+          </div>
+        )}
+        
+        <div className={`absolute top-2 right-2 px-2 py-1 rounded ${
+          vehicle.type ? 'bg-primary/80 text-white' : 'bg-gray-200'
+        }`}>
+          <span className="text-xs font-medium">
+            {vehicle.type ? vehicle.type.charAt(0).toUpperCase() + vehicle.type.slice(1) : 'Unknown'}
+          </span>
+        </div>
+      </div>
+      
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="font-semibold text-lg">{vehicle.make} {vehicle.model}</h3>
+            <p className="text-sm text-gray-500">{vehicle.year} {vehicle.color}</p>
+            
+            {/* Display location if available */}
+            {locationName && (
+              <div className="flex items-center mt-2 text-sm text-gray-600">
+                <MapPin className="h-3 w-3 mr-1" />
+                <span>{locationName}</span>
+              </div>
             )}
           </div>
-          <div className="ml-4 flex-1">
-            <div className="flex items-center justify-between">
-              <h4 className="font-semibold">
-                {vehicle.make} {vehicle.model}
-              </h4>
-              {selectionMode && (
-                <div className="mr-1" onClick={(e) => e.stopPropagation()}>
-                  <Checkbox checked={selected} />
-                </div>
-              )}
+          
+          {vehicle.licensePlate && (
+            <div className="bg-gray-100 px-2 py-1 rounded">
+              <span className="text-xs font-medium">{vehicle.licensePlate}</span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {vehicle.year} • {vehicle.color} • {vehicle.licensePlate}
-            </p>
-            <div className="mt-1 flex items-center">
-              <Badge variant="outline" className="text-xs">
-                {vehicle.type}
-              </Badge>
-            </div>
-          </div>
+          )}
         </div>
       </CardContent>
     </Card>
