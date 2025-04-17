@@ -48,7 +48,6 @@ export const useVehicleWashHistory = (vehicleId: string | null) => {
         const washRequestIds = washVehiclesData.map(item => item.wash_request_id);
 
         // Get all wash requests with details
-        // Fixed the query to properly reference the location name
         const { data: washRequestsData, error: washRequestsError } = await supabase
           .from('wash_requests')
           .select(`
@@ -73,10 +72,11 @@ export const useVehicleWashHistory = (vehicleId: string | null) => {
         const historyItems = washRequestsData.map(request => {
           const status = washStatusData?.find(status => status.wash_request_id === request.id);
           
-          // Safely access the location name
+          // Safely access the location name with proper null checking
           let locationName = null;
-          if (request.locations && typeof request.locations === 'object' && 'name' in request.locations) {
-            locationName = request.locations.name;
+          if (request.locations && typeof request.locations === 'object') {
+            // First check if locations exists and is an object
+            locationName = 'name' in request.locations ? request.locations.name : null;
           }
           
           return {
