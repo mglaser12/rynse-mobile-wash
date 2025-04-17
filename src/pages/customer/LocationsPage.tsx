@@ -77,8 +77,8 @@ export default function LocationsPage() {
               {locations.map((location) => (
                 <Card key={location.id} className="relative">
                   {location.isDefault && (
-                    <div className="absolute -top-2 -right-2">
-                      <Badge variant="default" className="bg-yellow-500">
+                    <div className="absolute -top-2 -right-2 z-10">
+                      <Badge variant="default" className="bg-yellow-500 flex items-center px-2 py-1 shadow-sm">
                         <Star className="h-3 w-3 mr-1" /> Default
                       </Badge>
                     </div>
