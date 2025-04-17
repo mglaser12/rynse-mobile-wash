@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Clock, User, Camera, FileText } from "lucide-react";
+import { Clock, User, Camera, FileText, MapPin } from "lucide-react";
 import { WashRequest, VehicleWashStatus } from "@/models/types";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,6 +90,25 @@ export function CompletedWashDialog({ washRequest, open, onOpenChange }: Complet
         </DialogHeader>
         
         <div className="space-y-4">
+          {/* Location Info Card */}
+          {washRequest.location && (
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-start space-x-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                  <div className="space-y-1">
+                    <h4 className="font-medium">{washRequest.location.name}</h4>
+                    {washRequest.location.address && (
+                      <p className="text-sm text-muted-foreground">
+                        {washRequest.location.address}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Completion Info Card */}
           <Card>
             <CardContent className="p-4 space-y-4">
