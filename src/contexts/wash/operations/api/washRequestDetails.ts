@@ -62,15 +62,23 @@ export const getFullWashRequest = async (washRequestId: string) => {
     
     if (washRequest.location) {
       // Check if location is an actual object with properties or an error message
-      if (typeof washRequest.location === 'object' && !washRequest.location.error) {
+      if (typeof washRequest.location === 'object' && washRequest.location !== null && !('error' in washRequest.location)) {
+        const location = washRequest.location;
+        const name = location?.name || "Unknown Location";
+        const hasAddress = location?.address && location?.city && location?.state;
+        const address = hasAddress ? 
+          `${location.address}, ${location.city}, ${location.state}` : 
+          undefined;
+        
+        const hasCoordinates = typeof location?.latitude === 'number' && typeof location?.longitude === 'number';
+        const coordinates = hasCoordinates ? 
+          { lat: location.latitude, lng: location.longitude } : 
+          undefined;
+          
         locationData = {
-          name: washRequest.location.name || "Unknown Location",
-          address: washRequest.location.address ? 
-            `${washRequest.location.address}, ${washRequest.location.city}, ${washRequest.location.state}` : 
-            undefined,
-          coordinates: (washRequest.location.latitude && washRequest.location.longitude) ? 
-            { lat: washRequest.location.latitude, lng: washRequest.location.longitude } : 
-            undefined
+          name,
+          address,
+          coordinates
         };
       }
     }
