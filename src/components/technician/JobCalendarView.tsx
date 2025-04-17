@@ -1,7 +1,7 @@
 
 import React, { useEffect } from "react";
 import { WashRequest } from "@/models/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { InProgressJobs } from "./calendar/InProgressJobs";
 import { CalendarDisplay } from "./calendar/CalendarDisplay";
 import { SelectedDateJobs } from "./calendar/SelectedDateJobs";
@@ -50,7 +50,7 @@ export const JobCalendarView = ({
       {/* Calendar View */}
       <Card>
         <CardHeader>
-          <CardTitle>Job Calendar</CardTitle>
+          {/* Removed CardTitle "Job Calendar" */}
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
@@ -72,3 +72,4 @@ export const JobCalendarView = ({
       </Card>
     </div>;
 };
+
