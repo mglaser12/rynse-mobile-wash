@@ -1,29 +1,22 @@
-
 import React from "react";
 import { WashRequest } from "@/models/types";
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow 
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
-
 interface JobHistoryProps {
   completedJobs: WashRequest[];
   onViewJobDetails: (requestId: string) => void;
 }
-
-export const JobHistory = ({ completedJobs = [], onViewJobDetails }: JobHistoryProps) => {
+export const JobHistory = ({
+  completedJobs = [],
+  onViewJobDetails
+}: JobHistoryProps) => {
   const isMobile = useIsMobile();
-  
+
   // Function to get customer name based on ID
   const getCustomerName = (customerId: string) => {
     // Map the specific customer ID to the name
@@ -51,10 +44,8 @@ export const JobHistory = ({ completedJobs = [], onViewJobDetails }: JobHistoryP
         return <Badge variant="outline">{status}</Badge>;
     }
   };
-
   if (!completedJobs || completedJobs.length === 0) {
-    return (
-      <Card>
+    return <Card>
         <CardHeader>
           <CardTitle>Job History</CardTitle>
         </CardHeader>
@@ -63,23 +54,18 @@ export const JobHistory = ({ completedJobs = [], onViewJobDetails }: JobHistoryP
             No completed jobs found in your history.
           </p>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
 
   // Responsive table layout
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Job History</CardTitle>
-      </CardHeader>
+  return <Card>
+      
       <CardContent>
         <div className="overflow-x-auto">
-          {isMobile ? (
-            // Mobile card-based layout
-            <div className="space-y-4">
-              {completedJobs.map((job) => (
-                <Card key={job.id} className="p-4">
+          {isMobile ?
+        // Mobile card-based layout
+        <div className="space-y-4">
+              {completedJobs.map(job => <Card key={job.id} className="p-4">
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <p className="font-medium">{getCustomerName(job.customerId)}</p>
@@ -101,21 +87,14 @@ export const JobHistory = ({ completedJobs = [], onViewJobDetails }: JobHistoryP
                     </div>
                   </div>
                   
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => onViewJobDetails(job.id)}
-                  >
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => onViewJobDetails(job.id)}>
                     <Eye className="h-4 w-4 mr-1" />
                     View Details
                   </Button>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            // Desktop table layout
-            <Table>
+                </Card>)}
+            </div> :
+        // Desktop table layout
+        <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
@@ -127,8 +106,7 @@ export const JobHistory = ({ completedJobs = [], onViewJobDetails }: JobHistoryP
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {completedJobs.map((job) => (
-                  <TableRow key={job.id}>
+                {completedJobs.map(job => <TableRow key={job.id}>
                     <TableCell>
                       {format(job.updatedAt, "MMM dd, yyyy")}
                     </TableCell>
@@ -137,22 +115,15 @@ export const JobHistory = ({ completedJobs = [], onViewJobDetails }: JobHistoryP
                     <TableCell>${job.price.toFixed(2)}</TableCell>
                     <TableCell>{getStatusBadge(job.status)}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onViewJobDetails(job.id)}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => onViewJobDetails(job.id)}>
                         <Eye className="h-4 w-4 mr-1" />
                         View
                       </Button>
                     </TableCell>
-                  </TableRow>
-                ))}
+                  </TableRow>)}
               </TableBody>
-            </Table>
-          )}
+            </Table>}
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
