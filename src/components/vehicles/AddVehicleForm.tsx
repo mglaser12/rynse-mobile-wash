@@ -6,6 +6,7 @@ import { VehicleImageUploader } from "./VehicleImageUploader";
 import { OcrSection } from "./OcrSection";
 import { FormActions } from "./FormActions";
 import { useAddVehicleForm } from "./useAddVehicleForm";
+import { DialogTitle } from "@/components/ui/dialog";
 
 interface AddVehicleFormProps {
   onCancel: () => void;
@@ -30,7 +31,7 @@ export function AddVehicleForm({ onCancel, onSuccess }: AddVehicleFormProps) {
 
   return (
     <div>
-      <h3 className="text-lg font-medium mb-4">Add New Vehicle</h3>
+      <DialogTitle className="text-lg font-medium mb-4">Add New Vehicle</DialogTitle>
       <form onSubmit={handleSubmit} className="space-y-4">
         <VehicleFormFields 
           vehicleData={vehicleData}

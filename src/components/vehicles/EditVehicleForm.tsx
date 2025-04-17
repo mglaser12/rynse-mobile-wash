@@ -10,6 +10,7 @@ import { VehicleImageUploader } from "./VehicleImageUploader";
 import { VehicleFormFields, VehicleFormData } from "./VehicleFormFields";
 import { DeleteVehicleDialog } from "./DeleteVehicleDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { DialogTitle } from "@/components/ui/dialog";
 
 interface EditVehicleFormProps {
   vehicle: Vehicle;
@@ -115,7 +116,7 @@ export function EditVehicleForm({ vehicle, onCancel, onSuccess }: EditVehicleFor
 
   return (
     <div>
-      <h3 className="text-lg font-medium mb-4">Edit Vehicle</h3>
+      <DialogTitle className="text-lg font-medium mb-4">Edit Vehicle</DialogTitle>
       <form onSubmit={handleSubmit} className="space-y-4">
         <VehicleFormFields 
           vehicleData={vehicleData}

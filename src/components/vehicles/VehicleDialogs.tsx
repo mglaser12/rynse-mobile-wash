@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { AddVehicleForm } from "./AddVehicleForm";
 import { EditVehicleForm } from "./EditVehicleForm";
 import { Vehicle } from "@/models/types";
@@ -40,6 +40,7 @@ export function VehicleDialogs({
       {/* Add Vehicle Dialog */}
       <Dialog open={showAddVehicleDialog} onOpenChange={setShowAddVehicleDialog}>
         <DialogContent className={dialogContentClass}>
+          <DialogTitle className="sr-only">Add Vehicle</DialogTitle>
           <AddVehicleForm 
             onSuccess={() => setShowAddVehicleDialog(false)}
             onCancel={() => setShowAddVehicleDialog(false)}
@@ -50,6 +51,7 @@ export function VehicleDialogs({
       {/* Edit Vehicle Dialog */}
       <Dialog open={!!selectedVehicleId} onOpenChange={(open) => !open && handleCloseEditDialog()}>
         <DialogContent className={dialogContentClass}>
+          <DialogTitle className="sr-only">Edit Vehicle</DialogTitle>
           {selectedVehicle && (
             <EditVehicleForm 
               vehicle={selectedVehicle}

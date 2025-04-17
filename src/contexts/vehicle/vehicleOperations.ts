@@ -208,7 +208,7 @@ export async function updateVehicle(
       // First check if vehicle already has a location
       const { data: existingLocations, error: fetchError } = await supabase
         .from('location_vehicles')
-        .select('location_id')
+        .select('location_id, id')
         .eq('vehicle_id', id);
 
       if (fetchError) throw fetchError;
