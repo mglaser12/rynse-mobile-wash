@@ -18,6 +18,12 @@ export const useSession = () => {
   const lastKnownUserId = useRef<string | null>(null);
 
   const updateUserState = async (userId: string, email: string | undefined) => {
+    if (lastKnownUserId.current === userId && user?.id === userId) {
+      console.log("User state already up to date");
+      setIsAuthenticated(true);
+      return;
+    }
+
     try {
       console.log("Updating user state for:", userId);
       const profile = await loadUserProfile(userId);
@@ -77,13 +83,6 @@ export const useSession = () => {
       }
 
       if (session?.user) {
-        // Check if we already have this user's state
-        if (lastKnownUserId.current === session.user.id && user) {
-          console.log("User state already up to date");
-          setIsAuthenticated(true);
-          return;
-        }
-
         await updateUserState(session.user.id, session.user.email || undefined);
       } else {
         console.log("No session found");
@@ -96,14 +95,17 @@ export const useSession = () => {
       sessionCheckInProgress.current = false;
       setIsLoading(false);
     }
-  }, [clearUserState, user]);
+  }, [clearUserState]);
 
   // Set up auth state listener
   useEffect(() => {
+    let mounted = true;
     console.log("Setting up auth subscription");
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+        
         console.log("Auth state changed:", event, session?.user?.id);
         
         switch (event) {
@@ -121,7 +123,7 @@ export const useSession = () => {
             break;
             
           case 'TOKEN_REFRESHED':
-            if (session?.user && (!user || user.id !== session.user.id)) {
+            if (session?.user) {
               setIsLoading(true);
               await updateUserState(session.user.id, session.user.email || undefined);
               setIsLoading(false);
@@ -135,10 +137,11 @@ export const useSession = () => {
     getSession();
 
     return () => {
+      mounted = false;
       console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [getSession, clearUserState, user]);
+  }, [getSession, clearUserState]);
 
   return {
     isAuthenticated,
