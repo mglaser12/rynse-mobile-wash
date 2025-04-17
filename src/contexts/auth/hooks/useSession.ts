@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "../types";
 import { loadUserProfile } from "../userProfile";
@@ -10,105 +10,135 @@ export const useSession = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(() => {
-    // Initialize with cached profile if available
     const cachedProfile = getUserProfileFromStorage();
     return isRunningAsPWA() && cachedProfile ? cachedProfile : null;
   });
+  
+  const sessionCheckInProgress = useRef(false);
+  const lastKnownUserId = useRef<string | null>(null);
+
+  const updateUserState = async (userId: string, email: string | undefined) => {
+    try {
+      console.log("Updating user state for:", userId);
+      const profile = await loadUserProfile(userId);
+      const updatedUser: User = {
+        id: userId,
+        email: email || '',
+        name: profile?.name || email?.split('@')[0] || '',
+        role: profile?.role || 'customer',
+        organizationId: profile?.organizationId,
+        avatarUrl: profile?.avatarUrl
+      };
+
+      setUser(updatedUser);
+      setIsAuthenticated(true);
+      saveUserProfileToStorage(updatedUser);
+      lastKnownUserId.current = userId;
+      console.log("User state updated successfully:", updatedUser);
+    } catch (error) {
+      console.error("Error updating user state:", error);
+      const fallbackUser: User = {
+        id: userId,
+        email: email || '',
+        name: email?.split('@')[0] || '',
+        role: 'customer'
+      };
+      setUser(fallbackUser);
+      setIsAuthenticated(true);
+      saveUserProfileToStorage(fallbackUser);
+      lastKnownUserId.current = userId;
+    }
+  };
+
+  const clearUserState = useCallback(() => {
+    console.log("Clearing user state");
+    setUser(null);
+    setIsAuthenticated(false);
+    saveUserProfileToStorage(null);
+    lastKnownUserId.current = null;
+  }, []);
 
   const getSession = useCallback(async () => {
+    if (sessionCheckInProgress.current) {
+      console.log("Session check already in progress, skipping");
+      return;
+    }
+
+    sessionCheckInProgress.current = true;
+    console.log("Fetching session from Supabase");
+
     try {
-      console.log("Fetching session from Supabase");
       const { data: { session }, error } = await supabase.auth.getSession();
 
       if (error) {
         console.error("Error getting session:", error);
-        throw error;
+        clearUserState();
+        return;
       }
 
       if (session?.user) {
-        try {
-          const profile = await loadUserProfile(session.user.id);
-          const updatedUser: User = {
-            id: session.user.id,
-            email: session.user.email!,
-            name: profile?.name || session.user.email?.split('@')[0] || '',
-            role: profile?.role || 'customer',
-            organizationId: profile?.organizationId,
-            avatarUrl: profile?.avatarUrl
-          };
-
-          setUser(updatedUser);
+        // Check if we already have this user's state
+        if (lastKnownUserId.current === session.user.id && user) {
+          console.log("User state already up to date");
           setIsAuthenticated(true);
-          saveUserProfileToStorage(updatedUser);
-          console.log("Session loaded successfully:", updatedUser);
-        } catch (profileError) {
-          console.error("Error loading profile:", profileError);
-          const fallbackUser: User = {
-            id: session.user.id,
-            email: session.user.email!,
-            name: session.user.email?.split('@')[0] || '',
-            role: 'customer'
-          };
-          setUser(fallbackUser);
-          setIsAuthenticated(true);
-          saveUserProfileToStorage(fallbackUser);
+          return;
         }
+
+        await updateUserState(session.user.id, session.user.email || undefined);
       } else {
         console.log("No session found");
-        setUser(null);
-        setIsAuthenticated(false);
-        saveUserProfileToStorage(null);
+        clearUserState();
       }
     } catch (error) {
       console.error("Session check failed:", error);
-      setUser(null);
-      setIsAuthenticated(false);
-      saveUserProfileToStorage(null);
+      clearUserState();
     } finally {
+      sessionCheckInProgress.current = false;
       setIsLoading(false);
     }
-  }, []);
+  }, [clearUserState, user]);
 
   // Set up auth state listener
   useEffect(() => {
-    getSession(); // Initial session check
-
+    console.log("Setting up auth subscription");
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state changed:", event, session?.user?.id);
         
-        if (event === 'SIGNED_IN' && session?.user) {
-          setIsLoading(true);
-          try {
-            const profile = await loadUserProfile(session.user.id);
-            const updatedUser: User = {
-              id: session.user.id,
-              email: session.user.email!,
-              name: profile?.name || session.user.email?.split('@')[0] || '',
-              role: profile?.role || 'customer',
-              organizationId: profile?.organizationId,
-              avatarUrl: profile?.avatarUrl
-            };
-            setUser(updatedUser);
-            setIsAuthenticated(true);
-            saveUserProfileToStorage(updatedUser);
-          } catch (error) {
-            console.error("Error updating user after auth state change:", error);
-          } finally {
-            setIsLoading(false);
-          }
-        } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-          setUser(null);
-          setIsAuthenticated(false);
-          saveUserProfileToStorage(null);
+        switch (event) {
+          case 'SIGNED_IN':
+            if (session?.user) {
+              setIsLoading(true);
+              await updateUserState(session.user.id, session.user.email || undefined);
+              setIsLoading(false);
+            }
+            break;
+            
+          case 'SIGNED_OUT':
+          case 'USER_DELETED':
+            clearUserState();
+            break;
+            
+          case 'TOKEN_REFRESHED':
+            if (session?.user && (!user || user.id !== session.user.id)) {
+              setIsLoading(true);
+              await updateUserState(session.user.id, session.user.email || undefined);
+              setIsLoading(false);
+            }
+            break;
         }
       }
     );
 
+    // Initial session check
+    getSession();
+
     return () => {
+      console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [getSession]);
+  }, [getSession, clearUserState, user]);
 
   return {
     isAuthenticated,
