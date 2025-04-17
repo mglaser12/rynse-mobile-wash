@@ -14,7 +14,7 @@ export const getFullWashRequest = async (washRequestId: string) => {
       .from('wash_requests')
       .select(`
         *,
-        location:location_id(*)
+        location:location_id(id, name, address, city, state, latitude, longitude)
       `)
       .eq('id', washRequestId)
       .single();
@@ -58,15 +58,22 @@ export const getFullWashRequest = async (washRequestId: string) => {
     });
 
     // Ensure location data is properly formatted or set to undefined
-    const locationData = washRequest.location ? {
-      name: washRequest.location.name || "Unknown Location",
-      address: washRequest.location.address ? 
-        `${washRequest.location.address}, ${washRequest.location.city}, ${washRequest.location.state}` : 
-        undefined,
-      coordinates: (washRequest.location.latitude && washRequest.location.longitude) ? 
-        { lat: washRequest.location.latitude, lng: washRequest.location.longitude } : 
-        undefined
-    } : undefined;
+    let locationData = undefined;
+    
+    if (washRequest.location) {
+      // Check if location is an actual object with properties or an error message
+      if (typeof washRequest.location === 'object' && !washRequest.location.error) {
+        locationData = {
+          name: washRequest.location.name || "Unknown Location",
+          address: washRequest.location.address ? 
+            `${washRequest.location.address}, ${washRequest.location.city}, ${washRequest.location.state}` : 
+            undefined,
+          coordinates: (washRequest.location.latitude && washRequest.location.longitude) ? 
+            { lat: washRequest.location.latitude, lng: washRequest.location.longitude } : 
+            undefined
+        };
+      }
+    }
 
     // Format the data to match our application models
     // Ensure status is explicitly cast as WashStatus
