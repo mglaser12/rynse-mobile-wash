@@ -15,6 +15,21 @@ interface CompletedWashDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Helper function to map Supabase response to our VehicleWashStatus type
+const mapSupabaseToVehicleWashStatus = (data: any): VehicleWashStatus => {
+  return {
+    id: data.id,
+    vehicleId: data.vehicle_id,
+    washRequestId: data.wash_request_id,
+    technicianId: data.technician_id,
+    completed: data.completed,
+    postWashPhoto: data.post_wash_photo,
+    notes: data.notes,
+    createdAt: new Date(data.created_at),
+    updatedAt: new Date(data.updated_at)
+  };
+};
+
 export function CompletedWashDialog({ washRequest, open, onOpenChange }: CompletedWashDialogProps) {
   const [technicianName, setTechnicianName] = useState<string>("");
   const [vehicleWashStatuses, setVehicleWashStatuses] = useState<VehicleWashStatus[]>([]);
@@ -41,7 +56,9 @@ export function CompletedWashDialog({ washRequest, open, onOpenChange }: Complet
         .eq('wash_request_id', washRequest.id);
       
       if (data) {
-        setVehicleWashStatuses(data);
+        // Map the response data to our VehicleWashStatus type
+        const mappedData = data.map(mapSupabaseToVehicleWashStatus);
+        setVehicleWashStatuses(mappedData);
       }
     };
     
@@ -123,4 +140,3 @@ export function CompletedWashDialog({ washRequest, open, onOpenChange }: Complet
     </Dialog>
   );
 }
-
