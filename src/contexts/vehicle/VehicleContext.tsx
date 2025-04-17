@@ -1,11 +1,9 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { Vehicle } from "@/models/types";
-// Change the relative path to use the absolute path for consistency
 import { useAuth } from "@/contexts/AuthContext";
 import { VehicleContextType } from "./types";
 import { useLoadVehicles } from "./useLoadVehicles";
-import { addVehicle as addVehicleOp, updateVehicle as updateVehicleOp, removeVehicle as removeVehicleOp } from "./vehicleOperations";
+import { addVehicle as addVehicleOp, updateVehicle as updateVehicleOp, removeVehicle as removeVehicleOp } from "./operations";
 
 const VehicleContext = createContext<VehicleContextType>({} as VehicleContextType);
 
@@ -18,12 +16,10 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
   const { vehicles: loadedVehicles, isLoading } = useLoadVehicles(user?.id);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 
-  // Update local state when loaded vehicles change
   useEffect(() => {
     setVehicles(loadedVehicles);
   }, [loadedVehicles]);
 
-  // Add a new vehicle
   const addVehicle = async (vehicleData: Omit<Vehicle, "id" | "dateAdded">, locationId?: string) => {
     const newVehicle = await addVehicleOp(user, { ...vehicleData, locationId });
     if (newVehicle) {
@@ -31,27 +27,20 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Update an existing vehicle
   const updateVehicle = async (id: string, data: Partial<Vehicle> & { locationId?: string }): Promise<boolean> => {
     console.log("Updating vehicle in context:", id, data);
     const success = await updateVehicleOp(id, data);
     if (success) {
-      // If image was removed or changed, update the local state
       if (data.image === undefined) {
-        // Image was removed
         setVehicles(prev => prev.map(vehicle => 
           vehicle.id === id ? { ...vehicle, ...data, image: undefined } : vehicle
         ));
       } else if (data.image && data.image.startsWith('data:image')) {
-        // If the image is a base64 string, this means it was changed
-        // We'll update it with the URL that comes back from Supabase in the next fetch
-        // For now, just update the other fields
         const { image, locationId, ...otherData } = data;
         setVehicles(prev => prev.map(vehicle => 
           vehicle.id === id ? { ...vehicle, ...otherData } : vehicle
         ));
       } else {
-        // Normal update (excluding locationId which doesn't belong in the Vehicle type)
         const { locationId, ...vehicleData } = data;
         setVehicles(prev => prev.map(vehicle => 
           vehicle.id === id ? { ...vehicle, ...vehicleData } : vehicle
@@ -61,7 +50,6 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
     return success;
   };
 
-  // Remove a vehicle
   const removeVehicle = async (id: string) => {
     const success = await removeVehicleOp(id);
     if (success) {
@@ -69,7 +57,6 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Get a vehicle by ID
   const getVehicleById = (id: string) => {
     return vehicles.find(vehicle => vehicle.id === id);
   };
