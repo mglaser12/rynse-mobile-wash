@@ -4,6 +4,7 @@ import { CreateWashRequestData } from "../types";
 import { WashRequest, WashStatus } from "@/models/types";
 import { toast } from "sonner";
 import { getFullWashRequest } from "./api/washRequestDetails";
+import { syncLocationToWashLocations } from "./api/locationApi";
 
 /**
  * Create a new wash request in the database
@@ -13,69 +14,28 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
     console.log("Creating wash request with data:", data);
 
     // Check if we need to sync locations between tables
-    if (data.locationId) {
-      const { data: locationData, error: locationFetchError } = await supabase
-        .from('locations')
-        .select('*')
-        .eq('id', data.locationId)
-        .single();
-        
-      if (locationFetchError) {
-        console.error("Error fetching location:", locationFetchError);
-        toast.error("Failed to create wash request - location not found");
-        return null;
-      }
+    let locationId = data.locationId;
+    if (locationId) {
+      locationId = await syncLocationToWashLocations(locationId);
       
-      // Check if this location exists in wash_locations table
-      const { data: washLocation, error: washLocationError } = await supabase
-        .from('wash_locations')
-        .select('id')
-        .eq('name', locationData.name)
-        .eq('address', locationData.address)
-        .single();
-        
-      if (washLocationError || !washLocation) {
-        // Location doesn't exist in wash_locations table, create it
-        console.log("Location not found in wash_locations, creating entry");
-        const { data: newWashLocation, error: createError } = await supabase
-          .from('wash_locations')
-          .insert({
-            name: locationData.name,
-            address: locationData.address,
-            city: locationData.city,
-            state: locationData.state,
-            zip_code: locationData.zip_code,
-            latitude: locationData.latitude,
-            longitude: locationData.longitude
-          })
-          .select('id')
-          .single();
-          
-        if (createError) {
-          console.error("Error creating location in wash_locations:", createError);
-          toast.error("Failed to create wash request - couldn't sync location");
-          return null;
-        }
-        
-        // Use the newly created wash_location id instead
-        data.locationId = newWashLocation.id;
-      } else {
-        // Use the existing wash_location id
-        data.locationId = washLocation.id;
+      if (!locationId) {
+        console.error("Failed to sync location");
+        toast.error("Failed to create wash request - location error");
+        return null;
       }
     }
 
-    // Insert the wash request
+    // Insert the wash request using the synchronized location ID
     const { data: washRequest, error: washError } = await supabase
       .from('wash_requests')
       .insert({
         user_id: data.customerId,
         preferred_date_start: data.preferredDates.start.toISOString(),
         preferred_date_end: data.preferredDates.end ? data.preferredDates.end.toISOString() : null,
-        status: 'pending' as WashStatus, // Explicitly type as WashStatus
+        status: 'pending' as WashStatus,
         price: data.price,
         notes: data.notes || null,
-        location_id: data.locationId || null
+        location_id: locationId || null
       })
       .select()
       .single();
