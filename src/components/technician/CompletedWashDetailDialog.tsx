@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { Label } from "@/components/ui/label";
-import { FileText, Image, Loader2 } from "lucide-react";
+import { FileText, Image, Loader2, MapPin } from "lucide-react";
 import { useVehicleWashStatus } from "@/hooks/useVehicleWashStatus";
 
 interface CompletedWashDetailDialogProps {
@@ -75,6 +75,21 @@ export const CompletedWashDetailDialog = ({
             View details about this completed wash from {format(washRequest.updatedAt, "MMM dd, yyyy")}
           </DialogDescription>
         </DialogHeader>
+        
+        {/* Display location/address information if available */}
+        {washRequest.location && washRequest.location.address && (
+          <Card className="mb-4">
+            <CardContent className="p-4">
+              <div className="flex items-start space-x-2">
+                <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div className="space-y-1">
+                  <h4 className="font-medium text-sm">{washRequest.location.name}</h4>
+                  <p className="text-sm text-muted-foreground">{washRequest.location.address}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         
         {isLoading ? (
           <div className="flex justify-center items-center py-12">

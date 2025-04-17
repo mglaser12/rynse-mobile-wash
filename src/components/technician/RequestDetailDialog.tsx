@@ -4,9 +4,10 @@ import { WashRequest } from "@/models/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Loader2, Calendar } from "lucide-react";
+import { AlertTriangle, Loader2, Calendar, MapPin } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { JobScheduler } from "./JobScheduler";
+import { Card } from "@/components/ui/card";
 
 interface RequestDetailDialogProps {
   open: boolean;
@@ -96,6 +97,19 @@ export const RequestDetailDialog = ({
             
             <WashRequestCard washRequest={selectedRequest} />
             
+            {/* Display location/address information if available */}
+            {selectedRequest.location && selectedRequest.location.address && (
+              <Card className="p-4">
+                <div className="flex items-start space-x-2">
+                  <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="space-y-1">
+                    <h4 className="font-medium text-sm">{selectedRequest.location.name}</h4>
+                    <p className="text-sm text-muted-foreground">{selectedRequest.location.address}</p>
+                  </div>
+                </div>
+              </Card>
+            )}
+            
             {/* Only show action buttons if not in readOnly mode */}
             {!readOnly && (
               <>
@@ -178,4 +192,3 @@ export const RequestDetailDialog = ({
     </>
   );
 };
-
