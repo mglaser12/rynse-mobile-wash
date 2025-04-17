@@ -15,20 +15,28 @@ import ProfilePage from "../pages/ProfilePage";
 import OrganizationPage from "../pages/admin/OrganizationPage";
 import NotFound from "../pages/NotFound";
 
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center h-screen">
+    <div className="text-center">
+      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+      <p className="text-muted-foreground">Loading...</p>
+    </div>
+  </div>
+);
+
 // Route guard component with useLocation to avoid render loops
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
+
+  // If we're on the auth page and loading, show the auth page
+  if (location.pathname === '/auth') {
+    return <>{children}</>;
+  }
   
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+  // Only show loading state on initial auth check
+  if (isLoading && !user) {
+    return <LoadingSpinner />;
   }
   
   if (!isAuthenticated) {
@@ -48,15 +56,9 @@ export const RoleRoute = ({
 }) => {
   const { user, isLoading } = useAuth();
   
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+  // Only show loading if we don't have user data yet
+  if (isLoading && !user) {
+    return <LoadingSpinner />;
   }
   
   // Modified logic: Allow customer access to both customer and fleet_manager routes
@@ -77,15 +79,8 @@ const AppRoutes = () => {
   
   // Render different home page based on user role
   const renderHome = () => {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-            <p className="text-muted-foreground">Loading...</p>
-          </div>
-        </div>
-      );
+    if (isLoading && !user) {
+      return <LoadingSpinner />;
     }
     
     return user?.role === "technician" ? (
@@ -97,8 +92,10 @@ const AppRoutes = () => {
   
   return (
     <Routes>
+      {/* Auth route - no protection needed */}
       <Route path="/auth" element={<Auth />} />
       
+      {/* Protected routes */}
       <Route 
         path="/" 
         element={
@@ -186,6 +183,7 @@ const AppRoutes = () => {
         } 
       />
       
+      {/* Catch-all route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

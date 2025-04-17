@@ -16,16 +16,19 @@ export const useSession = () => {
   
   const sessionCheckInProgress = useRef(false);
   const lastKnownUserId = useRef<string | null>(null);
+  const initialCheckDone = useRef(false);
 
   const updateUserState = async (userId: string, email: string | undefined) => {
-    if (lastKnownUserId.current === userId && user?.id === userId) {
-      console.log("User state already up to date");
-      setIsAuthenticated(true);
-      return;
-    }
-
     try {
       console.log("Updating user state for:", userId);
+      
+      // If we already have this user's state and they're authenticated, skip the update
+      if (lastKnownUserId.current === userId && user?.id === userId && isAuthenticated) {
+        console.log("User state already up to date");
+        setIsLoading(false);
+        return;
+      }
+
       const profile = await loadUserProfile(userId);
       const updatedUser: User = {
         id: userId,
@@ -53,6 +56,9 @@ export const useSession = () => {
       setIsAuthenticated(true);
       saveUserProfileToStorage(fallbackUser);
       lastKnownUserId.current = userId;
+    } finally {
+      setIsLoading(false);
+      initialCheckDone.current = true;
     }
   };
 
@@ -62,6 +68,8 @@ export const useSession = () => {
     setIsAuthenticated(false);
     saveUserProfileToStorage(null);
     lastKnownUserId.current = null;
+    setIsLoading(false);
+    initialCheckDone.current = true;
   }, []);
 
   const getSession = useCallback(async () => {
@@ -93,7 +101,6 @@ export const useSession = () => {
       clearUserState();
     } finally {
       sessionCheckInProgress.current = false;
-      setIsLoading(false);
     }
   }, [clearUserState]);
 
@@ -113,7 +120,6 @@ export const useSession = () => {
             if (session?.user) {
               setIsLoading(true);
               await updateUserState(session.user.id, session.user.email || undefined);
-              setIsLoading(false);
             }
             break;
             
@@ -123,10 +129,20 @@ export const useSession = () => {
             break;
             
           case 'TOKEN_REFRESHED':
-            if (session?.user) {
+            if (session?.user && (!user || user.id !== session.user.id)) {
               setIsLoading(true);
               await updateUserState(session.user.id, session.user.email || undefined);
-              setIsLoading(false);
+            }
+            break;
+            
+          case 'INITIAL_SESSION':
+            if (!initialCheckDone.current) {
+              if (session?.user) {
+                setIsLoading(true);
+                await updateUserState(session.user.id, session.user.email || undefined);
+              } else {
+                clearUserState();
+              }
             }
             break;
         }
@@ -134,14 +150,16 @@ export const useSession = () => {
     );
 
     // Initial session check
-    getSession();
+    if (!initialCheckDone.current) {
+      getSession();
+    }
 
     return () => {
       mounted = false;
       console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [getSession, clearUserState]);
+  }, [getSession, clearUserState, user]);
 
   return {
     isAuthenticated,
