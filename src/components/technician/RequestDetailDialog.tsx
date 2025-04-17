@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { WashRequest } from "@/models/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -6,7 +5,7 @@ import { WashRequestCard } from "@/components/shared/WashRequestCard";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Loader2, Calendar, MapPin, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { JobScheduler } from "./JobScheduler";
+import { DateRangePicker } from "@/components/booking/DateRangePicker";
 import { Card } from "@/components/ui/card";
 
 interface RequestDetailDialogProps {
@@ -18,7 +17,7 @@ interface RequestDetailDialogProps {
   onAcceptRequest: (id: string) => void;
   onStartWash: (id: string) => void;
   onCompleteWash: (id: string) => void;
-  onCancelAcceptance?: (id: string) => void; // Add new prop for canceling acceptance
+  onCancelAcceptance?: (id: string) => void;
   onScheduleJob?: (requestId: string, scheduledDate: Date) => Promise<boolean>;
   readOnly?: boolean;
 }
@@ -32,31 +31,28 @@ export const RequestDetailDialog = ({
   onAcceptRequest,
   onStartWash,
   onCompleteWash,
-  onCancelAcceptance, // Use the new prop
+  onCancelAcceptance,
   onScheduleJob,
   readOnly = false
 }: RequestDetailDialogProps) => {
-  const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
 
   if (!selectedRequest) return null;
   
-  // Check if this technician is assigned to this request
   const isAssignedTechnician = userId && selectedRequest.technician === userId;
   
-  // Check if this is a mock request (for offline demo)
   const isMockRequest = selectedRequest.id.startsWith("mock-");
   
-  // Check if this is a fleet manager created job
   const isFleetManagerJob = selectedRequest.customerId !== userId;
 
   const handleAcceptJob = () => {
     if (userId) {
-      if (onScheduleJob) {
-        // Open the scheduler instead of accepting directly
-        setIsSchedulerOpen(true);
-      } else {
-        // Fall back to direct acceptance
-        onAcceptRequest(selectedRequest.id);
+      if (selectedDate) {
+        if (onScheduleJob) {
+          onScheduleJob(selectedRequest.id, selectedDate);
+        } else {
+          onAcceptRequest(selectedRequest.id);
+        }
       }
     }
   };
@@ -64,12 +60,10 @@ export const RequestDetailDialog = ({
   return (
     <>
       <Dialog open={open} onOpenChange={(isOpen) => {
-        // Only allow closing if not currently updating
         if (!isOpen && !isUpdating) {
           onOpenChange(false);
-          setIsSchedulerOpen(false);
+          setSelectedDate(undefined);
         } else if (isUpdating) {
-          // If trying to close while updating, do nothing
           return;
         } else {
           onOpenChange(true);
@@ -99,7 +93,6 @@ export const RequestDetailDialog = ({
             
             <WashRequestCard washRequest={selectedRequest} />
             
-            {/* Display location/address information if available */}
             {selectedRequest.location && selectedRequest.location.address && (
               <Card className="p-4">
                 <div className="flex items-start space-x-2">
@@ -112,34 +105,39 @@ export const RequestDetailDialog = ({
               </Card>
             )}
             
-            {/* Only show action buttons if not in readOnly mode */}
             {!readOnly && (
               <>
-                {/* Actions based on status */}
                 {selectedRequest.status === "pending" && (
-                  <Button 
-                    className="w-full" 
-                    onClick={handleAcceptJob}
-                    disabled={isUpdating || !userId}
-                  >
-                    {isUpdating ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        {onScheduleJob ? (
-                          <>
-                            <Calendar className="h-4 w-4 mr-2" />
-                            Accept & Schedule Job
-                          </>
-                        ) : (
-                          isMockRequest ? "Demo Mode - Accept Job" : "Accept Job"
-                        )}
-                      </>
-                    )}
-                  </Button>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Select Wash Date</label>
+                      <DateRangePicker
+                        startDate={selectedDate}
+                        endDate={undefined}
+                        onStartDateChange={setSelectedDate}
+                        onEndDateChange={() => {}}
+                        allowRange={false}
+                      />
+                    </div>
+                    
+                    <Button 
+                      className="w-full" 
+                      onClick={handleAcceptJob}
+                      disabled={isUpdating || !userId || !selectedDate}
+                    >
+                      {isUpdating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Accept Job for {selectedDate ? selectedDate.toLocaleDateString() : 'Selected Date'}
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 )}
                 
                 {selectedRequest.status === "confirmed" && isAssignedTechnician && (
@@ -159,7 +157,6 @@ export const RequestDetailDialog = ({
                       )}
                     </Button>
                     
-                    {/* Add Cancel Acceptance button for confirmed jobs */}
                     {onCancelAcceptance && (
                       <Button 
                         variant="outline" 
@@ -204,17 +201,6 @@ export const RequestDetailDialog = ({
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Job Scheduler Dialog */}
-      {selectedRequest && onScheduleJob && !readOnly && (
-        <JobScheduler
-          washRequest={selectedRequest}
-          open={isSchedulerOpen}
-          onOpenChange={setIsSchedulerOpen}
-          onScheduleJob={onScheduleJob}
-          isUpdating={isUpdating}
-        />
-      )}
     </>
   );
 };
