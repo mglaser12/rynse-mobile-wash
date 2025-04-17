@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { useVehicles } from "@/contexts/VehicleContext";
@@ -10,7 +11,6 @@ import { FormActions } from "./FormActions";
 import { useWashRequestForm } from "./useWashRequestForm";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LocationSelectionSection } from "./LocationSelectionSection";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CreateWashRequestFormProps {
@@ -42,6 +42,20 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
 
   const [filteredVehicles, setFilteredVehicles] = useState(vehicles);
 
+  // Find default location and set it as selected on initial load
+  useEffect(() => {
+    if (locations.length > 0 && !selectedLocationId) {
+      const defaultLocation = locations.find(loc => loc.isDefault);
+      if (defaultLocation) {
+        setSelectedLocationId(defaultLocation.id);
+      } else {
+        // If no default, select first location
+        setSelectedLocationId(locations[0].id);
+      }
+    }
+  }, [locations, selectedLocationId, setSelectedLocationId]);
+
+  // Load vehicles for the selected location
   useEffect(() => {
     if (selectedLocationId) {
       const fetchVehicleLocations = async () => {

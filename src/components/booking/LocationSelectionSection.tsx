@@ -23,6 +23,14 @@ export function LocationSelectionSection({
   // Find the default location if any
   const defaultLocation = locations.find(loc => loc.isDefault);
 
+  // Format address with proper spacing after commas
+  const formatAddress = (location: Location | undefined) => {
+    if (!location) return "";
+    return `${location.address}, ${location.city}, ${location.state}`;
+  };
+
+  const selectedLocation = locations.find(loc => loc.id === selectedLocationId);
+
   return (
     <div className="space-y-2">
       <Label className="flex items-center">
@@ -52,11 +60,9 @@ export function LocationSelectionSection({
         </SelectContent>
       </Select>
 
-      {selectedLocationId && (
-        <div className="mt-1 text-sm text-muted-foreground">
-          {locations.find(loc => loc.id === selectedLocationId)?.address}, 
-          {locations.find(loc => loc.id === selectedLocationId)?.city}, 
-          {locations.find(loc => loc.id === selectedLocationId)?.state}
+      {selectedLocation && (
+        <div className="mt-2 text-sm text-muted-foreground pl-1">
+          {formatAddress(selectedLocation)}
         </div>
       )}
     </div>
