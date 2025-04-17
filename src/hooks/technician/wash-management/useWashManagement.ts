@@ -20,8 +20,11 @@ export function useWashManagement() {
     setActiveWashId 
   } = useWashStateManagement();
   
-  // Extract data loading operations - ensuring refreshData is handled properly
-  const { loadData } = useDataLoading(refreshData);
+  // Use a controlled data loading mechanism to prevent excessive refreshes
+  const { loadData } = useDataLoading(() => {
+    console.log("Refreshing wash data with controlled mechanism");
+    return refreshData();
+  });
   
   // Extract wash operations into a separate hook
   const {

@@ -27,11 +27,8 @@ const TechnicianHome = () => {
     handleWashProgressComplete
   } = useWashManagement();
   
-  // Force a refresh of wash requests data when the component mounts
-  useEffect(() => {
-    console.log("TechnicianHome mounted - loading initial data");
-    loadData();
-  }, [loadData]);
+  // We're removing this useEffect to prevent multiple refreshes
+  // The initial load is now handled in useDataLoading
   
   // Safely filter wash requests (defensive programming)
   const pendingRequests = Array.isArray(washRequests) 
