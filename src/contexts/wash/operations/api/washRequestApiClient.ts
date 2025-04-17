@@ -1,16 +1,17 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { WashStatus, Vehicle } from "@/models/types";
+import { WashStatus } from "@/models/types";
 import { toast } from "sonner";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabaseApi";
 
 interface WashRequestInsertData {
   user_id: string;
-  location_id: string;
+  location_id: string | null;
+  location_detail_id: string | null;
   preferred_date_start: string;
-  preferred_date_end?: string;
+  preferred_date_end?: string | null;
   price: number;
-  notes?: string;
+  notes?: string | null;
   status: WashStatus;
   organization_id?: string;
 }
@@ -47,7 +48,7 @@ export const insertWashRequestDirect = async (
     method: 'POST',
     headers: {
       'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${accessToken}`,
+      'Authorization': `Bearer ${accessToken || ''}`,
       'Content-Type': 'application/json',
       'Prefer': 'return=representation'
     },

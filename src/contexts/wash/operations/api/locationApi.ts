@@ -84,42 +84,33 @@ export const getLocationId = async (): Promise<string | null> => {
 };
 
 /**
- * Synchronize location data between the locations and wash_locations tables
- * Alternative approach to avoid permission issues
+ * Modified approach to work with the wash_requests table directly
+ * when there are permission issues with wash_locations
  */
 export const syncLocationToWashLocations = async (locationId: string): Promise<string | null> => {
   try {
-    // Check if this location exists in wash_locations table
-    const { data: washLocation, error: washLocationError } = await supabase
-      .from('wash_locations')
-      .select('id')
-      .eq('id', locationId)
-      .single();
-    
-    if (!washLocationError && washLocation) {
-      // Location already exists in wash_locations
-      return washLocation.id;
-    }
-    
-    // Fetch the location data from locations table
-    const { data: locationData, error: locationFetchError } = await supabase
+    // First, check if the location exists in the locations table
+    const { data: locationData, error: locationError } = await supabase
       .from('locations')
       .select('*')
       .eq('id', locationId)
       .single();
     
-    if (locationFetchError || !locationData) {
-      console.error("Error fetching location:", locationFetchError);
-      toast.error("Failed to sync location - location not found");
+    if (locationError || !locationData) {
+      console.error("Location not found in locations table:", locationError);
+      toast.error("Location not found");
       return null;
     }
     
-    // For now, we'll just return the location ID directly
-    // The wash request can use this location ID as-is
+    console.log("Found location in locations table:", locationData);
+    
+    // For now, we'll just pass through the locations table ID
+    // The createWashRequest function will handle this by using
+    // a special query that works around the foreign key constraint
     return locationId;
   } catch (error) {
-    console.error("Error syncing location:", error);
-    toast.error("Failed to sync location data");
+    console.error("Error in location sync:", error);
+    toast.error("Failed to process location data");
     return null;
   }
 };
