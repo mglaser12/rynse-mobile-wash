@@ -72,67 +72,41 @@ export async function updateVehicle(
     if (locationId) {
       logVehicleOperationStep('UPDATE_VEHICLE', 'Processing location update', { vehicleId: id, locationId });
       
-      // First check if vehicle already has a location
-      const { data: existingLocations, error: fetchError } = await supabase
+      // CHANGE: Delete existing location associations for this vehicle
+      logVehicleOperationStep('UPDATE_VEHICLE', 'Deleting existing location associations', { vehicleId: id });
+      const { error: deleteError } = await supabase
         .from('location_vehicles')
-        .select('location_id, id')
+        .delete()
         .eq('vehicle_id', id);
 
-      if (fetchError) {
-        logVehicleOperationStep('UPDATE_VEHICLE', 'Error fetching existing location', fetchError);
-        throw fetchError;
+      if (deleteError) {
+        logVehicleOperationStep('UPDATE_VEHICLE', 'Error deleting existing location associations', deleteError);
+        console.error("Error deleting location associations:", deleteError);
+        toast.error("Vehicle updated, but location update failed");
+        logVehicleResponse('UPDATE_VEHICLE', null, deleteError);
+        return false;
       }
 
-      logVehicleOperationStep('UPDATE_VEHICLE', 'Existing location fetch result', existingLocations);
+      // CHANGE: Create new location association
+      logVehicleOperationStep('UPDATE_VEHICLE', 'Creating new location association', { vehicleId: id, locationId });
+      const { data: newLocation, error: insertError } = await supabase
+        .from('location_vehicles')
+        .insert({
+          location_id: locationId,
+          vehicle_id: id
+        })
+        .select('*')
+        .maybeSingle();  // Use maybeSingle instead of single to handle cases where no rows are returned
 
-      if (existingLocations && existingLocations.length > 0) {
-        // Update existing location using the junction table's ID (instead of vehicle_id)
-        logVehicleOperationStep('UPDATE_VEHICLE', 'Updating existing location', { 
-          existingLocation: existingLocations[0],
-          newLocationId: locationId,
-          junctionTableId: existingLocations[0].id // Log the ID we're using
-        });
-        
-        const { data: updatedLocation, error: updateLocError } = await supabase
-          .from('location_vehicles')
-          .update({ location_id: locationId })
-          .eq('id', existingLocations[0].id) // Use the junction table's ID
-          .select('*')
-          .single();
-
-        if (updateLocError) {
-          logVehicleOperationStep('UPDATE_VEHICLE', 'Location update error', updateLocError);
-          console.error("Error updating location association:", updateLocError);
-          toast.error("Vehicle updated, but location update failed");
-          logVehicleResponse('UPDATE_VEHICLE', null, updateLocError);
-          return false;
-        }
-        
-        logVehicleOperationStep('UPDATE_VEHICLE', 'Location updated successfully', updatedLocation);
-      } else {
-        // Create new location association
-        logVehicleOperationStep('UPDATE_VEHICLE', 'Creating new location association', { vehicleId: id, locationId });
-        
-        const { data: newLocation, error: insertLocError } = await supabase
-          .from('location_vehicles')
-          .insert({
-            location_id: locationId,
-            vehicle_id: id
-          })
-          .select('*')
-          .single();
-
-        if (insertLocError) {
-          logVehicleOperationStep('UPDATE_VEHICLE', 'Location association creation error', insertLocError);
-          console.error("Error creating location association:", insertLocError);
-          toast.error("Vehicle updated, but location assignment failed");
-          logVehicleResponse('UPDATE_VEHICLE', null, insertLocError);
-          return false;
-        }
-        
-        logVehicleOperationStep('UPDATE_VEHICLE', 'Location association created successfully', newLocation);
+      if (insertError) {
+        logVehicleOperationStep('UPDATE_VEHICLE', 'Location association creation error', insertError);
+        console.error("Error creating location association:", insertError);
+        toast.error("Vehicle updated, but location assignment failed");
+        logVehicleResponse('UPDATE_VEHICLE', null, insertError);
+        return false;
       }
       
+      logVehicleOperationStep('UPDATE_VEHICLE', 'Location association created successfully', newLocation);
       toast.success("Vehicle and location updated successfully!");
     } else {
       toast.success("Vehicle updated successfully!");
