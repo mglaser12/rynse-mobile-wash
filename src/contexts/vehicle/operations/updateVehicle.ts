@@ -86,16 +86,17 @@ export async function updateVehicle(
       logVehicleOperationStep('UPDATE_VEHICLE', 'Existing location fetch result', existingLocations);
 
       if (existingLocations && existingLocations.length > 0) {
-        // Update existing location
+        // Update existing location using the junction table's ID (instead of vehicle_id)
         logVehicleOperationStep('UPDATE_VEHICLE', 'Updating existing location', { 
           existingLocation: existingLocations[0],
-          newLocationId: locationId
+          newLocationId: locationId,
+          junctionTableId: existingLocations[0].id // Log the ID we're using
         });
         
         const { data: updatedLocation, error: updateLocError } = await supabase
           .from('location_vehicles')
           .update({ location_id: locationId })
-          .eq('vehicle_id', id)
+          .eq('id', existingLocations[0].id) // Use the junction table's ID
           .select('*')
           .single();
 
