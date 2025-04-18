@@ -1,7 +1,8 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 interface SearchVehiclesProps {
   searchQuery: string;
@@ -14,15 +15,26 @@ export function SearchVehicles({
   onSearchChange,
   placeholder = "Search vehicles by make, model, year, license plate..."
 }: SearchVehiclesProps) {
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
     <div className="relative">
-      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+      <Search className={cn(
+        "absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground transition-transform duration-200",
+        isFocused && "scale-110"
+      )} />
       <Input
         type="text"
-        placeholder={placeholder}
+        placeholder={isFocused ? placeholder : "Search"}
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="pl-9 w-full"
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        className={cn(
+          "pl-9 transition-all duration-200 ease-in-out",
+          isFocused ? "w-full" : "w-[120px]",
+          "hover:w-full focus:w-full"
+        )}
       />
     </div>
   );
