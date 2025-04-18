@@ -16,7 +16,9 @@ export const base64ToBlob = (base64: string) => {
 
 // Upload a vehicle image to storage
 export const uploadVehicleImageToStorage = async (base64Image: string, supabase: any): Promise<{ path: string | null; error: Error | null }> => {
-  const { v4: uuidv4 } = require('uuid');
+  // Import UUID using ES modules syntax instead of require
+  import { v4 as uuidv4 } from 'uuid';
+  
   const fileName = `${uuidv4()}.jpg`;
   const { data: uploadData, error: uploadError } = await supabase
     .storage
