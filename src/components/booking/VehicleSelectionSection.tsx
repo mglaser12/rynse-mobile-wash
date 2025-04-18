@@ -12,6 +12,8 @@ interface VehicleSelectionSectionProps {
   selectedVehicleIds: string[];
   onSelectVehicle: (id: string) => void;
   locationSelected: boolean;
+  vehicles?: Vehicle[]; // Added this property to match usage in CreateWashRequestForm
+  onCancel?: () => void; // Added to match usage in CreateWashRequestForm
 }
 
 type SortOption = 'lastWash' | 'make' | 'model' | 'year' | 'dateAdded';
@@ -20,9 +22,14 @@ type FilterOption = 'all' | 'washed' | 'unwashed';
 export function VehicleSelectionSection({
   selectedVehicleIds,
   onSelectVehicle,
-  locationSelected
+  locationSelected,
+  vehicles: providedVehicles, // Rename to avoid conflict with useVehicles
+  onCancel
 }: VehicleSelectionSectionProps) {
-  const { vehicles } = useVehicles();
+  // Use provided vehicles if available, otherwise use vehicles from context
+  const { vehicles: contextVehicles } = useVehicles();
+  const vehicles = providedVehicles || contextVehicles;
+  
   const [sortBy, setSortBy] = useState<SortOption>('lastWash');
   const [filterBy, setFilterBy] = useState<FilterOption>('all');
 
