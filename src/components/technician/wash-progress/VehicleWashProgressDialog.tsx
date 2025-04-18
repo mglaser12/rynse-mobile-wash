@@ -42,20 +42,20 @@ export const VehicleWashProgressDialog = ({
           <NoVehiclesAlert />
         ) : (
           <>
-            <VehicleWashProgressFooter 
-              allComplete={allComplete}
-              vehicleCount={vehicles.length}
-              completedCount={getCompletedCount()}
-              onSaveAndExit={handleSaveAndExit}
-              onCompleteWash={handleCompleteWash}
-            />
-            
             <VehicleWashProgressTabs 
               vehicles={vehicles}
               vehicleStatuses={vehicleStatuses}
               activeTab={activeTab}
               onTabChange={setActiveTab}
               onStatusUpdate={handleVehicleStatusUpdate}
+            />
+            
+            <VehicleWashProgressFooter 
+              allComplete={allComplete}
+              vehicleCount={vehicles.length}
+              completedCount={getCompletedCount()}
+              onSaveAndExit={handleSaveAndExit}
+              onCompleteWash={handleCompleteWash}
             />
           </>
         )}
