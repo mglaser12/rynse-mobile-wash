@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { VehicleCard } from "./VehicleCard";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +15,7 @@ interface VehicleListProps {
   onSearchChange: (query: string) => void;
 }
 
-type SortOption = 'lastWash' | 'make' | 'model' | 'year' | 'dateAdded';
+type SortOption = 'lastWash' | 'make' | 'model' | 'year' | 'dateAdded' | 'location';
 type FilterOption = 'all' | 'washed' | 'unwashed';
 
 export function VehicleList({
@@ -30,9 +29,9 @@ export function VehicleList({
   const [vehicleLocations, setVehicleLocations] = useState<Record<string, string>>({});
   const [sortBy, setSortBy] = useState<SortOption>('dateAdded');
   const [filterBy, setFilterBy] = useState<FilterOption>('all');
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
   const [lastWashDates, setLastWashDates] = useState<Record<string, Date>>({});
-  
-  // Fetch vehicle-location associations
+
   useEffect(() => {
     const fetchVehicleLocations = async () => {
       const { data, error } = await supabase
@@ -42,7 +41,6 @@ export function VehicleList({
       if (data) {
         const locationMap: Record<string, string> = {};
         
-        // Create a mapping of vehicle IDs to location IDs
         data.forEach(item => {
           locationMap[item.vehicle_id] = item.location_id;
         });
@@ -58,7 +56,6 @@ export function VehicleList({
     fetchVehicleLocations();
   }, [vehicles]);
 
-  // Fetch last wash dates for vehicles
   useEffect(() => {
     const fetchLastWashDates = async () => {
       const vehicleIds = vehicles.map(v => v.id);
@@ -73,8 +70,6 @@ export function VehicleList({
       if (data) {
         const dates: Record<string, Date> = {};
         data.forEach(status => {
-          // Only set if we don't already have a date for this vehicle
-          // (since results are ordered by date descending)
           if (!dates[status.vehicle_id]) {
             dates[status.vehicle_id] = new Date(status.created_at);
           }
@@ -86,7 +81,6 @@ export function VehicleList({
     fetchLastWashDates();
   }, [vehicles]);
 
-  // Filter vehicles based on search query and filter option
   const filteredVehicles = vehicles.filter((vehicle) => {
     const matchesSearch = searchQuery.toLowerCase().trim() === '' || 
       vehicle.make.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -96,7 +90,9 @@ export function VehicleList({
       vehicle.type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       vehicle.color?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    if (!matchesSearch) return false;
+    const matchesLocation = !selectedLocationId || vehicleLocations[vehicle.id] === selectedLocationId;
+
+    if (!matchesSearch || !matchesLocation) return false;
 
     const lastWashDate = lastWashDates[vehicle.id];
     const daysSinceWash = lastWashDate ? differenceInDays(new Date(), lastWashDate) : null;
@@ -111,9 +107,13 @@ export function VehicleList({
     }
   });
 
-  // Sort vehicles
   const sortedVehicles = [...filteredVehicles].sort((a, b) => {
     switch (sortBy) {
+      case 'location': {
+        const locA = locations.find(loc => loc.id === vehicleLocations[a.id])?.name || '';
+        const locB = locations.find(loc => loc.id === vehicleLocations[b.id])?.name || '';
+        return locA.localeCompare(locB);
+      }
       case 'lastWash': {
         const dateA = lastWashDates[a.id];
         const dateB = lastWashDates[b.id];
@@ -147,8 +147,10 @@ export function VehicleList({
         <VehicleFilters
           sortBy={sortBy}
           filterBy={filterBy}
+          selectedLocationId={selectedLocationId}
           onSortChange={setSortBy}
           onFilterChange={setFilterBy}
+          onLocationChange={setSelectedLocationId}
         />
       </div>
       
