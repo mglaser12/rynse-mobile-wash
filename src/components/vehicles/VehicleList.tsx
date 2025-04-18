@@ -145,10 +145,8 @@ export function VehicleList({
           />
         </div>
         <VehicleFilters
-          sortBy={sortBy}
           filterBy={filterBy}
           selectedLocationId={selectedLocationId}
-          onSortChange={setSortBy}
           onFilterChange={setFilterBy}
           onLocationChange={setSelectedLocationId}
         />

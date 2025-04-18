@@ -2,6 +2,7 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SlidersHorizontal, MapPin } from "lucide-react";
+import { useLocations } from "@/contexts/LocationContext";
 
 interface VehicleFiltersProps {
   onFilterChange: (value: FilterOption) => void;
