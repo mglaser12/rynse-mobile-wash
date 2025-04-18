@@ -58,24 +58,76 @@ export function VehicleList({
 
   useEffect(() => {
     const fetchLastWashDates = async () => {
+      console.log("Fetching last wash dates for vehicles:", vehicles.map(v => v.id));
       const vehicleIds = vehicles.map(v => v.id);
       
-      const { data, error } = await supabase
-        .from('vehicle_wash_statuses')
-        .select('vehicle_id, created_at')
-        .in('vehicle_id', vehicleIds)
-        .eq('completed', true)
-        .order('created_at', { ascending: false });
-
-      if (data) {
-        const dates: Record<string, Date> = {};
-        data.forEach(status => {
-          if (!dates[status.vehicle_id]) {
-            dates[status.vehicle_id] = new Date(status.created_at);
-          }
-        });
-        setLastWashDates(dates);
+      if (vehicleIds.length === 0) {
+        console.log("No vehicles to fetch wash dates for");
+        return;
       }
+
+      // First, get all wash request vehicles to identify which wash requests include our vehicles
+      const { data: washRequestVehiclesData, error: washRequestVehiclesError } = await supabase
+        .from('wash_request_vehicles')
+        .select('wash_request_id, vehicle_id')
+        .in('vehicle_id', vehicleIds);
+
+      if (washRequestVehiclesError) {
+        console.error("Error fetching wash request vehicles:", washRequestVehiclesError);
+        return;
+      }
+
+      if (!washRequestVehiclesData || washRequestVehiclesData.length === 0) {
+        console.log("No wash requests found for any vehicles");
+        return;
+      }
+
+      console.log(`Found ${washRequestVehiclesData.length} wash request mappings for vehicles`);
+      
+      // Get unique wash request IDs that include our vehicles
+      const washRequestIds = [...new Set(washRequestVehiclesData.map(item => item.wash_request_id))];
+      
+      // Now get all completed wash requests
+      const { data: washRequestsData, error: washRequestsError } = await supabase
+        .from('wash_requests')
+        .select('id, updated_at')
+        .in('id', washRequestIds)
+        .eq('status', 'completed');
+
+      if (washRequestsError) {
+        console.error("Error fetching completed wash requests:", washRequestsError);
+        return;
+      }
+
+      if (!washRequestsData || washRequestsData.length === 0) {
+        console.log("No completed wash requests found");
+        return;
+      }
+
+      console.log(`Found ${washRequestsData.length} completed wash requests`);
+
+      // Create a mapping of wash request IDs to their dates
+      const washRequestDates = washRequestsData.reduce((acc, req) => {
+        acc[req.id] = new Date(req.updated_at);
+        return acc;
+      }, {} as Record<string, Date>);
+      
+      // Now map vehicle IDs to their most recent wash dates
+      const vehicleWashDates: Record<string, Date> = {};
+      
+      washRequestVehiclesData.forEach(mapping => {
+        const washDate = washRequestDates[mapping.wash_request_id];
+        if (washDate) {
+          const vehicleId = mapping.vehicle_id;
+          // Keep only the most recent wash date for each vehicle
+          if (!vehicleWashDates[vehicleId] || washDate > vehicleWashDates[vehicleId]) {
+            vehicleWashDates[vehicleId] = washDate;
+          }
+        }
+      });
+      
+      console.log("Vehicle wash dates:", vehicleWashDates);
+      setLastWashDates(vehicleWashDates);
     };
 
     fetchLastWashDates();
