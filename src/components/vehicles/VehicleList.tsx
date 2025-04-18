@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useVehicles } from "@/contexts/VehicleContext";
 import { useLocations } from "@/contexts/LocationContext";
 import { SearchVehicles } from "./SearchVehicles";
-import { Location } from "@/models/types";
+import { VehicleFilters } from "./VehicleFilters";
+import { Location, Vehicle } from "@/models/types";
+import { differenceInDays } from "date-fns";
 
 interface VehicleListProps {
   onAddVehicle: () => void;
@@ -13,6 +15,9 @@ interface VehicleListProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }
+
+type SortOption = 'lastWash' | 'make' | 'model' | 'year' | 'dateAdded';
+type FilterOption = 'all' | 'washed' | 'unwashed';
 
 export function VehicleList({
   onAddVehicle,
@@ -23,8 +28,11 @@ export function VehicleList({
   const { vehicles } = useVehicles();
   const { locations } = useLocations();
   const [vehicleLocations, setVehicleLocations] = useState<Record<string, string>>({});
+  const [sortBy, setSortBy] = useState<SortOption>('dateAdded');
+  const [filterBy, setFilterBy] = useState<FilterOption>('all');
+  const [lastWashDates, setLastWashDates] = useState<Record<string, Date>>({});
   
-  // Fetch all vehicle-location associations
+  // Fetch vehicle-location associations
   useEffect(() => {
     const fetchVehicleLocations = async () => {
       const { data, error } = await supabase
@@ -50,33 +58,101 @@ export function VehicleList({
     fetchVehicleLocations();
   }, [vehicles]);
 
-  // Filter vehicles based on search query
+  // Fetch last wash dates for vehicles
+  useEffect(() => {
+    const fetchLastWashDates = async () => {
+      const vehicleIds = vehicles.map(v => v.id);
+      
+      const { data, error } = await supabase
+        .from('vehicle_wash_statuses')
+        .select('vehicle_id, created_at')
+        .in('vehicle_id', vehicleIds)
+        .eq('completed', true)
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        const dates: Record<string, Date> = {};
+        data.forEach(status => {
+          // Only set if we don't already have a date for this vehicle
+          // (since results are ordered by date descending)
+          if (!dates[status.vehicle_id]) {
+            dates[status.vehicle_id] = new Date(status.created_at);
+          }
+        });
+        setLastWashDates(dates);
+      }
+    };
+
+    fetchLastWashDates();
+  }, [vehicles]);
+
+  // Filter vehicles based on search query and filter option
   const filteredVehicles = vehicles.filter((vehicle) => {
-    const searchTerms = searchQuery.toLowerCase();
-    return (
-      vehicle.make.toLowerCase().includes(searchTerms) ||
-      vehicle.model.toLowerCase().includes(searchTerms) ||
-      vehicle.year.toLowerCase().includes(searchTerms) ||
-      vehicle.licensePlate.toLowerCase().includes(searchTerms) ||
-      vehicle.type?.toLowerCase().includes(searchTerms) ||
-      vehicle.color?.toLowerCase().includes(searchTerms)
-    );
+    const matchesSearch = searchQuery.toLowerCase().trim() === '' || 
+      vehicle.make.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      vehicle.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      vehicle.year.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      vehicle.licensePlate?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      vehicle.type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      vehicle.color?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (!matchesSearch) return false;
+
+    const lastWashDate = lastWashDates[vehicle.id];
+    const daysSinceWash = lastWashDate ? differenceInDays(new Date(), lastWashDate) : null;
+
+    switch (filterBy) {
+      case 'washed':
+        return daysSinceWash !== null && daysSinceWash <= 7;
+      case 'unwashed':
+        return daysSinceWash === null || daysSinceWash > 7;
+      default:
+        return true;
+    }
   });
 
-  // Function to get location name by ID
-  const getLocationNameById = (locationId: string): string => {
-    const location = locations.find(loc => loc.id === locationId);
-    return location ? location.name : "";
-  };
+  // Sort vehicles
+  const sortedVehicles = [...filteredVehicles].sort((a, b) => {
+    switch (sortBy) {
+      case 'lastWash': {
+        const dateA = lastWashDates[a.id];
+        const dateB = lastWashDates[b.id];
+        if (!dateA && !dateB) return 0;
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+        return dateB.getTime() - dateA.getTime();
+      }
+      case 'make':
+        return a.make.localeCompare(b.make);
+      case 'model':
+        return a.model.localeCompare(b.model);
+      case 'year':
+        return b.year.localeCompare(a.year);
+      case 'dateAdded':
+        return b.dateAdded.getTime() - a.dateAdded.getTime();
+      default:
+        return 0;
+    }
+  });
 
   return (
     <div>
-      <SearchVehicles 
-        searchQuery={searchQuery} 
-        onSearchChange={onSearchChange} 
-      />
+      <div className="flex gap-4 mb-4">
+        <div className="flex-1">
+          <SearchVehicles 
+            searchQuery={searchQuery} 
+            onSearchChange={onSearchChange} 
+          />
+        </div>
+        <VehicleFilters
+          sortBy={sortBy}
+          filterBy={filterBy}
+          onSortChange={setSortBy}
+          onFilterChange={setFilterBy}
+        />
+      </div>
       
-      {filteredVehicles.length === 0 ? (
+      {sortedVehicles.length === 0 ? (
         <div className="text-center my-12">
           <p className="text-muted-foreground mb-4">No vehicles found</p>
           <button
@@ -88,9 +164,10 @@ export function VehicleList({
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 mt-4">
-          {filteredVehicles.map((vehicle) => {
+          {sortedVehicles.map((vehicle) => {
             const locationId = vehicleLocations[vehicle.id];
-            const locationName = locationId ? getLocationNameById(locationId) : undefined;
+            const locationName = locationId ? locations.find(loc => loc.id === locationId)?.name : undefined;
+            const lastWashDate = lastWashDates[vehicle.id];
             
             return (
               <VehicleCard
@@ -99,6 +176,7 @@ export function VehicleList({
                 onClick={() => onSelectVehicle(vehicle.id)}
                 clickable={true}
                 locationName={locationName}
+                lastWashDate={lastWashDate}
               />
             );
           })}
