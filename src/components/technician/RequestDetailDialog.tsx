@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { WashRequest } from "@/models/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
@@ -34,35 +34,41 @@ export const RequestDetailDialog = ({
   onScheduleJob,
   readOnly = false
 }: RequestDetailDialogProps) => {
+  // Always declare hooks at the top level
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
 
-  if (!selectedRequest) return null;
+  // Use callbacks for handlers
+  const handleOpenChange = useCallback((isOpen: boolean) => {
+    if (!isOpen && !isUpdating) {
+      setSelectedDate(undefined);
+      onOpenChange(false);
+    } else if (!isUpdating) {
+      onOpenChange(true);
+    }
+  }, [isUpdating, onOpenChange]);
+
+  const handleAcceptJob = useCallback(() => {
+    if (!selectedRequest || !userId) return;
+    
+    if (selectedDate) {
+      if (onScheduleJob) {
+        onScheduleJob(selectedRequest.id, selectedDate)
+          .catch(error => console.error('Failed to schedule job:', error));
+      } else {
+        onAcceptRequest(selectedRequest.id);
+      }
+    }
+  }, [selectedRequest, userId, selectedDate, onScheduleJob, onAcceptRequest]);
+
+  // Return empty fragment instead of null for consistency
+  if (!selectedRequest) {
+    return <></>;
+  }
   
   const isMockRequest = selectedRequest.id.startsWith("mock-");
 
-  const handleAcceptJob = () => {
-    if (userId) {
-      if (selectedDate) {
-        if (onScheduleJob) {
-          onScheduleJob(selectedRequest.id, selectedDate);
-        } else {
-          onAcceptRequest(selectedRequest.id);
-        }
-      }
-    }
-  };
-
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      if (!isOpen && !isUpdating) {
-        onOpenChange(false);
-        setSelectedDate(undefined);
-      } else if (isUpdating) {
-        return;
-      } else {
-        onOpenChange(true);
-      }
-    }}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="w-full max-w-lg">
         <DialogHeader>
           <DialogTitle>
