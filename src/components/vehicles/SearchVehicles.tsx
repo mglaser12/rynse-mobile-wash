@@ -16,23 +16,30 @@ export function SearchVehicles({
   placeholder = "Search vehicles by make, model, year, license plate..."
 }: SearchVehiclesProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const shouldExpand = isFocused || isHovered || searchQuery.length > 0;
 
   return (
-    <div className="relative">
+    <div 
+      className="relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <Search className={cn(
         "absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground transition-transform duration-200",
-        isFocused && "scale-110"
+        shouldExpand && "scale-110"
       )} />
       <Input
         type="text"
-        placeholder={isFocused ? placeholder : "Search"}
+        placeholder={shouldExpand ? placeholder : "Search"}
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         className={cn(
-          "pl-9 transition-all duration-200 ease-in-out w-[120px]",
-          (isFocused || searchQuery) && "w-full"
+          "pl-9 transition-all duration-300 ease-in-out",
+          shouldExpand ? "w-full" : "w-[120px]"
         )}
       />
     </div>
