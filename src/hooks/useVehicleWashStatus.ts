@@ -1,28 +1,24 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { VehicleWashStatus, SupabaseVehicleWashStatus } from "@/models/types";
 import { toast } from "sonner";
 
-// Convert Supabase vehicle wash status to our app's format
-const mapSupabaseWashStatus = (status: SupabaseVehicleWashStatus): VehicleWashStatus => {
-  return {
-    id: status.id,
-    vehicleId: status.vehicle_id,
-    washRequestId: status.wash_request_id,
-    technicianId: status.technician_id || undefined,
-    completed: status.completed,
-    notes: status.notes || undefined,
-    postWashPhoto: status.post_wash_photo || undefined,
-    createdAt: new Date(status.created_at),
-    updatedAt: new Date(status.updated_at),
-  };
-};
+const mapSupabaseWashStatus = (status: SupabaseVehicleWashStatus): VehicleWashStatus => ({
+  id: status.id,
+  vehicleId: status.vehicle_id,
+  washRequestId: status.wash_request_id,
+  technicianId: status.technician_id || undefined,
+  completed: status.completed,
+  notes: status.notes || undefined,
+  postWashPhoto: status.post_wash_photo || undefined,
+  createdAt: new Date(status.created_at),
+  updatedAt: new Date(status.updated_at),
+});
 
 export function useVehicleWashStatus() {
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch wash statuses for a specific wash request
-  const fetchWashStatusesByWashId = async (washRequestId: string): Promise<VehicleWashStatus[]> => {
+  const fetchWashStatusesByWashId = useCallback(async (washRequestId: string): Promise<VehicleWashStatus[]> => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -30,10 +26,7 @@ export function useVehicleWashStatus() {
         .select('*')
         .eq('wash_request_id', washRequestId);
 
-      if (error) {
-        throw error;
-      }
-
+      if (error) throw error;
       return (data as SupabaseVehicleWashStatus[]).map(mapSupabaseWashStatus);
     } catch (error) {
       console.error('Error fetching wash statuses:', error);
@@ -41,13 +34,11 @@ export function useVehicleWashStatus() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  // Create or update a vehicle wash status
-  const saveVehicleWashStatus = async (status: VehicleWashStatus): Promise<VehicleWashStatus | null> => {
+  const saveVehicleWashStatus = useCallback(async (status: VehicleWashStatus): Promise<VehicleWashStatus | null> => {
     setIsLoading(true);
     try {
-      // Convert our app's wash status to Supabase format
       const supabaseStatus = {
         vehicle_id: status.vehicleId,
         wash_request_id: status.washRequestId,
@@ -57,9 +48,6 @@ export function useVehicleWashStatus() {
         post_wash_photo: status.postWashPhoto || null,
       };
 
-      let result;
-
-      // If we have an ID, update the existing record
       if (status.id) {
         const { data, error } = await supabase
           .from('vehicle_wash_statuses')
@@ -69,9 +57,8 @@ export function useVehicleWashStatus() {
           .single();
 
         if (error) throw error;
-        result = data as SupabaseVehicleWashStatus;
+        return mapSupabaseWashStatus(data as SupabaseVehicleWashStatus);
       } else {
-        // Otherwise, insert a new record
         const { data, error } = await supabase
           .from('vehicle_wash_statuses')
           .insert(supabaseStatus)
@@ -79,10 +66,8 @@ export function useVehicleWashStatus() {
           .single();
 
         if (error) throw error;
-        result = data as SupabaseVehicleWashStatus;
+        return mapSupabaseWashStatus(data as SupabaseVehicleWashStatus);
       }
-
-      return mapSupabaseWashStatus(result);
     } catch (error) {
       console.error('Error saving wash status:', error);
       toast.error('Failed to save wash status');
@@ -90,25 +75,17 @@ export function useVehicleWashStatus() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  // Save multiple vehicle wash statuses
-  const saveVehicleWashStatuses = async (
+  const saveVehicleWashStatuses = useCallback(async (
     statuses: VehicleWashStatus[]
   ): Promise<VehicleWashStatus[]> => {
     setIsLoading(true);
     try {
-      const results: VehicleWashStatus[] = [];
-
-      // Process each status one by one
-      for (const status of statuses) {
-        const savedStatus = await saveVehicleWashStatus(status);
-        if (savedStatus) {
-          results.push(savedStatus);
-        }
-      }
-
-      return results;
+      const results = await Promise.all(
+        statuses.map(status => saveVehicleWashStatus(status))
+      );
+      return results.filter((status): status is VehicleWashStatus => status !== null);
     } catch (error) {
       console.error('Error saving wash statuses:', error);
       toast.error('Failed to save some wash statuses');
@@ -116,7 +93,7 @@ export function useVehicleWashStatus() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [saveVehicleWashStatus]);
 
   return {
     isLoading,
