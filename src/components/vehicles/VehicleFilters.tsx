@@ -59,13 +59,13 @@ export function VehicleFilters({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Select value={selectedLocationId || ''} onValueChange={(value) => onLocationChange(value === '' ? null : value)}>
+      <Select value={selectedLocationId || 'all'} onValueChange={(value) => onLocationChange(value === 'all' ? null : value)}>
         <SelectTrigger className="w-[180px]">
           <MapPin className="h-4 w-4 mr-2" />
           <SelectValue placeholder="All Locations" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Locations</SelectItem>
+          <SelectItem value="all">All Locations</SelectItem>
           {locations.map((location) => (
             <SelectItem key={location.id} value={location.id}>
               {location.name}
