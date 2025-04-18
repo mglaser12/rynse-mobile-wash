@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Location } from "@/models/types";
@@ -20,10 +19,8 @@ export function LocationSelectionSection({
     onSelectLocation(value);
   };
 
-  // Find the default location if any
   const defaultLocation = locations.find(loc => loc.isDefault);
 
-  // Format address with proper spacing after commas
   const formatAddress = (location: Location | undefined) => {
     if (!location) return "";
     return `${location.address}, ${location.city}, ${location.state}`;
@@ -45,7 +42,7 @@ export function LocationSelectionSection({
         <SelectTrigger className="w-full">
           <SelectValue placeholder={defaultLocation ? `${defaultLocation.name} (Default)` : "Select a location"} />
         </SelectTrigger>
-        <SelectContent className="w-full min-w-[250px]">
+        <SelectContent position="item" className="w-full min-w-[250px]">
           {locations.length === 0 ? (
             <SelectItem value="no-locations" disabled>
               No locations available
