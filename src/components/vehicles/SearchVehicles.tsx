@@ -31,9 +31,8 @@ export function SearchVehicles({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         className={cn(
-          "pl-9 transition-all duration-200 ease-in-out",
-          isFocused ? "w-full" : "w-[120px]", 
-          "hover:w-full focus:w-full"
+          "pl-9 transition-all duration-200 ease-in-out w-[120px]",
+          (isFocused || searchQuery) && "w-full"
         )}
       />
     </div>
