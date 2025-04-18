@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { VehicleCard } from "./VehicleCard";
 import { supabase } from "@/integrations/supabase/client";
@@ -98,12 +97,22 @@ export function VehicleList({
     const lastWashDate = lastWashDates[vehicle.id];
     const daysSinceWash = lastWashDate ? differenceInDays(new Date(), lastWashDate) : null;
 
+    console.log(`Filtering vehicle: ${vehicle.make} ${vehicle.model} (${vehicle.id})`);
+    console.log(`- Last wash date: ${lastWashDate ? lastWashDate.toLocaleDateString() : 'Never washed'}`);
+    console.log(`- Days since last wash: ${daysSinceWash !== null ? daysSinceWash : 'N/A'}`);
+    
+    let filterResult = false;
     switch (filterBy) {
       case 'washed':
-        return daysSinceWash !== null && daysSinceWash <= 30;
+        filterResult = daysSinceWash !== null && daysSinceWash <= 30;
+        console.log(`- "Recently Washed" filter result: ${filterResult} (needs to be <= 30 days)`);
+        return filterResult;
       case 'unwashed':
-        return daysSinceWash === null || daysSinceWash > 30;
+        filterResult = daysSinceWash === null || daysSinceWash > 30;
+        console.log(`- "Needs Washing" filter result: ${filterResult} (needs to be > 30 days or never washed)`);
+        return filterResult;
       default:
+        console.log('- No wash status filter applied');
         return true;
     }
   });
