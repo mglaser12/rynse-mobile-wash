@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Location } from "@/models/types";
@@ -42,7 +43,13 @@ export function LocationSelectionSection({
         <SelectTrigger className="w-full">
           <SelectValue placeholder={defaultLocation ? `${defaultLocation.name} (Default)` : "Select a location"} />
         </SelectTrigger>
-        <SelectContent position="item-aligned" className="w-full min-w-[250px]">
+        <SelectContent 
+          position="item-aligned" 
+          side="bottom" 
+          align="start"
+          sideOffset={5}
+          className="w-full min-w-[250px] z-50"
+        >
           {locations.length === 0 ? (
             <SelectItem value="no-locations" disabled>
               No locations available
