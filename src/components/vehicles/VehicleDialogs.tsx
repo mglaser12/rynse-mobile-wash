@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { useVehicles } from "@/contexts/VehicleContext";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AddVehicleForm } from "./AddVehicleForm";
 import { EditVehicleForm } from "./EditVehicleForm";
 import { DeleteVehicleDialog } from "./DeleteVehicleDialog";
@@ -48,6 +48,10 @@ export function VehicleDialogs({
       {/* Add Vehicle Dialog */}
       <Dialog open={showAddVehicleDialog} onOpenChange={setShowAddVehicleDialog}>
         <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Vehicle</DialogTitle>
+            <DialogDescription>Enter details to add a vehicle to your account</DialogDescription>
+          </DialogHeader>
           <AddVehicleForm 
             onSuccess={() => setShowAddVehicleDialog(false)}
             onCancel={() => setShowAddVehicleDialog(false)}
@@ -63,6 +67,10 @@ export function VehicleDialogs({
         }}
       >
         <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Vehicle Details</DialogTitle>
+            <DialogDescription>View details and wash history for this vehicle</DialogDescription>
+          </DialogHeader>
           {selectedVehicle && (
             <VehicleWashHistory 
               vehicle={selectedVehicle} 
@@ -80,6 +88,10 @@ export function VehicleDialogs({
         }}
       >
         <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Vehicle</DialogTitle>
+            <DialogDescription>Update vehicle information</DialogDescription>
+          </DialogHeader>
           {selectedVehicle && (
             <EditVehicleForm
               vehicle={selectedVehicle}
@@ -92,7 +104,7 @@ export function VehicleDialogs({
         </DialogContent>
       </Dialog>
 
-      {/* Delete Vehicle Dialog */}
+      {/* Delete Vehicle Dialog is already wrapped in an AlertDialog which has its own structure */}
       <DeleteVehicleDialog
         isOpen={showDeleteDialog}
         isDeleting={false}

@@ -3,7 +3,6 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { WashRequest } from "@/models/types";
 import { NoVehiclesAlert } from "./NoVehiclesAlert";
-import { VehicleWashProgressHeader } from "./VehicleWashProgressHeader";
 import { VehicleWashProgressFooter } from "./VehicleWashProgressFooter";
 import { VehicleWashProgressTabs } from "./VehicleWashProgressTabs";
 import { useVehicleWashProgress } from "./useVehicleWashProgress";
@@ -42,8 +41,6 @@ export const VehicleWashProgressDialog = ({
             Track and update the wash status for each vehicle
           </DialogDescription>
         </DialogHeader>
-
-        <VehicleWashProgressHeader />
 
         {vehicles.length === 0 ? (
           <NoVehiclesAlert />
