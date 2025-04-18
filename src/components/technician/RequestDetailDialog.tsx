@@ -68,11 +68,11 @@ export const RequestDetailDialog = ({
           <DialogTitle>
             {readOnly ? "Job Details" : "Wash Request Details"}
           </DialogTitle>
-          {isMockRequest && (
-            <DialogDescription className="text-amber-500">
-              This is demo data shown for offline use
-            </DialogDescription>
-          )}
+          <DialogDescription>
+            {isMockRequest 
+              ? "This is demo data shown for offline use" 
+              : "Review the details for this wash request"}
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
