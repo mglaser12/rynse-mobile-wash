@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { VehicleCard } from "./VehicleCard";
 import { supabase } from "@/integrations/supabase/client";
@@ -99,9 +100,9 @@ export function VehicleList({
 
     switch (filterBy) {
       case 'washed':
-        return daysSinceWash !== null && daysSinceWash <= 7;
+        return daysSinceWash !== null && daysSinceWash <= 30;
       case 'unwashed':
-        return daysSinceWash === null || daysSinceWash > 7;
+        return daysSinceWash === null || daysSinceWash > 30;
       default:
         return true;
     }
