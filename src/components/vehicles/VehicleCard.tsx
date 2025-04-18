@@ -14,6 +14,7 @@ interface VehicleCardProps {
   className?: string; 
   clickable?: boolean;
   locationName?: string;
+  lastWashDate?: Date; // Add the lastWashDate prop
 }
 
 export function VehicleCard({ 
@@ -23,10 +24,18 @@ export function VehicleCard({
   selectionMode = false,
   className = "",
   clickable = false,
-  locationName
+  locationName,
+  lastWashDate
 }: VehicleCardProps) {
   const isClickable = clickable || !!onClick;
-  const { daysSinceLastWash } = useVehicleWashHistory(vehicle.id);
+  
+  // Use the passed lastWashDate prop if provided, otherwise use the hook
+  const { daysSinceLastWash: hookDaysSinceLastWash } = useVehicleWashHistory(vehicle.id);
+  
+  // Calculate days since last wash if lastWashDate is provided
+  const daysSinceLastWash = lastWashDate 
+    ? Math.floor((new Date().getTime() - lastWashDate.getTime()) / (1000 * 60 * 60 * 24))
+    : hookDaysSinceLastWash;
   
   // Determine the badge color based on days since last wash
   const getWashStatusBadge = () => {
