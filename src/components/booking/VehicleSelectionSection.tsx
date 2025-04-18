@@ -1,12 +1,12 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Car, Check, ArrowRight, AlertCircle } from "lucide-react";
+import { Car, AlertCircle, ArrowRight } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Vehicle } from "@/models/types";
 import { VehicleSelectionTab } from "./VehicleSelectionTab";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useVehicleWashHistory } from "@/hooks/useVehicleWashHistory";
 
 interface VehicleSelectionSectionProps {
   vehicles: Vehicle[];
@@ -26,7 +26,7 @@ export function VehicleSelectionSection({
   locationSelected = false
 }: VehicleSelectionSectionProps) {
   const isMobile = useIsMobile();
-  
+
   // If no location is selected yet
   if (!locationSelected) {
     return (
@@ -86,6 +86,7 @@ export function VehicleSelectionSection({
               vehicle={vehicle}
               isSelected={selectedVehicleIds.includes(vehicle.id)}
               onSelect={() => onSelectVehicle(vehicle.id)}
+              showWashHistory={true}
             />
           ))}
         </div>
