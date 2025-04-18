@@ -1,114 +1,105 @@
 
-import React, { useState } from "react";
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Car, Check, ArrowRight, AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { Car } from "lucide-react";
-import { VehicleSelectionFilters } from "./VehicleSelectionFilters";
 import { Vehicle } from "@/models/types";
-import { useVehicles } from "@/contexts/VehicleContext";
-import { VehicleCard } from "@/components/vehicles/VehicleCard";
-import { useVehicleWashHistory } from "@/hooks/useVehicleWashHistory";
+import { VehicleSelectionTab } from "./VehicleSelectionTab";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface VehicleSelectionSectionProps {
+  vehicles: Vehicle[];
   selectedVehicleIds: string[];
   onSelectVehicle: (id: string) => void;
-  locationSelected: boolean;
-  vehicles?: Vehicle[]; // Added this property to match usage in CreateWashRequestForm
-  onCancel?: () => void; // Added to match usage in CreateWashRequestForm
+  onCancel: () => void;
+  onContinue?: () => void;
+  locationSelected?: boolean;
 }
 
-type SortOption = 'lastWash' | 'make' | 'model' | 'year' | 'dateAdded';
-type FilterOption = 'all' | 'washed' | 'unwashed';
-
 export function VehicleSelectionSection({
+  vehicles,
   selectedVehicleIds,
   onSelectVehicle,
-  locationSelected,
-  vehicles: providedVehicles, // Rename to avoid conflict with useVehicles
-  onCancel
+  onCancel,
+  onContinue,
+  locationSelected = false
 }: VehicleSelectionSectionProps) {
-  // Use provided vehicles if available, otherwise use vehicles from context
-  const { vehicles: contextVehicles } = useVehicles();
-  const vehicles = providedVehicles || contextVehicles;
+  const isMobile = useIsMobile();
   
-  const [sortBy, setSortBy] = useState<SortOption>('lastWash');
-  const [filterBy, setFilterBy] = useState<FilterOption>('all');
-
-  // Get last wash dates for all vehicles
-  const vehiclesWithWashDates = vehicles.map(vehicle => {
-    const { lastWashDate, daysSinceLastWash } = useVehicleWashHistory(vehicle.id);
-    return {
-      ...vehicle,
-      lastWashDate,
-      daysSinceLastWash
-    };
-  });
-
-  // Filter vehicles
-  const filteredVehicles = vehiclesWithWashDates.filter(vehicle => {
-    switch (filterBy) {
-      case 'washed':
-        return vehicle.daysSinceLastWash !== null && vehicle.daysSinceLastWash <= 7;
-      case 'unwashed':
-        return vehicle.daysSinceLastWash === null || vehicle.daysSinceLastWash > 7;
-      default:
-        return true;
-    }
-  });
-
-  // Sort vehicles
-  const sortedVehicles = [...filteredVehicles].sort((a, b) => {
-    switch (sortBy) {
-      case 'lastWash':
-        if (!a.lastWashDate && !b.lastWashDate) return 0;
-        if (!a.lastWashDate) return 1;
-        if (!b.lastWashDate) return -1;
-        return b.lastWashDate.getTime() - a.lastWashDate.getTime();
-      case 'make':
-        return a.make.localeCompare(b.make);
-      case 'model':
-        return a.model.localeCompare(b.model);
-      case 'year':
-        return b.year.localeCompare(a.year);
-      case 'dateAdded':
-        return b.dateAdded.getTime() - a.dateAdded.getTime();
-      default:
-        return 0;
-    }
-  });
+  // If no location is selected yet
+  if (!locationSelected) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <Label className="flex items-center">
+            <Car className="h-4 w-4 mr-2" />
+            Select Vehicle(s)
+          </Label>
+          
+          <Alert className="mt-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Please select a location first to view available vehicles
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+  
+  if (vehicles.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <Label className="flex items-center">
+            <Car className="h-4 w-4 mr-2" />
+            Select Vehicle(s)
+          </Label>
+          
+          <Alert className="mt-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              No vehicles found at this location. Please add vehicles to this location first.
+            </AlertDescription>
+          </Alert>
+          
+          <Button className="mt-4" variant="outline" onClick={onCancel}>
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div>
         <Label className="flex items-center">
           <Car className="h-4 w-4 mr-2" />
           Select Vehicle(s)
         </Label>
-        <VehicleSelectionFilters
-          sortBy={sortBy}
-          filterBy={filterBy}
-          onSortChange={setSortBy}
-          onFilterChange={setFilterBy}
-        />
-      </div>
-
-      {!locationSelected ? (
-        <p className="text-sm text-muted-foreground">Please select a location first</p>
-      ) : sortedVehicles.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No vehicles found</p>
-      ) : (
-        <div className="grid gap-3">
-          {sortedVehicles.map((vehicle) => (
-            <VehicleCard
+        <div className="grid grid-cols-1 gap-2 mt-2">
+          {vehicles.map((vehicle) => (
+            <VehicleSelectionTab
               key={vehicle.id}
               vehicle={vehicle}
-              selected={selectedVehicleIds.includes(vehicle.id)}
-              selectionMode={true}
-              onClick={() => onSelectVehicle(vehicle.id)}
-              lastWashDate={vehicle.lastWashDate}
-              clickable
+              isSelected={selectedVehicleIds.includes(vehicle.id)}
+              onSelect={() => onSelectVehicle(vehicle.id)}
             />
           ))}
         </div>
+      </div>
+      
+      {selectedVehicleIds.length > 0 && onContinue && (
+        <Button 
+          type="button" 
+          className="w-full" 
+          onClick={onContinue}
+        >
+          Continue to Date Selection
+          <ArrowRight className="h-4 w-4 ml-2" />
+        </Button>
       )}
     </div>
   );
