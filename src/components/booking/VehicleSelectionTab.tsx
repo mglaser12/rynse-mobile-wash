@@ -1,7 +1,6 @@
-
 import React from "react";
 import { Vehicle } from "@/models/types";
-import { Clock } from "lucide-react";
+import { Clock, Car } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useVehicleWashHistory } from "@/hooks/useVehicleWashHistory";
 
