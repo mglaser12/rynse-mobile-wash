@@ -32,7 +32,7 @@ export function SearchVehicles({
         onBlur={() => setIsFocused(false)}
         className={cn(
           "pl-9 transition-all duration-200 ease-in-out",
-          isFocused ? "w-full" : "w-[120px]",
+          isFocused ? "w-full" : "w-[120px]", 
           "hover:w-full focus:w-full"
         )}
       />
