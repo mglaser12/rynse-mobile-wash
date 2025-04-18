@@ -1,4 +1,7 @@
 
+// Import uuid at the top level of the file
+import { v4 as uuidv4 } from 'uuid';
+
 // Helper function to convert base64 to Blob
 export const base64ToBlob = (base64: string) => {
   const parts = base64.split(';base64,');
@@ -16,9 +19,6 @@ export const base64ToBlob = (base64: string) => {
 
 // Upload a vehicle image to storage
 export const uploadVehicleImageToStorage = async (base64Image: string, supabase: any): Promise<{ path: string | null; error: Error | null }> => {
-  // Import UUID using ES modules syntax instead of require
-  import { v4 as uuidv4 } from 'uuid';
-  
   const fileName = `${uuidv4()}.jpg`;
   const { data: uploadData, error: uploadError } = await supabase
     .storage
