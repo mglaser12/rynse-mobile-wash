@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Clock, User, Camera, FileText, MapPin } from "lucide-react";
@@ -87,9 +87,6 @@ export function CompletedWashDialog({ washRequest, open, onOpenChange }: Complet
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Completed Wash Details</DialogTitle>
-          <DialogDescription>
-            View information about your completed wash service.
-          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">

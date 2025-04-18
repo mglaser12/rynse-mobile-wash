@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { WashRequest } from "@/models/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
@@ -34,51 +34,45 @@ export const RequestDetailDialog = ({
   onScheduleJob,
   readOnly = false
 }: RequestDetailDialogProps) => {
-  // Always declare hooks at the top level
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
 
-  // Use callbacks for handlers
-  const handleOpenChange = useCallback((isOpen: boolean) => {
-    if (!isOpen && !isUpdating) {
-      setSelectedDate(undefined);
-      onOpenChange(false);
-    } else if (!isUpdating) {
-      onOpenChange(true);
-    }
-  }, [isUpdating, onOpenChange]);
-
-  const handleAcceptJob = useCallback(() => {
-    if (!selectedRequest || !userId) return;
-    
-    if (selectedDate) {
-      if (onScheduleJob) {
-        onScheduleJob(selectedRequest.id, selectedDate)
-          .catch(error => console.error('Failed to schedule job:', error));
-      } else {
-        onAcceptRequest(selectedRequest.id);
-      }
-    }
-  }, [selectedRequest, userId, selectedDate, onScheduleJob, onAcceptRequest]);
-
-  // Return empty fragment instead of null for consistency
-  if (!selectedRequest) {
-    return <></>;
-  }
+  if (!selectedRequest) return null;
   
   const isMockRequest = selectedRequest.id.startsWith("mock-");
 
+  const handleAcceptJob = () => {
+    if (userId) {
+      if (selectedDate) {
+        if (onScheduleJob) {
+          onScheduleJob(selectedRequest.id, selectedDate);
+        } else {
+          onAcceptRequest(selectedRequest.id);
+        }
+      }
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen && !isUpdating) {
+        onOpenChange(false);
+        setSelectedDate(undefined);
+      } else if (isUpdating) {
+        return;
+      } else {
+        onOpenChange(true);
+      }
+    }}>
       <DialogContent className="w-full max-w-lg">
         <DialogHeader>
           <DialogTitle>
             {readOnly ? "Job Details" : "Wash Request Details"}
           </DialogTitle>
-          <DialogDescription>
-            {isMockRequest 
-              ? "This is demo data shown for offline use" 
-              : "Review the details for this wash request"}
-          </DialogDescription>
+          {isMockRequest && (
+            <DialogDescription className="text-amber-500">
+              This is demo data shown for offline use
+            </DialogDescription>
+          )}
         </DialogHeader>
         
         <div className="space-y-4">

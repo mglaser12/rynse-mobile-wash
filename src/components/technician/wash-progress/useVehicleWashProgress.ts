@@ -1,8 +1,8 @@
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import { VehicleWashStatus, WashRequest } from "@/models/types";
 import { useVehicleWashStatus } from "@/hooks/useVehicleWashStatus";
-import { useAuth } from "@/contexts/auth";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 export const useVehicleWashProgress = (
@@ -11,35 +11,25 @@ export const useVehicleWashProgress = (
   onComplete: () => void,
   onOpenChange: (open: boolean) => void
 ) => {
-  const mounted = useRef(true);
+  // Get vehicle details from the wash request
   const vehicles = washRequest.vehicleDetails || [];
-  const [activeTab, setActiveTab] = useState<string>(
-    vehicles.length > 0 ? vehicles[0].id : "0"
-  );
+  const [activeTab, setActiveTab] = useState<string>(vehicles.length > 0 ? vehicles[0].id : "0");
   const [vehicleStatuses, setVehicleStatuses] = useState<VehicleWashStatus[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
   const { fetchWashStatusesByWashId, saveVehicleWashStatuses } = useVehicleWashStatus();
 
-  const initializeStatuses = useCallback(() => {
-    if (!mounted.current) return;
-    const initialStatuses = vehicles.map(vehicle => ({
-      vehicleId: vehicle.id,
-      washRequestId: washRequest.id,
-      technicianId: user?.id,
-      completed: false,
-      notes: ""
-    }));
-    setVehicleStatuses(initialStatuses);
-  }, [vehicles, washRequest.id, user?.id]);
+  // Initialize vehicle statuses
+  useEffect(() => {
+    if (open && vehicles.length > 0 && washRequest.id) {
+      loadWashStatuses();
+    }
+  }, [open, washRequest.id, vehicles]);
 
-  const loadWashStatuses = useCallback(async () => {
-    if (!washRequest.id || !open || vehicles.length === 0 || !mounted.current) return;
-    
+  const loadWashStatuses = async () => {
     try {
+      // Try to get previously saved statuses from database
       const savedStatuses = await fetchWashStatusesByWashId(washRequest.id);
-      
-      if (!mounted.current) return;
       
       if (savedStatuses && savedStatuses.length > 0) {
         setVehicleStatuses(savedStatuses);
@@ -48,78 +38,73 @@ export const useVehicleWashProgress = (
       }
     } catch (error) {
       console.error("Failed to load wash statuses:", error);
-      if (mounted.current) {
-        initializeStatuses();
-      }
+      initializeStatuses();
     }
-  }, [washRequest.id, open, vehicles.length, fetchWashStatusesByWashId, initializeStatuses]);
+  };
 
-  useEffect(() => {
-    mounted.current = true;
-    
-    if (open && vehicles.length > 0 && washRequest.id) {
-      loadWashStatuses();
-    }
+  // Initialize vehicle statuses for tracking
+  const initializeStatuses = () => {
+    const initialStatuses = vehicles.map(vehicle => ({
+      vehicleId: vehicle.id,
+      washRequestId: washRequest.id,
+      technicianId: user?.id,
+      completed: false,
+      notes: ""
+    }));
+    setVehicleStatuses(initialStatuses);
+  };
 
-    return () => {
-      mounted.current = false;
-    };
-  }, [open, washRequest.id, vehicles.length, loadWashStatuses]);
-
-  const handleVehicleStatusUpdate = useCallback((updatedStatus: VehicleWashStatus) => {
-    if (!mounted.current) return;
+  // Save progress when vehicle status changes
+  const handleVehicleStatusUpdate = (updatedStatus: VehicleWashStatus) => {
     setVehicleStatuses(prev => 
       prev.map(status => 
-        status.vehicleId === updatedStatus.vehicleId ? updatedStatus : status
+        status.vehicleId === updatedStatus.vehicleId 
+          ? updatedStatus 
+          : status
       )
     );
-  }, []);
+  };
 
-  const handleCompleteWash = useCallback(async () => {
-    if (!mounted.current) return;
-    
+  const handleCompleteWash = async () => {
     const allCompleted = vehicleStatuses.every(status => status.completed);
-    if (!allCompleted) {
-      toast({
-        variant: "destructive",
-        title: "Incomplete Wash",
-        description: "Please complete the wash for all vehicles before finishing."
-      });
-      return;
-    }
-
-    try {
-      const statusesToSave = vehicleStatuses.map(status => ({
-        ...status,
-        washRequestId: washRequest.id,
-        technicianId: user?.id
-      }));
-      
-      await saveVehicleWashStatuses(statusesToSave);
-      onComplete();
-      
-      if (mounted.current) {
+    
+    if (allCompleted) {
+      try {
+        // Make sure all statuses have required fields
+        const statusesToSave = vehicleStatuses.map(status => ({
+          ...status,
+          washRequestId: washRequest.id,
+          technicianId: user?.id
+        }));
+        
+        // Save all statuses to the database
+        await saveVehicleWashStatuses(statusesToSave);
+        
+        onComplete();
         toast({
           title: "Wash Completed",
           description: "All vehicles have been successfully washed."
         });
-      }
-    } catch (error) {
-      console.error("Error saving wash statuses:", error);
-      if (mounted.current) {
+      } catch (error) {
+        console.error("Error saving wash statuses:", error);
         toast({
           variant: "destructive",
           title: "Error",
           description: "Failed to save wash information. Please try again."
         });
       }
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Incomplete Wash",
+        description: "Please complete the wash for all vehicles before finishing."
+      });
     }
-  }, [vehicleStatuses, washRequest.id, user?.id, saveVehicleWashStatuses, onComplete, toast]);
+  };
 
-  const handleSaveAndExit = useCallback(async () => {
-    if (!mounted.current) return;
-    
+  const handleSaveAndExit = async () => {
     try {
+      // Save current progress to database
       const statusesToSave = vehicleStatuses.map(status => ({
         ...status,
         washRequestId: washRequest.id,
@@ -128,28 +113,25 @@ export const useVehicleWashProgress = (
       
       await saveVehicleWashStatuses(statusesToSave);
       
-      if (mounted.current) {
-        toast({
-          title: "Progress Saved",
-          description: "Your wash progress has been saved."
-        });
-        onOpenChange(false);
-      }
+      toast({
+        title: "Progress Saved",
+        description: "Your wash progress has been saved."
+      });
+      
+      onOpenChange(false);
     } catch (error) {
       console.error("Error saving progress:", error);
-      if (mounted.current) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to save progress. Please try again."
-        });
-      }
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save progress. Please try again."
+      });
     }
-  }, [vehicleStatuses, washRequest.id, user?.id, saveVehicleWashStatuses, onOpenChange, toast]);
+  };
 
-  const getCompletedCount = useCallback(() => {
+  const getCompletedCount = () => {
     return vehicleStatuses.filter(status => status.completed).length;
-  }, [vehicleStatuses]);
+  };
 
   const allComplete = vehicles.length > 0 && getCompletedCount() === vehicles.length;
   

@@ -1,8 +1,14 @@
 
 import React from "react";
+import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
-// This component is no longer used as its functionality has been 
-// moved directly into the VehicleWashProgressDialog component
 export const VehicleWashProgressHeader = () => {
-  return null;
+  return (
+    <DialogHeader>
+      <DialogTitle>Wash Progress</DialogTitle>
+      <DialogDescription>
+        Record information for each vehicle as you complete the wash.
+      </DialogDescription>
+    </DialogHeader>
+  );
 };
