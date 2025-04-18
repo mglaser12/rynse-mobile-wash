@@ -1,64 +1,27 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SlidersHorizontal, ArrowUpDown, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useLocations } from "@/contexts/LocationContext";
-
-type SortOption = 'lastWash' | 'make' | 'model' | 'year' | 'dateAdded' | 'location';
-type FilterOption = 'all' | 'washed' | 'unwashed';
+import { SlidersHorizontal, MapPin } from "lucide-react";
 
 interface VehicleFiltersProps {
-  onSortChange: (value: SortOption) => void;
   onFilterChange: (value: FilterOption) => void;
   onLocationChange: (locationId: string | null) => void;
   selectedLocationId: string | null;
-  sortBy: SortOption;
   filterBy: FilterOption;
 }
 
+type FilterOption = 'all' | 'washed' | 'unwashed';
+
 export function VehicleFilters({ 
-  onSortChange, 
   onFilterChange, 
   onLocationChange,
   selectedLocationId,
-  sortBy, 
   filterBy 
 }: VehicleFiltersProps) {
   const { locations } = useLocations();
 
   return (
     <div className="flex gap-2">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm">
-            <ArrowUpDown className="h-4 w-4 mr-2" />
-            Sort
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onClick={() => onSortChange('lastWash')}>
-            Days Since Last Wash
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onSortChange('location')}>
-            Location
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onSortChange('make')}>
-            Make
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onSortChange('model')}>
-            Model
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onSortChange('year')}>
-            Year
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onSortChange('dateAdded')}>
-            Date Added
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
       <Select value={selectedLocationId || 'all'} onValueChange={(value) => onLocationChange(value === 'all' ? null : value)}>
         <SelectTrigger className="w-[180px]">
           <MapPin className="h-4 w-4 mr-2" />
