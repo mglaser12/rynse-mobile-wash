@@ -11,12 +11,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog";
+import { PwaDialogContent } from "@/components/ui/pwa-dialog"; // Use the PWA-optimized dialog
 import { EditWashRequestForm } from "@/components/booking/EditWashRequestForm";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useWashRequests } from "@/contexts/WashContext";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface WashRequestCardProps {
   washRequest: WashRequest;
@@ -49,8 +50,33 @@ export const WashRequestCard = ({
 }: WashRequestCardProps) => {
   const { cancelWashRequest } = useWashRequests();
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const dialogClosingRef = useRef(false);
+
+  // Handle proper cleanup when component unmounts or dialog closes
+  useEffect(() => {
+    return () => {
+      // Ensure we're not leaving any pending state when component unmounts
+      dialogClosingRef.current = false;
+    };
+  }, []);
+
+  // Handle dialog state changes with animation frame to prevent blocking
+  const handleOpenDialogChange = (open: boolean) => {
+    if (!open && !dialogClosingRef.current) {
+      dialogClosingRef.current = true;
+      
+      // Use requestAnimationFrame to defer state update until after animations
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setShowEditDialog(false);
+          dialogClosingRef.current = false;
+        });
+      });
+    } else if (open) {
+      setShowEditDialog(true);
+    }
+  };
 
   const handleClick = () => {
     if (onClick) onClick();
@@ -221,14 +247,16 @@ export const WashRequestCard = ({
         )}
       </Card>
 
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="w-full max-w-lg py-6 max-h-[90vh] overflow-hidden flex flex-col">
-          <EditWashRequestForm 
-            washRequest={washRequest}
-            onSuccess={() => setShowEditDialog(false)}
-            onCancel={() => setShowEditDialog(false)}
-          />
-        </DialogContent>
+      <Dialog open={showEditDialog} onOpenChange={handleOpenDialogChange}>
+        <PwaDialogContent className="w-full max-w-lg py-6 max-h-[90vh] overflow-hidden flex flex-col">
+          {showEditDialog && ( // Only render when dialog is open to prevent unnecessary operations
+            <EditWashRequestForm 
+              washRequest={washRequest}
+              onSuccess={() => handleOpenDialogChange(false)}
+              onCancel={() => handleOpenDialogChange(false)}
+            />
+          )}
+        </PwaDialogContent>
       </Dialog>
     </>
   );

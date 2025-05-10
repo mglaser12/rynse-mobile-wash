@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { DateSelectionSection } from "./DateSelectionSection";
 import { LocationSelectionSection } from "./LocationSelectionSection";
 import { NotesSection } from "./NotesSection";
@@ -12,6 +12,7 @@ import { VehicleSelectionSection } from "./VehicleSelectionSection";
 import { useVehicles } from "@/contexts/VehicleContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Separator } from "@/components/ui/separator";
+import { DialogTitle } from "@/components/ui/dialog";
 
 interface EditWashRequestFormProps {
   washRequest: WashRequest;
@@ -36,6 +37,16 @@ export function EditWashRequestForm({
   const [notes, setNotes] = useState<string>(washRequest.notes || "");
   const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>(washRequest.vehicles || []);
   const [filteredVehicles, setFilteredVehicles] = useState<Vehicle[]>([]);
+  
+  // Track mounting state to prevent state updates after unmount
+  const isMounted = useRef(true);
+
+  // Set up cleanup when component unmounts
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Load vehicles for the selected location
   useEffect(() => {
@@ -46,6 +57,8 @@ export function EditWashRequestForm({
           .select('vehicle_id')
           .eq('location_id', locationId);
         
+        if (!isMounted.current) return;
+          
         if (data && data.length > 0) {
           const vehicleIds = data.map(item => item.vehicle_id);
           setFilteredVehicles(vehicles.filter(v => vehicleIds.includes(v.id)));
@@ -137,9 +150,13 @@ export function EditWashRequestForm({
         notes
       });
 
+      if (!isMounted.current) return;
+
       if (success) {
         // Update vehicle associations
         const vehiclesUpdated = await updateVehicleAssociations(washRequest.id, selectedVehicleIds);
+        
+        if (!isMounted.current) return;
         
         if (vehiclesUpdated) {
           toast.success("Wash request updated successfully");
@@ -152,15 +169,19 @@ export function EditWashRequestForm({
       }
     } catch (error) {
       console.error("Error updating wash request:", error);
-      toast.error("Failed to update wash request");
+      if (isMounted.current) {
+        toast.error("Failed to update wash request");
+      }
     } finally {
-      setIsSubmitting(false);
+      if (isMounted.current) {
+        setIsSubmitting(false);
+      }
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 overflow-y-auto flex-grow">
-      <h2 className="text-xl font-semibold">Edit Wash Request</h2>
+      <DialogTitle className="text-xl font-semibold">Edit Wash Request</DialogTitle>
 
       <div className="space-y-6">
         <LocationSelectionSection 
@@ -206,4 +227,4 @@ export function EditWashRequestForm({
       />
     </form>
   );
-}
+};

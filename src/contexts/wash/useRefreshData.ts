@@ -5,7 +5,18 @@ export function useRefreshData(refreshData: Function) {
   const lastUpdateTimestampRef = useRef<number>(0);
   const pendingRefreshRef = useRef<boolean>(false);
   const forceRefreshRef = useRef<boolean>(false);
+  const timeoutIdRef = useRef<number | null>(null); // Track timeout ID for cleanup
   const THROTTLE_INTERVAL = 5000; // 5 second throttle
+  
+  // Cancel any pending refresh timeouts
+  const cancelPendingRefresh = useCallback(() => {
+    if (timeoutIdRef.current !== null) {
+      clearTimeout(timeoutIdRef.current);
+      timeoutIdRef.current = null;
+      pendingRefreshRef.current = false;
+      console.log("Pending refresh canceled");
+    }
+  }, []);
   
   // Safe refresh data with throttling
   const safeRefreshData = useCallback(async () => {
@@ -21,16 +32,21 @@ export function useRefreshData(refreshData: Function) {
     if (now - lastUpdateTimestampRef.current < THROTTLE_INTERVAL) {
       console.log(`Refresh throttled - too soon after last update (wait ${THROTTLE_INTERVAL/1000}s)`);
       
-      // Mark that we need a refresh, but only if not already pending
-      if (!pendingRefreshRef.current) {
-        pendingRefreshRef.current = true;
-        
-        // Schedule a refresh after the throttle period
-        setTimeout(() => {
+      // Cancel any existing pending refresh first
+      cancelPendingRefresh();
+      
+      // Mark that we need a refresh and schedule it
+      pendingRefreshRef.current = true;
+      
+      // Use requestAnimationFrame to ensure we're not blocking the UI thread
+      // and then set a timeout for the actual refresh
+      requestAnimationFrame(() => {
+        timeoutIdRef.current = window.setTimeout(() => {
           if (pendingRefreshRef.current) {
             console.log("Executing delayed refresh");
             lastUpdateTimestampRef.current = Date.now();
             pendingRefreshRef.current = false;
+            timeoutIdRef.current = null;
             
             try {
               refreshData();
@@ -39,7 +55,8 @@ export function useRefreshData(refreshData: Function) {
             }
           }
         }, THROTTLE_INTERVAL - (now - lastUpdateTimestampRef.current));
-      }
+      });
+      
       return;
     }
     
@@ -52,12 +69,13 @@ export function useRefreshData(refreshData: Function) {
     } catch (error) {
       console.error("Error refreshing data:", error);
     }
-  }, [refreshData, THROTTLE_INTERVAL]);
+  }, [refreshData, THROTTLE_INTERVAL, cancelPendingRefresh]);
   
   return {
     safeRefreshData,
     lastUpdateTimestampRef,
     pendingRefreshRef,
-    forceRefreshRef
+    forceRefreshRef,
+    cancelPendingRefresh // Export the cleanup function
   };
 }

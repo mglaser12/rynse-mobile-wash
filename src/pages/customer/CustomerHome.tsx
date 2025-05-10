@@ -2,7 +2,8 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog";
+import { PwaDialogContent } from "@/components/ui/pwa-dialog"; // Use the PWA-optimized dialog
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -10,12 +11,14 @@ import { WashRequestCard } from "@/components/shared/WashRequestCard";
 import { CreateWashRequestForm } from "@/components/booking/CreateWashRequestForm";
 import { useWashRequests } from "@/contexts/WashContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, PlusCircle, Car } from "lucide-react";
+import { Loader2, PlusCircle } from "lucide-react";
+import { DialogTitle } from "@/components/ui/dialog"; // Import DialogTitle for accessibility
 
 const CustomerHome = () => {
   const { user } = useAuth();
   const { washRequests, isLoading } = useWashRequests();
   const [showNewRequestDialog, setShowNewRequestDialog] = useState(false);
+  const [dialogClosing, setDialogClosing] = useState(false);
 
   // Filter requests by status
   const activeRequests = washRequests.filter(req => 
@@ -23,6 +26,23 @@ const CustomerHome = () => {
   );
   const completedRequests = washRequests.filter(req => req.status === "completed");
   const cancelledRequests = washRequests.filter(req => req.status === "cancelled");
+  
+  // Handle dialog state changes with animation frame to prevent blocking
+  const handleOpenDialogChange = (open: boolean) => {
+    if (!open && !dialogClosing) {
+      setDialogClosing(true);
+      
+      // Use requestAnimationFrame to defer state update until after animations
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setShowNewRequestDialog(false);
+          setDialogClosing(false);
+        });
+      });
+    } else if (open) {
+      setShowNewRequestDialog(true);
+    }
+  };
 
   return (
     <AppLayout>
@@ -52,7 +72,7 @@ const CustomerHome = () => {
             <Button 
               variant="secondary" 
               className="mt-3" 
-              onClick={() => setShowNewRequestDialog(true)}
+              onClick={() => handleOpenDialogChange(true)}
             >
               Schedule a Wash
             </Button>
@@ -84,7 +104,7 @@ const CustomerHome = () => {
               ) : (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-3">No active wash appointments</p>
-                  <Button onClick={() => setShowNewRequestDialog(true)}>
+                  <Button onClick={() => handleOpenDialogChange(true)}>
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Schedule a Wash
                   </Button>
@@ -125,13 +145,18 @@ const CustomerHome = () => {
         )}
       </div>
       
-      <Dialog open={showNewRequestDialog} onOpenChange={setShowNewRequestDialog}>
-        <DialogContent className="w-full max-w-lg py-6 max-h-[90vh] overflow-hidden flex flex-col">
-          <CreateWashRequestForm 
-            onSuccess={() => setShowNewRequestDialog(false)}
-            onCancel={() => setShowNewRequestDialog(false)}
-          />
-        </DialogContent>
+      <Dialog open={showNewRequestDialog} onOpenChange={handleOpenDialogChange}>
+        <PwaDialogContent className="w-full max-w-lg py-6 max-h-[90vh] overflow-hidden flex flex-col">
+          {showNewRequestDialog && ( // Only render form when dialog is actually open
+            <>
+              <DialogTitle className="text-xl font-semibold mb-4">Schedule a Wash</DialogTitle>
+              <CreateWashRequestForm 
+                onSuccess={() => handleOpenDialogChange(false)}
+                onCancel={() => handleOpenDialogChange(false)}
+              />
+            </>
+          )}
+        </PwaDialogContent>
       </Dialog>
     </AppLayout>
   );
