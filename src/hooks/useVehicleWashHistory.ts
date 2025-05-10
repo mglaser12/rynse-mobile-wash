@@ -1,17 +1,29 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
-interface UseVehicleWashHistoryResult {
+export interface VehicleWashHistoryItem {
+  id: string;
+  washRequestId: string;
+  date: Date;
+  location?: string;
+  notes?: string;
+  photoUrl?: string;
+}
+
+export interface UseVehicleWashHistoryResult {
   isLoading: boolean;
   lastWashDate: Date | null;
   daysSinceLastWash: number | null;
+  history: VehicleWashHistoryItem[];
 }
 
 export function useVehicleWashHistory(vehicleId: string): UseVehicleWashHistoryResult {
   const [isLoading, setIsLoading] = useState(true);
   const [lastWashDate, setLastWashDate] = useState<Date | null>(null);
   const [daysSinceLastWash, setDaysSinceLastWash] = useState<number | null>(null);
+  const [history, setHistory] = useState<VehicleWashHistoryItem[]>([]);
 
   useEffect(() => {
     const fetchWashHistory = async () => {
@@ -30,6 +42,7 @@ export function useVehicleWashHistory(vehicleId: string): UseVehicleWashHistoryR
         if (!washRequestVehiclesData || washRequestVehiclesData.length === 0) {
           setLastWashDate(null);
           setDaysSinceLastWash(null);
+          setHistory([]);
           setIsLoading(false);
           return;
         }
@@ -38,11 +51,22 @@ export function useVehicleWashHistory(vehicleId: string): UseVehicleWashHistoryR
         const washRequestIds = washRequestVehiclesData.map(item => item.wash_request_id);
         const { data: completedWashRequestsData, error: completedWashRequestsError } = await supabase
           .from('wash_requests')
-          .select('updated_at')
+          .select(`
+            id,
+            preferred_date_start,
+            updated_at,
+            status,
+            notes,
+            locations:location_id (
+              name, 
+              address, 
+              city, 
+              state
+            )
+          `)
           .in('id', washRequestIds)
           .eq('status', 'completed')
-          .order('updated_at', { ascending: false })
-          .limit(1);
+          .order('updated_at', { ascending: false });
 
         if (completedWashRequestsError) {
           throw completedWashRequestsError;
@@ -51,6 +75,7 @@ export function useVehicleWashHistory(vehicleId: string): UseVehicleWashHistoryR
         if (!completedWashRequestsData || completedWashRequestsData.length === 0) {
           setLastWashDate(null);
           setDaysSinceLastWash(null);
+          setHistory([]);
           setIsLoading(false);
           return;
         }
@@ -63,8 +88,38 @@ export function useVehicleWashHistory(vehicleId: string): UseVehicleWashHistoryR
 
         setLastWashDate(lastWash);
         setDaysSinceLastWash(diffDays);
+
+        // Format history items
+        const historyItems: VehicleWashHistoryItem[] = completedWashRequestsData.map(req => {
+          // Format location string if available
+          let locationStr = undefined;
+          if (req.locations) {
+            const loc = req.locations as any;
+            if (loc.name) {
+              locationStr = loc.name;
+              if (loc.city && loc.state) {
+                locationStr += `, ${loc.city}, ${loc.state}`;
+              }
+            }
+          }
+
+          // Fetch vehicle wash status for photo
+          // For now, we'll leave photoUrl undefined, but this could be enhanced later
+
+          return {
+            id: req.id,
+            washRequestId: req.id,
+            date: new Date(req.updated_at),
+            location: locationStr,
+            notes: req.notes || undefined,
+            photoUrl: undefined
+          };
+        });
+
+        setHistory(historyItems);
       } catch (error) {
         console.error('Error fetching vehicle wash history:', error);
+        setHistory([]);
       } finally {
         setIsLoading(false);
       }
@@ -75,5 +130,5 @@ export function useVehicleWashHistory(vehicleId: string): UseVehicleWashHistoryR
     }
   }, [vehicleId]);
 
-  return { isLoading, lastWashDate, daysSinceLastWash };
+  return { isLoading, lastWashDate, daysSinceLastWash, history };
 }

@@ -8,7 +8,7 @@ import { Image, Clock, MapPin, FileText, AlertCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { useVehicleWashHistory, VehicleWashHistoryItem } from "@/hooks/useVehicleWashHistory";
+import { useVehicleWashHistory } from "@/hooks/useVehicleWashHistory";
 import { Vehicle, WashRequest } from "@/models/types";
 import { CompletedWashDialog } from "@/components/wash/CompletedWashDialog";
 import { useWashContext } from "@/contexts/wash/useWashContext";
