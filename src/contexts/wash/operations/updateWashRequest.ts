@@ -52,11 +52,6 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
     if (data.notes) {
       updateData.notes = data.notes;
     }
-
-    // Handle location ID updates
-    if (data.locationId) {
-      updateData.location_id = data.locationId;
-    }
     
     // Handle date updates for scheduling
     if (data.preferredDates) {
@@ -79,6 +74,7 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
     
     if (success) {
       console.log("Update successful!");
+      toast.success("Request updated successfully");
       return true;
     } else {
       console.error("Update failed");

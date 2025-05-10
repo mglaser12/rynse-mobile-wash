@@ -1,134 +1,125 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+import { WashRequest, VehicleWashStatus } from "@/models/types";
+import { differenceInDays } from 'date-fns';
 
 export interface VehicleWashHistoryItem {
   id: string;
-  washRequestId: string;
   date: Date;
-  location?: string;
+  status: string;
   notes?: string;
   photoUrl?: string;
+  location?: string;
+  washRequestId: string;
 }
 
-export interface UseVehicleWashHistoryResult {
-  isLoading: boolean;
-  lastWashDate: Date | null;
-  daysSinceLastWash: number | null;
-  history: VehicleWashHistoryItem[];
-}
-
-export function useVehicleWashHistory(vehicleId: string): UseVehicleWashHistoryResult {
-  const [isLoading, setIsLoading] = useState(true);
+export const useVehicleWashHistory = (vehicleId: string | null) => {
+  const [history, setHistory] = useState<VehicleWashHistoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [lastWashDate, setLastWashDate] = useState<Date | null>(null);
   const [daysSinceLastWash, setDaysSinceLastWash] = useState<number | null>(null);
-  const [history, setHistory] = useState<VehicleWashHistoryItem[]>([]);
 
   useEffect(() => {
     const fetchWashHistory = async () => {
+      if (!vehicleId) {
+        setHistory([]);
+        setLastWashDate(null);
+        setDaysSinceLastWash(null);
+        return;
+      }
+
       setIsLoading(true);
       try {
-        // Get all wash request IDs for this vehicle
-        const { data: washRequestVehiclesData, error: washRequestVehiclesError } = await supabase
+        // Get all wash requests for this vehicle
+        const { data: washVehiclesData, error: washVehiclesError } = await supabase
           .from('wash_request_vehicles')
           .select('wash_request_id')
           .eq('vehicle_id', vehicleId);
 
-        if (washRequestVehiclesError) {
-          throw washRequestVehiclesError;
-        }
-
-        if (!washRequestVehiclesData || washRequestVehiclesData.length === 0) {
-          setLastWashDate(null);
-          setDaysSinceLastWash(null);
+        if (washVehiclesError) throw washVehiclesError;
+        
+        if (!washVehiclesData || washVehiclesData.length === 0) {
           setHistory([]);
           setIsLoading(false);
           return;
         }
 
-        // Get all completed wash requests for this vehicle
-        const washRequestIds = washRequestVehiclesData.map(item => item.wash_request_id);
-        const { data: completedWashRequestsData, error: completedWashRequestsError } = await supabase
+        const washRequestIds = washVehiclesData.map(item => item.wash_request_id);
+
+        // Get all wash requests with details
+        const { data: washRequestsData, error: washRequestsError } = await supabase
           .from('wash_requests')
           .select(`
-            id,
-            preferred_date_start,
-            updated_at,
-            status,
-            notes,
-            locations:location_id (
-              name, 
-              address, 
-              city, 
-              state
-            )
+            *,
+            locations:location_id(name)
           `)
           .in('id', washRequestIds)
           .eq('status', 'completed')
           .order('updated_at', { ascending: false });
 
-        if (completedWashRequestsError) {
-          throw completedWashRequestsError;
-        }
+        if (washRequestsError) throw washRequestsError;
 
-        if (!completedWashRequestsData || completedWashRequestsData.length === 0) {
-          setLastWashDate(null);
-          setDaysSinceLastWash(null);
-          setHistory([]);
-          setIsLoading(false);
-          return;
-        }
+        // Get wash statuses for this vehicle
+        const { data: washStatusData, error: washStatusError } = await supabase
+          .from('vehicle_wash_statuses')
+          .select('*')
+          .eq('vehicle_id', vehicleId);
 
-        // Calculate days since last wash
-        const lastWash = new Date(completedWashRequestsData[0].updated_at);
-        const now = new Date();
-        const diffTime = Math.abs(now.getTime() - lastWash.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (washStatusError) throw washStatusError;
 
-        setLastWashDate(lastWash);
-        setDaysSinceLastWash(diffDays);
-
-        // Format history items
-        const historyItems: VehicleWashHistoryItem[] = completedWashRequestsData.map(req => {
-          // Format location string if available
-          let locationStr = undefined;
-          if (req.locations) {
-            const loc = req.locations as any;
-            if (loc.name) {
-              locationStr = loc.name;
-              if (loc.city && loc.state) {
-                locationStr += `, ${loc.city}, ${loc.state}`;
-              }
+        // Combine the data
+        const historyItems = washRequestsData.map(request => {
+          const status = washStatusData?.find(status => status.wash_request_id === request.id);
+          
+          // Safely access the location name with comprehensive null checking
+          let locationName = null;
+          if (request.locations) {
+            const locationsValue = request.locations as unknown;
+            if (
+              locationsValue && 
+              typeof locationsValue === 'object' && 
+              !Array.isArray(locationsValue) && 
+              'name' in locationsValue
+            ) {
+              // Type assertion to access name safely
+              locationName = (locationsValue as { name: string }).name;
             }
           }
-
-          // Fetch vehicle wash status for photo
-          // For now, we'll leave photoUrl undefined, but this could be enhanced later
-
+          
           return {
-            id: req.id,
-            washRequestId: req.id,
-            date: new Date(req.updated_at),
-            location: locationStr,
-            notes: req.notes || undefined,
-            photoUrl: undefined
+            id: request.id,
+            date: new Date(request.updated_at),
+            status: request.status,
+            notes: status?.notes,
+            photoUrl: status?.post_wash_photo,
+            location: locationName,
+            washRequestId: request.id
           };
         });
 
         setHistory(historyItems);
+        
+        // Set last wash date if there are completed washes
+        if (historyItems.length > 0) {
+          const mostRecentWash = historyItems[0]; // Already sorted descending
+          setLastWashDate(mostRecentWash.date);
+          setDaysSinceLastWash(differenceInDays(new Date(), mostRecentWash.date));
+        }
       } catch (error) {
-        console.error('Error fetching vehicle wash history:', error);
-        setHistory([]);
+        console.error("Error fetching vehicle wash history:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (vehicleId) {
-      fetchWashHistory();
-    }
+    fetchWashHistory();
   }, [vehicleId]);
 
-  return { isLoading, lastWashDate, daysSinceLastWash, history };
-}
+  return {
+    history,
+    isLoading,
+    lastWashDate,
+    daysSinceLastWash,
+  };
+};

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Vehicle } from "@/models/types";
 import { Clock, Car } from "lucide-react";
