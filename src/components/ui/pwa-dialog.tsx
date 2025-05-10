@@ -46,8 +46,12 @@ export const PwaDialogContent = React.forwardRef<
 PwaDialogContent.displayName = "PwaDialogContent";
 
 // Re-export other Dialog components for convenience
+const PwaDialog = DialogPrimitive.Root;
+const PwaDialogTrigger = DialogPrimitive.Trigger;
+const PwaDialogClose = DialogPrimitive.Close;
+
 export {
-  DialogPrimitive as PwaDialog,
-  DialogPrimitive.Trigger as PwaDialogTrigger,
-  DialogPrimitive.Close as PwaDialogClose,
+  PwaDialog,
+  PwaDialogTrigger,
+  PwaDialogClose,
 };
