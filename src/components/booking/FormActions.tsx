@@ -4,27 +4,45 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Check } from "lucide-react";
 
 interface FormActionsProps {
-  isLoading: boolean;
-  isValid: boolean;
+  isSubmitting?: boolean;
+  isValid?: boolean;
   onCancel: () => void;
+  primaryLabel?: string;
+  secondaryLabel?: string;
+  onSecondaryAction?: () => void;
 }
 
-export function FormActions({ isLoading, isValid, onCancel }: FormActionsProps) {
+export function FormActions({
+  isSubmitting = false,
+  isValid = true,
+  onCancel,
+  primaryLabel = "Request Wash",
+  secondaryLabel = "Cancel",
+  onSecondaryAction
+}: FormActionsProps) {
+  const handleSecondaryAction = (e: React.MouseEvent) => {
+    if (onSecondaryAction) {
+      onSecondaryAction();
+    } else {
+      onCancel();
+    }
+  };
+  
   return (
     <div className="flex justify-end space-x-2 pt-4">
       <Button 
         type="button" 
         variant="outline" 
-        onClick={onCancel} 
-        disabled={isLoading}
+        onClick={handleSecondaryAction} 
+        disabled={isSubmitting}
       >
-        Cancel
+        {secondaryLabel}
       </Button>
       <Button 
         type="submit" 
-        disabled={isLoading || !isValid}
+        disabled={isSubmitting || !isValid}
       >
-        {isLoading ? (
+        {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Submitting...
@@ -32,7 +50,7 @@ export function FormActions({ isLoading, isValid, onCancel }: FormActionsProps) 
         ) : (
           <>
             <Check className="mr-2 h-4 w-4" />
-            Request Wash
+            {primaryLabel}
           </>
         )}
       </Button>

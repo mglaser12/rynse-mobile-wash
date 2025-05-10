@@ -98,7 +98,8 @@ export function EditWashRequestForm({
         primaryLabel="Update Wash Request"
         secondaryLabel="Cancel"
         isSubmitting={isSubmitting}
-        onSecondaryAction={onCancel}
+        isValid={!!startDate && !!locationId}
+        onCancel={onCancel}
       />
     </form>
   );
