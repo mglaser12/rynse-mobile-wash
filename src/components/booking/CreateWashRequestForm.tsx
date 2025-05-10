@@ -143,7 +143,7 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
               <Separator />
               
               <FormActions 
-                isLoading={isLoading} 
+                isLoading={isLoading}
                 isValid={isFormValid}
                 onCancel={onCancel}
               />

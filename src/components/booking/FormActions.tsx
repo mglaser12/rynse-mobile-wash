@@ -5,6 +5,7 @@ import { Loader2, Check } from "lucide-react";
 
 interface FormActionsProps {
   isSubmitting?: boolean;
+  isLoading?: boolean; // Added isLoading prop
   isValid?: boolean;
   onCancel: () => void;
   primaryLabel?: string;
@@ -14,6 +15,7 @@ interface FormActionsProps {
 
 export function FormActions({
   isSubmitting = false,
+  isLoading = false, // Added isLoading with default value
   isValid = true,
   onCancel,
   primaryLabel = "Request Wash",
@@ -28,21 +30,24 @@ export function FormActions({
     }
   };
   
+  // Use either isSubmitting or isLoading
+  const isProcessing = isSubmitting || isLoading;
+  
   return (
     <div className="flex justify-end space-x-2 pt-4">
       <Button 
         type="button" 
         variant="outline" 
         onClick={handleSecondaryAction} 
-        disabled={isSubmitting}
+        disabled={isProcessing}
       >
         {secondaryLabel}
       </Button>
       <Button 
         type="submit" 
-        disabled={isSubmitting || !isValid}
+        disabled={isProcessing || !isValid}
       >
-        {isSubmitting ? (
+        {isProcessing ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Submitting...
