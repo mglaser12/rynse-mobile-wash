@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useRef, useCallback } from "react";
 import { WashRequest } from "@/models/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,7 +27,15 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
   const [washRequests, setWashRequests] = useState<WashRequest[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   
-  const { safeRefreshData, forceRefreshRef, lastUpdateTimestampRef, pendingRefreshRef } = useRefreshData(refreshData);
+  const { safeRefreshData, forceRefreshRef, lastUpdateTimestampRef, pendingRefreshRef, cancelPendingRefresh } = useRefreshData(refreshData);
+  
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      // Make sure to cancel any pending refreshes when the component unmounts
+      cancelPendingRefresh();
+    };
+  }, [cancelPendingRefresh]);
   
   // Update local state when loaded wash requests change
   useEffect(() => {
@@ -56,8 +65,11 @@ export function WashProvider({ children }: { children: React.ReactNode }) {
     };
     
     const timer = setInterval(checkPendingRefresh, 1000);
-    return () => clearInterval(timer);
-  }, [safeRefreshData, forceRefreshRef, lastUpdateTimestampRef]);
+    return () => {
+      clearInterval(timer);
+      cancelPendingRefresh(); // Also cancel any pending refreshes
+    };
+  }, [safeRefreshData, forceRefreshRef, lastUpdateTimestampRef, cancelPendingRefresh]);
 
   // Create action handlers
   const handleCreate = handleCreateWashRequest(user, washRequests, setWashRequests, createWashRequest);

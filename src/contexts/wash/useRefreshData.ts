@@ -20,42 +20,47 @@ export function useRefreshData(refreshData: Function) {
   
   // Safe refresh data with throttling
   const safeRefreshData = useCallback(async () => {
+    // First, always cancel any existing pending refresh to avoid multiple refreshes
+    cancelPendingRefresh();
+    
     const now = Date.now();
     
     // Override throttling if force refresh is requested
     if (forceRefreshRef.current) {
       console.log("Forcing data refresh");
       forceRefreshRef.current = false;
+      
+      try {
+        await refreshData();
+      } catch (error) {
+        console.error("Error in forced refresh:", error);
+      }
+      
+      lastUpdateTimestampRef.current = now;
+      return;
     }
     
     // Throttle refresh calls to prevent flooding
     if (now - lastUpdateTimestampRef.current < THROTTLE_INTERVAL) {
       console.log(`Refresh throttled - too soon after last update (wait ${THROTTLE_INTERVAL/1000}s)`);
       
-      // Cancel any existing pending refresh first
-      cancelPendingRefresh();
-      
       // Mark that we need a refresh and schedule it
       pendingRefreshRef.current = true;
       
-      // Use requestAnimationFrame to ensure we're not blocking the UI thread
-      // and then set a timeout for the actual refresh
-      requestAnimationFrame(() => {
-        timeoutIdRef.current = window.setTimeout(() => {
-          if (pendingRefreshRef.current) {
-            console.log("Executing delayed refresh");
-            lastUpdateTimestampRef.current = Date.now();
-            pendingRefreshRef.current = false;
-            timeoutIdRef.current = null;
-            
-            try {
-              refreshData();
-            } catch (error) {
-              console.error("Error in delayed refresh:", error);
-            }
+      timeoutIdRef.current = window.setTimeout(() => {
+        if (pendingRefreshRef.current) {
+          console.log("Executing delayed refresh");
+          lastUpdateTimestampRef.current = Date.now();
+          pendingRefreshRef.current = false;
+          timeoutIdRef.current = null;
+          
+          try {
+            refreshData();
+          } catch (error) {
+            console.error("Error in delayed refresh:", error);
           }
-        }, THROTTLE_INTERVAL - (now - lastUpdateTimestampRef.current));
-      });
+        }
+      }, THROTTLE_INTERVAL - (now - lastUpdateTimestampRef.current));
       
       return;
     }

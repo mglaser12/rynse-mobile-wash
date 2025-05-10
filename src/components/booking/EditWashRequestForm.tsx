@@ -40,30 +40,55 @@ export function EditWashRequestForm({
   
   // Track mounting state to prevent state updates after unmount
   const isMounted = useRef(true);
+  // Track if any requests are in progress
+  const activeRequestRef = useRef<AbortController | null>(null);
 
   // Set up cleanup when component unmounts
   useEffect(() => {
     return () => {
+      // Mark component as unmounted
       isMounted.current = false;
+      
+      // Cancel any in-progress requests
+      if (activeRequestRef.current) {
+        activeRequestRef.current.abort();
+        activeRequestRef.current = null;
+      }
     };
   }, []);
 
-  // Load vehicles for the selected location
+  // Load vehicles for the selected location with abort controller
   useEffect(() => {
+    // Cancel any previous request
+    if (activeRequestRef.current) {
+      activeRequestRef.current.abort();
+    }
+    
+    // Create a new abort controller for this request
+    activeRequestRef.current = new AbortController();
+    
     if (locationId) {
       const fetchVehicleLocations = async () => {
-        const { data } = await supabase
-          .from('location_vehicles')
-          .select('vehicle_id')
-          .eq('location_id', locationId);
-        
-        if (!isMounted.current) return;
+        try {
+          const { data } = await supabase
+            .from('location_vehicles')
+            .select('vehicle_id')
+            .eq('location_id', locationId)
+            .abortSignal(activeRequestRef.current?.signal);
           
-        if (data && data.length > 0) {
-          const vehicleIds = data.map(item => item.vehicle_id);
-          setFilteredVehicles(vehicles.filter(v => vehicleIds.includes(v.id)));
-        } else {
-          setFilteredVehicles([]);
+          if (!isMounted.current) return;
+            
+          if (data && data.length > 0) {
+            const vehicleIds = data.map(item => item.vehicle_id);
+            setFilteredVehicles(vehicles.filter(v => vehicleIds.includes(v.id)));
+          } else {
+            setFilteredVehicles([]);
+          }
+        } catch (error: any) {
+          // Only log error if it's not an abort error
+          if (error.name !== 'AbortError') {
+            console.error("Error fetching vehicle locations:", error);
+          }
         }
       };
       
@@ -71,6 +96,14 @@ export function EditWashRequestForm({
     } else {
       setFilteredVehicles([]);
     }
+    
+    // Cleanup function to abort any pending requests when the effect re-runs
+    return () => {
+      if (activeRequestRef.current) {
+        activeRequestRef.current.abort();
+        activeRequestRef.current = null;
+      }
+    };
   }, [locationId, vehicles]);
 
   // Handle vehicle selection/deselection
@@ -84,39 +117,58 @@ export function EditWashRequestForm({
     });
   };
 
-  // Update wash request vehicle associations
+  // Update wash request vehicle associations with abort controller
   const updateVehicleAssociations = async (washRequestId: string, vehicleIds: string[]) => {
-    // First, delete all existing associations
-    const { error: deleteError } = await supabase
-      .from('wash_request_vehicles')
-      .delete()
-      .eq('wash_request_id', washRequestId);
+    // Create a new abort controller for this request
+    const abortController = new AbortController();
+    activeRequestRef.current = abortController;
     
-    if (deleteError) {
-      console.error("Error deleting vehicle associations:", deleteError);
+    try {
+      // First, delete all existing associations
+      const { error: deleteError } = await supabase
+        .from('wash_request_vehicles')
+        .delete()
+        .eq('wash_request_id', washRequestId)
+        .abortSignal(abortController.signal);
+      
+      if (deleteError) {
+        console.error("Error deleting vehicle associations:", deleteError);
+        return false;
+      }
+      
+      // Then create new associations
+      if (vehicleIds.length === 0) {
+        return true; // No vehicles to add
+      }
+      
+      const vehicleInserts = vehicleIds.map(vehicleId => ({
+        wash_request_id: washRequestId,
+        vehicle_id: vehicleId
+      }));
+      
+      const { error } = await supabase
+        .from('wash_request_vehicles')
+        .insert(vehicleInserts)
+        .abortSignal(abortController.signal);
+      
+      if (error) {
+        console.error("Error creating vehicle associations:", error);
+        return false;
+      }
+      
+      return true;
+    } catch (error: any) {
+      // Only log error if it's not an abort error
+      if (error.name !== 'AbortError') {
+        console.error("Error updating vehicle associations:", error);
+      }
       return false;
+    } finally {
+      // Clear the abort controller reference if it's still the current one
+      if (activeRequestRef.current === abortController) {
+        activeRequestRef.current = null;
+      }
     }
-    
-    // Then create new associations
-    if (vehicleIds.length === 0) {
-      return true; // No vehicles to add
-    }
-    
-    const vehicleInserts = vehicleIds.map(vehicleId => ({
-      wash_request_id: washRequestId,
-      vehicle_id: vehicleId
-    }));
-    
-    const { error } = await supabase
-      .from('wash_request_vehicles')
-      .insert(vehicleInserts);
-    
-    if (error) {
-      console.error("Error creating vehicle associations:", error);
-      return false;
-    }
-    
-    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
