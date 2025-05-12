@@ -12,11 +12,16 @@ import { useWashRequests } from "@/contexts/WashContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { PlusCircle, Car, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EditWashRequestDialog } from "@/components/wash/EditWashRequestDialog";
+import { WashRequestActions } from "@/components/wash/WashRequestActions";
+import { WashRequest } from "@/models/types";
 
 const CustomerHome = () => {
   const { user } = useAuth();
   const { washRequests, isLoading } = useWashRequests();
   const [showNewRequestDialog, setShowNewRequestDialog] = useState(false);
+  const [selectedWashRequest, setSelectedWashRequest] = useState<WashRequest | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   // Filter wash requests the same way as BookingsPage
   const activeRequests = washRequests.filter(req => 
@@ -25,6 +30,11 @@ const CustomerHome = () => {
   
   const completedRequests = washRequests.filter(req => req.status === "completed");
   const cancelledRequests = washRequests.filter(req => req.status === "cancelled");
+
+  const handleEditWashRequest = (washRequest: WashRequest) => {
+    setSelectedWashRequest(washRequest);
+    setShowEditDialog(true);
+  };
 
   return (
     <AppLayout>
@@ -82,7 +92,17 @@ const CustomerHome = () => {
             <TabsContent value="active" className="pt-4 space-y-4">
               {activeRequests.length > 0 ? (
                 activeRequests.map(request => (
-                  <WashRequestCard key={request.id} washRequest={request} />
+                  <WashRequestCard 
+                    key={request.id} 
+                    washRequest={request}
+                    actions={
+                      <WashRequestActions
+                        requestId={request.id}
+                        status={request.status}
+                        onEdit={() => handleEditWashRequest(request)}
+                      />
+                    }
+                  />
                 ))
               ) : (
                 <div className="text-center py-10">
@@ -140,6 +160,12 @@ const CustomerHome = () => {
           />
         </DialogContent>
       </Dialog>
+      
+      <EditWashRequestDialog 
+        washRequest={selectedWashRequest}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+      />
     </AppLayout>
   );
 };

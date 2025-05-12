@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
@@ -10,14 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Loader2, PlusCircle } from "lucide-react";
 import { CompletedWashDetailDialog } from "@/components/technician/CompletedWashDetailDialog";
 import { WashRequest } from "@/models/types";
+import { WashRequestActions } from "@/components/wash/WashRequestActions";
+import { EditWashRequestDialog } from "@/components/wash/EditWashRequestDialog";
 
 const BookingsPage = () => {
   console.log("BookingsPage rendered - testing AI edits");
   
-  const { washRequests, isLoading, cancelWashRequest } = useWashRequests();
+  const { washRequests, isLoading } = useWashRequests();
   const [showNewBookingDialog, setShowNewBookingDialog] = useState(false);
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [selectedWashRequest, setSelectedWashRequest] = useState<WashRequest | null>(null);
+  const [showCompletedDialog, setShowCompletedDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   useEffect(() => {
     console.log("BookingsPage - Wash Requests:", washRequests.length);
@@ -30,17 +34,14 @@ const BookingsPage = () => {
   const completedRequests = washRequests.filter(req => req.status === "completed");
   const cancelledRequests = washRequests.filter(req => req.status === "cancelled");
 
-  const handleCancelRequest = async (id: string) => {
-    setCancellingId(id);
-    try {
-      await cancelWashRequest(id);
-    } finally {
-      setCancellingId(null);
-    }
-  };
-
   const handleViewCompletedWash = (washRequest: WashRequest) => {
     setSelectedWashRequest(washRequest);
+    setShowCompletedDialog(true);
+  };
+
+  const handleEditWashRequest = (washRequest: WashRequest) => {
+    setSelectedWashRequest(washRequest);
+    setShowEditDialog(true);
   };
 
   return (
@@ -87,20 +88,11 @@ const BookingsPage = () => {
                     key={request.id} 
                     washRequest={request} 
                     actions={
-                      request.status === "pending" && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => handleCancelRequest(request.id)}
-                          disabled={cancellingId === request.id}
-                          className="w-full mt-2"
-                        >
-                          {cancellingId === request.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          ) : null}
-                          Cancel Request
-                        </Button>
-                      )
+                      <WashRequestActions
+                        requestId={request.id}
+                        status={request.status}
+                        onEdit={() => handleEditWashRequest(request)}
+                      />
                     }
                   />
                 ))
@@ -164,9 +156,18 @@ const BookingsPage = () => {
       </Dialog>
 
       <CompletedWashDetailDialog
-        open={!!selectedWashRequest}
-        onOpenChange={(open) => !open && setSelectedWashRequest(null)}
+        open={showCompletedDialog}
+        onOpenChange={(open) => {
+          setShowCompletedDialog(open);
+          if (!open) setSelectedWashRequest(null);
+        }}
         washRequest={selectedWashRequest}
+      />
+      
+      <EditWashRequestDialog 
+        washRequest={selectedWashRequest}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
       />
     </AppLayout>
   );
