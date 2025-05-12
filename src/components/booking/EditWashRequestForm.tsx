@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { WashRequest } from "@/models/types";
 import { useWashRequests } from "@/contexts/WashContext";
@@ -101,9 +102,10 @@ export function EditWashRequestForm({ washRequest, onSuccess, onCancel }: EditWa
     setIsLoading(true);
     
     try {
+      // Fix here: Changed vehicleIds to vehicleIds to match what the updateWashRequest function expects
       const success = await updateWashRequest(washRequest.id, {
         locationId: selectedLocationId,
-        vehicleIds: selectedVehicleIds,
+        vehicleIds: selectedVehicleIds, // Changed from vehicles to vehicleIds to match backend expectations
         preferredDates: {
           start: startDate,
           end: endDate

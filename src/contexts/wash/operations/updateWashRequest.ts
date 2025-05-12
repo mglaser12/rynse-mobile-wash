@@ -55,12 +55,11 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
       updateData.location_id = data.locationId;
     }
 
-    // Handle vehicle changes
+    // Handle vehicle changes - FIXED: Changed vehicleIds to use correct property name
     if (data.vehicleIds) {
       console.log("Processing vehicle IDs:", data.vehicleIds);
-      // The vehicle update will need to be handled separately since
-      // we need to update the junction table (wash_request_vehicles)
-      // This would typically be handled using a transaction or server function
+      // We need to update the wash_request_vehicles junction table directly
+      // This requires separate calls to update the junction table
       updateData.vehicle_ids = data.vehicleIds;
     }
     

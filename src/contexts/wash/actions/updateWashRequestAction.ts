@@ -1,3 +1,4 @@
+
 import { WashRequest } from "@/models/types";
 
 /**
@@ -47,7 +48,7 @@ export function handleUpdateWashRequest(
             safeRefreshData();
           }, 1000);  
         } else {
-          // For other updates, do a regular refresh
+          // For other updates, do a regular refresh to ensure vehicle changes are reflected
           setTimeout(() => {
             safeRefreshData();
           }, 2000);
