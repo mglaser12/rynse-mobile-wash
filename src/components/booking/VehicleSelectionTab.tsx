@@ -1,8 +1,11 @@
+
 import React from "react";
 import { Vehicle } from "@/models/types";
 import { Clock, Car } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useVehicleWashHistory } from "@/hooks/useVehicleWashHistory";
+import { PressableTile, ScaleIn } from "@/components/ui/micro-animations";
+import { cn } from "@/lib/utils";
 
 interface VehicleSelectionTabProps {
   vehicle: Vehicle;
@@ -32,44 +35,62 @@ export function VehicleSelectionTab({
   };
 
   return (
-    <div
-      className={`p-3 border rounded-md cursor-pointer transition-colors ${
-        isSelected ? 'border-primary bg-primary/5' : 'hover:border-primary/50'
-      }`}
+    <PressableTile
+      className={cn(
+        "p-3 border rounded-md cursor-pointer transition-all duration-200", 
+        isSelected 
+          ? "border-primary bg-primary/5 shadow-sm" 
+          : "hover:border-primary/50 hover:bg-primary/[0.02]"
+      )}
       onClick={onSelect}
     >
       <div className="flex items-center gap-4">
-        <div className="h-12 w-12 rounded bg-muted flex items-center justify-center overflow-hidden">
+        <div className={cn(
+          "h-12 w-12 rounded bg-muted flex items-center justify-center overflow-hidden transition-all",
+          isSelected ? "ring-2 ring-primary/50" : ""
+        )}>
           {vehicle.image ? (
             <img
               src={vehicle.image}
               alt={`${vehicle.make} ${vehicle.model}`}
-              className="h-full w-full object-cover"
+              className={cn(
+                "h-full w-full object-cover transition-transform duration-300",
+                isSelected ? "scale-105" : ""
+              )}
             />
           ) : (
-            <Car className="h-6 w-6 text-muted-foreground" />
+            <Car className={cn(
+              "h-6 w-6 transition-colors duration-300",
+              isSelected ? "text-primary" : "text-muted-foreground"
+            )} />
           )}
         </div>
         <div className="flex-1">
-          <h4 className="font-medium">
+          <h4 className={cn(
+            "font-medium transition-colors duration-200", 
+            isSelected ? "text-primary" : ""
+          )}>
             {vehicle.make} {vehicle.model}
           </h4>
           <p className="text-sm text-muted-foreground">
             {vehicle.year} • {vehicle.color} • {vehicle.licensePlate}
           </p>
           {showWashHistory && (
-            <div className="mt-1">
+            <ScaleIn className="mt-1 origin-left">
               <Badge 
                 variant="outline" 
-                className={`text-xs flex items-center gap-1 ${getWashStatusColor(daysSinceLastWash)}`}
+                className={cn(
+                  "text-xs flex items-center gap-1 transition-colors duration-300",
+                  getWashStatusColor(daysSinceLastWash)
+                )}
               >
                 <Clock className="h-3 w-3" />
                 {getWashStatusText(daysSinceLastWash)}
               </Badge>
-            </div>
+            </ScaleIn>
           )}
         </div>
       </div>
-    </div>
+    </PressableTile>
   );
 }

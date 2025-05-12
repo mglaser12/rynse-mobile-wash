@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { transitions } from '@/lib/animations';
@@ -104,6 +105,36 @@ export const StaggeredChildren = ({
           }
         });
       })}
+    </div>
+  );
+};
+
+// Checkbox Selection Animation
+export const SelectionIndicator = ({ isSelected }: { isSelected: boolean }) => {
+  return (
+    <div className={cn(
+      "absolute top-3 right-3 rounded-full w-5 h-5 flex items-center justify-center transition-all duration-300",
+      isSelected 
+        ? "bg-primary scale-100 opacity-100" 
+        : "bg-primary/20 scale-90 opacity-0"
+    )}>
+      <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        width="12" 
+        height="12" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="3" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+        className={cn(
+          "text-white transition-transform duration-300",
+          isSelected ? "scale-100" : "scale-0"
+        )}
+      >
+        <path d="M20 6L9 17l-5-5" />
+      </svg>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Car, AlertCircle, ArrowRight } from "lucide-react";
@@ -7,6 +8,8 @@ import { VehicleSelectionTab } from "./VehicleSelectionTab";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useVehicleWashHistory } from "@/hooks/useVehicleWashHistory";
+import { PulseSoft, AnimatedButton, ScaleIn, StaggeredChildren } from "@/components/ui/micro-animations";
+import { cn } from "@/lib/utils";
 
 interface VehicleSelectionSectionProps {
   vehicles: Vehicle[];
@@ -37,12 +40,14 @@ export function VehicleSelectionSection({
             Select Vehicle(s)
           </Label>
           
-          <Alert className="mt-2">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Please select a location first to view available vehicles
-            </AlertDescription>
-          </Alert>
+          <ScaleIn className="mt-2">
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Please select a location first to view available vehicles
+              </AlertDescription>
+            </Alert>
+          </ScaleIn>
         </div>
       </div>
     );
@@ -57,16 +62,18 @@ export function VehicleSelectionSection({
             Select Vehicle(s)
           </Label>
           
-          <Alert className="mt-2">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              No vehicles found at this location. Please add vehicles to this location first.
-            </AlertDescription>
-          </Alert>
+          <ScaleIn className="mt-2">
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                No vehicles found at this location. Please add vehicles to this location first.
+              </AlertDescription>
+            </Alert>
+          </ScaleIn>
           
-          <Button className="mt-4" variant="outline" onClick={onCancel}>
+          <AnimatedButton className="mt-4" variant="outline" onClick={onCancel}>
             Go Back
-          </Button>
+          </AnimatedButton>
         </div>
       </div>
     );
@@ -79,7 +86,7 @@ export function VehicleSelectionSection({
           <Car className="h-4 w-4 mr-2" />
           Select Vehicle(s)
         </Label>
-        <div className="grid grid-cols-1 gap-2 mt-2">
+        <StaggeredChildren staggerMs={80} className="grid grid-cols-1 gap-2 mt-2">
           {vehicles.map((vehicle) => (
             <VehicleSelectionTab
               key={vehicle.id}
@@ -89,18 +96,23 @@ export function VehicleSelectionSection({
               showWashHistory={true}
             />
           ))}
-        </div>
+        </StaggeredChildren>
       </div>
       
       {selectedVehicleIds.length > 0 && onContinue && (
-        <Button 
-          type="button" 
-          className="w-full" 
-          onClick={onContinue}
-        >
-          Continue to Date Selection
-          <ArrowRight className="h-4 w-4 ml-2" />
-        </Button>
+        <PulseSoft className="transition-all duration-300 transform">
+          <AnimatedButton 
+            type="button" 
+            className={cn(
+              "w-full transition-all duration-300",
+              selectedVehicleIds.length > 0 ? "opacity-100" : "opacity-70"
+            )}
+            onClick={onContinue}
+          >
+            Continue to Date Selection
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </AnimatedButton>
+        </PulseSoft>
       )}
     </div>
   );
