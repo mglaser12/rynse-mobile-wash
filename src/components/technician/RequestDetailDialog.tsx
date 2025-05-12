@@ -6,6 +6,8 @@ import { WashRequestCard } from "@/components/shared/WashRequestCard";
 import { LocationCard } from "./request-detail/LocationCard";
 import { RequestActions } from "./request-detail/RequestActions";
 import { MockRequestAlert } from "./request-detail/MockRequestAlert";
+import { PriceSummary } from "@/components/booking/PriceSummary";
+import { Separator } from "@/components/ui/separator";
 
 interface RequestDetailDialogProps {
   open: boolean;
@@ -39,6 +41,7 @@ export const RequestDetailDialog = ({
   if (!selectedRequest) return null;
   
   const isMockRequest = selectedRequest.id.startsWith("mock-");
+  const vehicleCount = selectedRequest.vehicleDetails?.length || selectedRequest.vehicles.length || 0;
 
   const handleAcceptJob = () => {
     if (userId) {
@@ -83,6 +86,13 @@ export const RequestDetailDialog = ({
           {selectedRequest.location && (
             <LocationCard location={selectedRequest.location} />
           )}
+          
+          <Separator />
+          
+          <PriceSummary
+            vehicleCount={vehicleCount}
+            className="pt-2"
+          />
           
           {!readOnly && (
             <RequestActions

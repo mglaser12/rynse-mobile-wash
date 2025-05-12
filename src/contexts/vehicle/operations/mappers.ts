@@ -15,6 +15,7 @@ export const mapDbVehicleToVehicle = (dbVehicle: SupabaseVehicle): Vehicle => {
     vinNumber: dbVehicle.vin_number,
     image: dbVehicle.image_url,
     dateAdded: new Date(dbVehicle.created_at),
-    organizationId: dbVehicle.organization_id
+    organizationId: dbVehicle.organization_id,
+    assetNumber: dbVehicle.asset_number || undefined
   };
 };

@@ -9,6 +9,7 @@ import { Calendar, Car, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocations } from "@/contexts/LocationContext";
 import { CompletedWashDialog } from "@/components/wash/CompletedWashDialog";
+import { PriceSummary } from "@/components/booking/PriceSummary";
 
 interface WashRequestCardProps {
   washRequest: WashRequest;
@@ -80,6 +81,9 @@ export function WashRequestCard({
     }
   };
 
+  // Calculate vehicle count
+  const vehicleCount = requestVehicles?.length || 0;
+
   return (
     <>
       <Card 
@@ -132,6 +136,13 @@ export function WashRequestCard({
                 )}
               </div>
             </div>
+            
+            {/* Price estimate */}
+            <PriceSummary 
+              vehicleCount={vehicleCount} 
+              showCard={false} 
+              className="mt-3 pt-3 border-t border-muted" 
+            />
           </div>
           
           {actions && <div className="mt-4">{actions}</div>}

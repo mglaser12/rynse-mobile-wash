@@ -15,6 +15,7 @@ export type Vehicle = {
   vinNumber?: string;
   dateAdded: Date;
   organizationId?: string; // Organization ID field
+  assetNumber?: string; // Add the asset_number field
 };
 
 export type WashStatus = 
@@ -116,6 +117,7 @@ export type SupabaseVehicle = {
   created_at: string;
   updated_at: string;
   organization_id: string | null; // Organization ID field
+  asset_number: string | null; // Add the asset_number field
 };
 
 export type SupabaseWashRequest = {
