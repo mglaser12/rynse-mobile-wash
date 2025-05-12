@@ -40,7 +40,6 @@ export async function updateVehicle(
     if (vehicleUpdateData.type !== undefined) updateData.type = vehicleUpdateData.type || null;
     if (vehicleUpdateData.vinNumber !== undefined) updateData.vin_number = vehicleUpdateData.vinNumber || null;
     if (vehicleUpdateData.organizationId !== undefined) updateData.organization_id = vehicleUpdateData.organizationId;
-    if (vehicleUpdateData.assetNumber !== undefined) updateData.asset_number = vehicleUpdateData.assetNumber || null; // Handle asset number updates
     
     // Handle image explicitly
     if (imageUrl !== undefined) {

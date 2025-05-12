@@ -24,7 +24,6 @@ export function useAddVehicleForm({ onSuccess }: UseAddVehicleFormProps) {
     type: "",
     color: "",
     locationId: "",
-    assetNumber: "",
   });
 
   // Clean up OCR worker when component unmounts
@@ -84,7 +83,6 @@ export function useAddVehicleForm({ onSuccess }: UseAddVehicleFormProps) {
         color: vehicleFormData.color || "",
         type: vehicleFormData.type || "",
         licensePlate: vehicleFormData.licensePlate || "",
-        assetNumber: vehicleFormData.assetNumber || "",
         organizationId: user.organizationId,
       }, locationId);  // Pass locationId as a separate parameter
       

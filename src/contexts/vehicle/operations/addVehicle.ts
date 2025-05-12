@@ -47,8 +47,7 @@ export async function addVehicle(
       type: vehicleData.type || null,
       vin_number: vehicleData.vinNumber || null,
       image_url: imageUrl || null,
-      organization_id: vehicleData.organizationId || null,
-      asset_number: vehicleData.assetNumber || null // Add asset number to insertion data
+      organization_id: vehicleData.organizationId || null
     };
     logVehicleOperationStep('ADD_VEHICLE', 'Prepared insert data', insertData);
 

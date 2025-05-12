@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +14,6 @@ export interface VehicleFormData {
   color: string;
   vinNumber?: string;
   locationId?: string;
-  assetNumber?: string; // Added assetNumber field
 }
 
 interface VehicleFormFieldsProps {
@@ -22,7 +22,7 @@ interface VehicleFormFieldsProps {
   disabled?: boolean;
   onLocationChange?: (locationId: string) => void;
   locationRequired?: boolean;
-  showLocation?: boolean;
+  showLocation?: boolean; // New prop to control location visibility
 }
 
 export function VehicleFormFields({
@@ -31,7 +31,7 @@ export function VehicleFormFields({
   disabled = false,
   onLocationChange,
   locationRequired = false,
-  showLocation = true,
+  showLocation = true, // Default to showing location
 }: VehicleFormFieldsProps) {
   const { locations } = useLocations();
 
@@ -157,29 +157,16 @@ export function VehicleFormFields({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="vinNumber">VIN Number</Label>
-          <Input
-            id="vinNumber"
-            name="vinNumber"
-            value={vehicleData.vinNumber || ""}
-            onChange={onInputChange}
-            placeholder="e.g. 1HGCM82633A004352"
-            disabled={disabled}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="assetNumber">Asset Number</Label>
-          <Input
-            id="assetNumber"
-            name="assetNumber"
-            value={vehicleData.assetNumber || ""}
-            onChange={onInputChange}
-            placeholder="e.g. TYT-CM-12345"
-            disabled={disabled}
-          />
-        </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="vinNumber">VIN Number</Label>
+        <Input
+          id="vinNumber"
+          name="vinNumber"
+          value={vehicleData.vinNumber || ""}
+          onChange={onInputChange}
+          placeholder="e.g. 1HGCM82633A004352"
+          disabled={disabled}
+        />
       </div>
     </>
   );
