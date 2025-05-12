@@ -8,7 +8,7 @@ import { VehicleSelectionTab } from "./VehicleSelectionTab";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useVehicleWashHistory } from "@/hooks/useVehicleWashHistory";
-import { PulseSoft, ScaleIn, StaggeredChildren } from "@/components/ui/micro-animations";
+import { PulseSoft, ScaleIn, StaggeredChildren, AnimatedButton } from "@/components/ui/micro-animations";
 import { cn } from "@/lib/utils";
 
 interface VehicleSelectionSectionProps {
