@@ -17,6 +17,8 @@ interface TechnicianData {
   averageCompletionTime: string;
   rating?: number;
   vehiclesWashed: number;
+  averageRating?: number;
+  totalWashes?: number;
 }
 
 interface TechnicianPerformanceTableProps {
@@ -47,7 +49,7 @@ export function TechnicianPerformanceTable({ data }: TechnicianPerformanceTableP
                 <TableCell className="text-right">{technician.completedWashes}</TableCell>
                 <TableCell className="text-right">{technician.averageCompletionTime}</TableCell>
                 <TableCell className="text-right">{technician.vehiclesWashed}</TableCell>
-                <TableCell className="text-right">{technician.rating || 'N/A'}</TableCell>
+                <TableCell className="text-right">{technician.rating || technician.averageRating || 'N/A'}</TableCell>
               </TableRow>
             ))}
             {data.length === 0 && (

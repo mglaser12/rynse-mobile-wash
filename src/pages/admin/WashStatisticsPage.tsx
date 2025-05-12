@@ -37,19 +37,22 @@ export default function WashStatisticsPage() {
     overview: {
       totalWashes: washStats.overview?.totalWashes || 0,
       completedWashes: washStats.overview?.completedWashes || 0,
-      pendingWashes: washStats.overview?.pendingWashes || 0,
-      averageCompletionTime: washStats.overview?.averageCompletionTime || "N/A",
+      pendingWashes: washStats.overview?.scheduledWashes || 0,
+      averageCompletionTime: washStats.overview?.averageCompletionTime ? 
+        `${washStats.overview.averageCompletionTime} mins` : "N/A",
       totalVehicles: washStats.overview?.totalVehicles || 0,
       washGrowth: washStats.overview?.washGrowth || "0%",
-      completionRate: washStats.overview?.completionRate || "0%",
+      completionRate: `${washStats.overview?.washCompletionRate || 0}%`,
       averageRating: washStats.overview?.averageRating
     }
   };
 
-  // Transform technician performance data to include vehiclesWashed
+  // Transform technician performance data to include vehiclesWashed and convert averageCompletionTime to string
   const technicianData = washStats.technicianPerformance?.map(tech => ({
     ...tech,
-    vehiclesWashed: tech.completedWashes || 0 // Default to same as completedWashes if not provided
+    vehiclesWashed: tech.completedWashes || 0,
+    averageCompletionTime: tech.averageCompletionTime ? 
+      `${tech.averageCompletionTime} mins` : "N/A"
   })) || [];
 
   return (

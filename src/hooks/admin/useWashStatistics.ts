@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -11,6 +10,9 @@ interface MetricStats {
   cancelledWashes: number;
   averageRating: number;
   washCompletionRate: number;
+  totalVehicles?: number;
+  washGrowth?: string;
+  averageCompletionTime?: number;
 }
 
 interface TechnicianPerformance {
@@ -60,7 +62,10 @@ const defaultStats: WashStatistics = {
     scheduledWashes: 0,
     cancelledWashes: 0,
     averageRating: 0,
-    washCompletionRate: 0
+    washCompletionRate: 0,
+    totalVehicles: 0,
+    washGrowth: "0%",
+    averageCompletionTime: 0
   },
   technicianPerformance: [],
   vehicleFrequency: [],
@@ -167,6 +172,30 @@ function calculateStatistics(washRequests: any[]): WashStatistics {
   const washCompletionRate = totalWashes > 0 
     ? (completedWashes / totalWashes) * 100 
     : 0;
+
+  // Get unique vehicles
+  const uniqueVehicleIds = new Set();
+  washRequests.forEach(wash => {
+    if (wash.vehicles && wash.vehicles.id) {
+      uniqueVehicleIds.add(wash.vehicles.id);
+    }
+  });
+  const totalVehicles = uniqueVehicleIds.size;
+
+  // Calculate average completion time
+  const completionTimes = washRequests
+    .filter(w => w.status === 'completed' && w.completed_at && w.started_at)
+    .map(w => {
+      const completionTime = new Date(w.completed_at).getTime() - new Date(w.started_at).getTime();
+      return completionTime / (1000 * 60); // in minutes
+    });
+
+  const averageCompletionTime = completionTimes.length > 0
+    ? completionTimes.reduce((sum, time) => sum + time, 0) / completionTimes.length
+    : 0;
+
+  // Calculate wash growth (dummy calculation for now)
+  const washGrowth = "5%"; // Placeholder for actual growth calculation
 
   // Technician performance
   const technicianMap = new Map<string, any>();
@@ -299,10 +328,64 @@ function calculateStatistics(washRequests: any[]): WashStatistics {
       scheduledWashes,
       cancelledWashes,
       averageRating: Number(averageRating.toFixed(1)),
-      washCompletionRate: Number(washCompletionRate.toFixed(1))
+      washCompletionRate: Number(washCompletionRate.toFixed(1)),
+      totalVehicles,
+      washGrowth,
+      averageCompletionTime: Number(averageCompletionTime.toFixed(0))
     },
-    technicianPerformance,
-    vehicleFrequency,
+    technicianPerformance: technicianMap ? Array.from(technicianMap.values()).map(tech => {
+      const avgRating = tech.ratings && tech.ratings.length > 0 
+        ? tech.ratings.reduce((sum: number, r: number) => sum + r, 0) / tech.ratings.length
+        : 0;
+      
+      const avgCompletionTime = tech.completionTimes && tech.completionTimes.length > 0
+        ? tech.completionTimes.reduce((sum: number, t: number) => sum + t, 0) / tech.completionTimes.length
+        : 0;
+      
+      return {
+        id: tech.id,
+        name: tech.name,
+        totalWashes: tech.totalWashes,
+        completedWashes: tech.completedWashes,
+        averageRating: Number(avgRating.toFixed(1)),
+        averageCompletionTime: Number(avgCompletionTime.toFixed(0))
+      };
+    }) : [],
+    vehicleFrequency: vehicleMap ? Array.from(vehicleMap.values()).map(vehicle => {
+      // Sort washes by date
+      const sortedWashes = [...vehicle.washes].sort((a: any, b: any) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      
+      const lastWashed = sortedWashes.length > 0 ? sortedWashes[0].date : 'Never';
+      const totalWashes = sortedWashes.length;
+      
+      // Calculate average days between washes
+      let daysBetweenWashes = 0;
+      if (sortedWashes.length > 1) {
+        let totalDays = 0;
+        for (let i = 0; i < sortedWashes.length - 1; i++) {
+          const daysDiff = (
+            new Date(sortedWashes[i].date).getTime() - 
+            new Date(sortedWashes[i+1].date).getTime()
+          ) / (1000 * 3600 * 24);
+          totalDays += daysDiff;
+        }
+        daysBetweenWashes = Math.round(totalDays / (sortedWashes.length - 1));
+      }
+      
+      return {
+        id: vehicle.id,
+        make: vehicle.make,
+        model: vehicle.model,
+        licensePlate: vehicle.licensePlate,
+        totalWashes: vehicle.washes?.length || 0,
+        lastWashed: vehicle.washes && vehicle.washes.length > 0 
+          ? new Date(vehicle.washes[0].date).toLocaleDateString() 
+          : 'Never',
+        daysBetweenWashes: vehicle.daysBetweenWashes || 0
+      };
+    }) : [],
     statusDistribution,
     trends: trendData
   };
