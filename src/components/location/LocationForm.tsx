@@ -34,11 +34,15 @@ const formSchema = z.object({
   city: z.string().min(1, { message: "City is required" }),
   state: z.string().min(1, { message: "State is required" }),
   zipCode: z.string().min(1, { message: "Zip code is required" }),
-  // Properly handle latitude and longitude as optional numbers
-  latitude: z.string().optional()
-    .transform(val => val && val.trim() !== '' ? parseFloat(val) : undefined),
-  longitude: z.string().optional()
-    .transform(val => val && val.trim() !== '' ? parseFloat(val) : undefined),
+  // Properly handle latitude and longitude as optional numbers using transform
+  latitude: z.union([
+    z.number().optional(),
+    z.string().transform(val => val && val.trim() !== '' ? parseFloat(val) : undefined)
+  ]),
+  longitude: z.union([
+    z.number().optional(),
+    z.string().transform(val => val && val.trim() !== '' ? parseFloat(val) : undefined)
+  ]),
   notes: z.string().optional(),
   isDefault: z.boolean().default(false),
 });
@@ -60,8 +64,8 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
       city: "",
       state: "",
       zipCode: "",
-      latitude: "",
-      longitude: "",
+      latitude: undefined,
+      longitude: undefined,
       notes: "",
       isDefault: false,
     },
@@ -84,8 +88,8 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
         city: location.city,
         state: location.state,
         zipCode: location.zipCode,
-        latitude: location.latitude ? String(location.latitude) : "",
-        longitude: location.longitude ? String(location.longitude) : "",
+        latitude: location.latitude,
+        longitude: location.longitude,
         notes: location.notes || "",
         isDefault: location.isDefault,
       });
@@ -97,8 +101,8 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
         city: "",
         state: "",
         zipCode: "",
-        latitude: "",
-        longitude: "",
+        latitude: undefined,
+        longitude: undefined,
         notes: "",
         isDefault: false,
       });
@@ -122,8 +126,8 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
           city: data.city,
           state: data.state,
           zipCode: data.zipCode,
-          latitude: data.latitude,
-          longitude: data.longitude,
+          latitude: data.latitude as number | undefined,
+          longitude: data.longitude as number | undefined,
           notes: data.notes,
           isDefault: data.isDefault,
           organizationId: user?.organizationId || ""
@@ -146,8 +150,8 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        setValue("latitude", latitude.toString());
-        setValue("longitude", longitude.toString());
+        setValue("latitude", latitude);
+        setValue("longitude", longitude);
         setIsGettingLocation(false);
         toast.success("Current location coordinates applied");
       },
@@ -278,6 +282,11 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
                     <Input
                       placeholder="Latitude"
                       {...field}
+                      value={field.value?.toString() || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value === '' ? undefined : parseFloat(value));
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -294,6 +303,11 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
                     <Input
                       placeholder="Longitude"
                       {...field}
+                      value={field.value?.toString() || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value === '' ? undefined : parseFloat(value));
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
