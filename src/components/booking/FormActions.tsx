@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Check } from "lucide-react";
+import { RippleEffect } from "@/components/ui/micro-animations";
 
 interface FormActionsProps {
   isLoading: boolean;
@@ -18,12 +19,15 @@ export function FormActions({ isLoading, isValid, onCancel, submitText = "Reques
         variant="outline" 
         onClick={onCancel} 
         disabled={isLoading}
+        className="relative overflow-hidden transition-all hover:translate-y-[-1px] active:translate-y-[1px]"
       >
         Cancel
+        <RippleEffect />
       </Button>
       <Button 
         type="submit" 
         disabled={isLoading || !isValid}
+        className="relative overflow-hidden transition-all hover:shadow-md hover:translate-y-[-1px] active:translate-y-[1px] active:shadow-sm"
       >
         {isLoading ? (
           <>
@@ -36,6 +40,7 @@ export function FormActions({ isLoading, isValid, onCancel, submitText = "Reques
             {submitText}
           </>
         )}
+        <RippleEffect />
       </Button>
     </div>
   );

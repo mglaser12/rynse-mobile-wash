@@ -3,6 +3,7 @@ import React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { EditWashRequestForm } from "@/components/booking/EditWashRequestForm";
 import { WashRequest } from "@/models/types";
+import { ScaleIn } from "@/components/ui/micro-animations";
 
 interface EditWashRequestDialogProps {
   washRequest: WashRequest | null;
@@ -27,7 +28,7 @@ export function EditWashRequestDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-lg py-6 max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="w-full max-w-lg py-6 max-h-[90vh] overflow-hidden flex flex-col animate-scale-in">
         <EditWashRequestForm 
           washRequest={washRequest}
           onSuccess={handleSuccess}

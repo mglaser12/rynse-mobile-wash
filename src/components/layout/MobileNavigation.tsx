@@ -73,19 +73,27 @@ export function MobileNavigation() {
   return (
     <nav className="bottom-navigation bg-white pb-safe-ios">
       <div className="flex justify-center items-center">
-        {navItems.map((item) => (
+        {navItems.map((item, index) => (
           <Link
             key={item.name}
             to={item.href}
             className={cn(
-              "flex flex-col items-center pt-1 pb-0.5 px-4 text-xs font-medium",
+              "flex flex-col items-center pt-1 pb-0.5 px-4 text-xs font-medium transition-all duration-150",
               pathname === item.href
-                ? "text-brand-primary"
+                ? "text-brand-primary scale-105 transform"
                 : "text-muted-foreground hover:text-foreground"
             )}
+            style={{ animationDelay: `${index * 50}ms` }}
           >
-            <item.icon className="h-5 w-5 mb-1" />
-            <span>{item.name}</span>
+            <item.icon 
+              className={cn(
+                "h-5 w-5 mb-1 transition-transform duration-200",
+                pathname === item.href && "animate-bounce-soft"
+              )} 
+            />
+            <span className={cn(
+              pathname === item.href && "animate-pulse-soft"
+            )}>{item.name}</span>
           </Link>
         ))}
       </div>

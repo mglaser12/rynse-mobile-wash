@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { WashRequest } from "@/models/types";
 import { useWashRequests } from "@/contexts/WashContext";
@@ -13,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useVehicles } from "@/contexts/VehicleContext";
 import { supabase } from "@/integrations/supabase/client";
+import { FadeIn, ScaleIn, SlideUp, StaggeredChildren } from "@/components/ui/micro-animations";
 
 interface EditWashRequestFormProps {
   washRequest: WashRequest;
@@ -127,12 +127,14 @@ export function EditWashRequestForm({ washRequest, onSuccess, onCancel }: EditWa
 
   return (
     <div className="space-y-6 overflow-hidden flex flex-col h-full max-h-[80vh]">
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Edit Wash Request</h2>
-        <p className="text-sm text-muted-foreground mb-6">
-          You can modify your wash request details below.
-        </p>
-      </div>
+      <ScaleIn>
+        <div>
+          <h2 className="text-lg font-semibold mb-4">Edit Wash Request</h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            You can modify your wash request details below.
+          </p>
+        </div>
+      </ScaleIn>
       
       <ScrollArea 
         className="flex-1 pr-4 -mr-4 overflow-y-auto" 
@@ -141,60 +143,64 @@ export function EditWashRequestForm({ washRequest, onSuccess, onCancel }: EditWa
         <div ref={formRef} className="pb-4">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-6">
-              <div className="form-section">
-                <LocationSelectionSection
-                  locations={locations}
-                  selectedLocationId={selectedLocationId}
-                  onSelectLocation={setSelectedLocationId}
-                />
-              </div>
+              <StaggeredChildren staggerMs={150}>
+                <SlideUp className="form-section">
+                  <LocationSelectionSection
+                    locations={locations}
+                    selectedLocationId={selectedLocationId}
+                    onSelectLocation={setSelectedLocationId}
+                  />
+                </SlideUp>
 
-              <Separator />
+                <Separator className="animate-fade-in" style={{ animationDelay: '100ms' }} />
 
-              <div className="form-section">
-                <VehicleSelectionSection 
-                  vehicles={filteredVehicles}
-                  selectedVehicleIds={selectedVehicleIds}
-                  onSelectVehicle={handleVehicleSelection}
-                  onCancel={onCancel}
-                  locationSelected={!!selectedLocationId}
-                />
-              </div>
+                <SlideUp className="form-section">
+                  <VehicleSelectionSection 
+                    vehicles={filteredVehicles}
+                    selectedVehicleIds={selectedVehicleIds}
+                    onSelectVehicle={handleVehicleSelection}
+                    onCancel={onCancel}
+                    locationSelected={!!selectedLocationId}
+                  />
+                </SlideUp>
 
-              <Separator />
-              
-              <div className="form-section">
-                <DateSelectionSection 
-                  startDate={startDate}
-                  endDate={endDate}
-                  onStartDateChange={setStartDate}
-                  onEndDateChange={setEndDate}
-                />
-              </div>
-              
-              <Separator />
-              
-              <div className="form-section">
-                <NotesSection 
-                  notes={notes}
-                  onNotesChange={setNotes}
-                />
-              </div>
-              
-              <Separator />
-              
-              <div className="form-section">
-                <PriceSummary vehicleCount={selectedVehicleIds.length} />
-              </div>
-              
-              <Separator />
-              
-              <FormActions 
-                isLoading={isLoading} 
-                isValid={isFormValid}
-                onCancel={onCancel}
-                submitText="Update Request"
-              />
+                <Separator className="animate-fade-in" style={{ animationDelay: '250ms' }} />
+                
+                <SlideUp className="form-section">
+                  <DateSelectionSection 
+                    startDate={startDate}
+                    endDate={endDate}
+                    onStartDateChange={setStartDate}
+                    onEndDateChange={setEndDate}
+                  />
+                </SlideUp>
+                
+                <Separator className="animate-fade-in" style={{ animationDelay: '400ms' }} />
+                
+                <SlideUp className="form-section">
+                  <NotesSection 
+                    notes={notes}
+                    onNotesChange={setNotes}
+                  />
+                </SlideUp>
+                
+                <Separator className="animate-fade-in" style={{ animationDelay: '550ms' }} />
+                
+                <SlideUp className="form-section">
+                  <PriceSummary vehicleCount={selectedVehicleIds.length} />
+                </SlideUp>
+                
+                <Separator className="animate-fade-in" style={{ animationDelay: '700ms' }} />
+                
+                <FadeIn style={{ animationDelay: '800ms' }}>
+                  <FormActions 
+                    isLoading={isLoading} 
+                    isValid={isFormValid}
+                    onCancel={onCancel}
+                    submitText="Update Request"
+                  />
+                </FadeIn>
+              </StaggeredChildren>
             </div>
           </form>
         </div>
