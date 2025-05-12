@@ -13,6 +13,7 @@ import TechnicianJobsPage from "../pages/technician/TechnicianJobsPage";
 import TechnicianHistoryPage from "../pages/technician/TechnicianHistoryPage";
 import ProfilePage from "../pages/ProfilePage";
 import OrganizationPage from "../pages/admin/OrganizationPage";
+import WashStatisticsPage from "../pages/admin/WashStatisticsPage";
 import NotFound from "../pages/NotFound";
 
 const LoadingSpinner = () => (
@@ -169,6 +170,15 @@ const AppRoutes = () => {
         element={
           <PrivateRoute>
             <OrganizationPage />
+          </PrivateRoute>
+        } 
+      />
+      
+      <Route 
+        path="/admin/statistics" 
+        element={
+          <PrivateRoute>
+            <WashStatisticsPage />
           </PrivateRoute>
         } 
       />
