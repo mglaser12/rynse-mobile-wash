@@ -13,6 +13,42 @@ type MapboxNavigationControl = any;
 type MapboxFullscreenControl = any;
 type MapboxGeolocateControl = any;
 
+// Add global mapboxgl declaration
+declare global {
+  interface Window {
+    mapboxgl: any;
+  }
+}
+
+// Function to load Mapbox from CDN
+const loadMapboxFromCDN = async () => {
+  return new Promise<void>((resolve, reject) => {
+    try {
+      // Check if mapboxgl is already loaded
+      if (window.mapboxgl) {
+        resolve();
+        return;
+      }
+
+      // Load CSS
+      const cssLink = document.createElement('link');
+      cssLink.rel = 'stylesheet';
+      cssLink.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
+      document.head.appendChild(cssLink);
+
+      // Load JS
+      const script = document.createElement('script');
+      script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js';
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load Mapbox from CDN'));
+      document.head.appendChild(script);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
 interface LocationMapProps {
   locations: Location[];
   selectedLocationId?: string;
@@ -35,17 +71,30 @@ export const LocationMap = ({
   const [loading, setLoading] = useState(true);
   const [mapboxLoaded, setMapboxLoaded] = useState(false);
   const [mapboxgl, setMapboxgl] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Dynamically import mapbox-gl
+  // Attempt to load mapbox-gl - first via import, then via CDN
   useEffect(() => {
     const loadMapbox = async () => {
       try {
-        const mapboxModule = await import('mapbox-gl');
-        await import('mapbox-gl/dist/mapbox-gl.css');
-        setMapboxgl(mapboxModule.default);
+        // First try: attempt to load via module import
+        const mapboxModule = await import('mapbox-gl').catch(() => null);
+        if (mapboxModule?.default) {
+          await import('mapbox-gl/dist/mapbox-gl.css').catch(() => {
+            // CSS import failed, but we can still use the CDN CSS
+          });
+          setMapboxgl(mapboxModule.default);
+          setMapboxLoaded(true);
+          return;
+        }
+        
+        // Second try: fall back to CDN
+        await loadMapboxFromCDN();
+        setMapboxgl(window.mapboxgl);
         setMapboxLoaded(true);
       } catch (err) {
         console.error('Failed to load Mapbox:', err);
+        setError('Failed to load Mapbox. Please check your internet connection and try again.');
         setLoading(false);
       }
     };
@@ -63,9 +112,14 @@ export const LocationMap = ({
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken || !mapboxgl || !mapboxLoaded) return;
     
+    // Use the provided token
+    const token = mapboxToken === "MAPBOX_TOKEN" 
+      ? "pk.eyJ1IjoibWF0dHJ5bnNlIiwiYSI6ImNtYWxsM2FoYjBhM2oyam9icHkzeTZ1eG8ifQ.p7JoAIEy_fOV7AsoMClKeA" 
+      : mapboxToken;
+    
     try {
       // Set access token for Mapbox
-      mapboxgl.accessToken = mapboxToken;
+      mapboxgl.accessToken = token;
       
       const newMap = new mapboxgl.Map({
         container: mapContainer.current,
@@ -96,6 +150,7 @@ export const LocationMap = ({
       map.current = newMap;
     } catch (err) {
       console.error('Error initializing map:', err);
+      setError('Error initializing map. Please try again later.');
       setLoading(false);
     }
   }, [mapboxToken, mapboxgl, mapboxLoaded]);
@@ -199,6 +254,17 @@ export const LocationMap = ({
         <div className="text-center space-y-2 p-4">
           <MapPin className="h-12 w-12 text-muted-foreground mx-auto" />
           <p className="text-muted-foreground">Mapbox API key is required to display maps</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`flex items-center justify-center ${className} ${height} bg-gray-100 rounded-lg border border-gray-200`}>
+        <div className="text-center space-y-2 p-4">
+          <MapPin className="h-12 w-12 text-muted-foreground mx-auto" />
+          <p className="text-muted-foreground">{error}</p>
         </div>
       </div>
     );

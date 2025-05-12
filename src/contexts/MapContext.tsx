@@ -8,6 +8,9 @@ type MapContextType = {
   isMapAvailable: boolean;
 };
 
+// Default Mapbox token provided by the user
+const DEFAULT_MAPBOX_TOKEN = "pk.eyJ1IjoibWF0dHJ5bnNlIiwiYSI6ImNtYWxsM2FoYjBhM2oyam9icHkzeTZ1eG8ifQ.p7JoAIEy_fOV7AsoMClKeA";
+
 const MapContext = createContext<MapContextType>({
   mapboxToken: null,
   setMapboxToken: () => {},
@@ -18,7 +21,7 @@ export const useMap = () => useContext(MapContext);
 
 export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mapboxToken, setMapboxTokenState] = useState<string | null>(
-    localStorage.getItem('mapbox_token')
+    localStorage.getItem('mapbox_token') || DEFAULT_MAPBOX_TOKEN
   );
   const [isMapAvailable, setIsMapAvailable] = useState<boolean>(!!mapboxToken);
 
@@ -34,6 +37,10 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const savedToken = localStorage.getItem('mapbox_token');
     if (savedToken) {
       setMapboxTokenState(savedToken);
+      setIsMapAvailable(true);
+    } else if (DEFAULT_MAPBOX_TOKEN) {
+      // Use default token if no saved token
+      setMapboxTokenState(DEFAULT_MAPBOX_TOKEN);
       setIsMapAvailable(true);
     }
   }, []);
