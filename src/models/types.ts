@@ -1,4 +1,3 @@
-
 // Add the UserRole type to the existing types
 export type UserRole = "fleet_manager" | "technician" | "admin";
 
@@ -14,7 +13,8 @@ export type Vehicle = {
   image?: string;
   vinNumber?: string;
   dateAdded: Date;
-  organizationId?: string; // Organization ID field
+  organizationId?: string;
+  assetNumber?: string; // New field for asset number
 };
 
 export type WashStatus = 
@@ -115,7 +115,8 @@ export type SupabaseVehicle = {
   image_url: string | null;
   created_at: string;
   updated_at: string;
-  organization_id: string | null; // Organization ID field
+  organization_id: string | null;
+  asset_number: string | null; // New field for asset number in Supabase
 };
 
 export type SupabaseWashRequest = {
