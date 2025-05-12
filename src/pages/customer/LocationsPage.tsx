@@ -172,119 +172,121 @@ export default function LocationsPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <TabsContent value="list" className="mt-4">
-                {filteredLocations.length === 0 ? (
-                  <div className="text-center my-12">
-                    <p className="text-muted-foreground mb-4">No locations found</p>
-                    <button
-                      onClick={handleAddLocation}
-                      className="text-primary hover:underline"
-                    >
-                      Add your first location
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-3">
-                    {filteredLocations.map((location) => (
-                      <Card 
-                        key={location.id} 
-                        className={`overflow-hidden ${selectedLocation?.id === location.id ? 'ring-2 ring-primary' : ''}`}
-                        onClick={() => setSelectedLocation(location)}
+              <Tabs value={viewMode} className="mt-4">
+                <TabsContent value="list">
+                  {filteredLocations.length === 0 ? (
+                    <div className="text-center my-12">
+                      <p className="text-muted-foreground mb-4">No locations found</p>
+                      <button
+                        onClick={handleAddLocation}
+                        className="text-primary hover:underline"
                       >
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-1">
-                              <div className="flex items-center">
-                                <MapPin className="h-4 w-4 text-primary mr-2" />
-                                <h3 className="font-semibold">{location.name}</h3>
+                        Add your first location
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-3">
+                      {filteredLocations.map((location) => (
+                        <Card 
+                          key={location.id} 
+                          className={`overflow-hidden ${selectedLocation?.id === location.id ? 'ring-2 ring-primary' : ''}`}
+                          onClick={() => setSelectedLocation(location)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-1">
+                                <div className="flex items-center">
+                                  <MapPin className="h-4 w-4 text-primary mr-2" />
+                                  <h3 className="font-semibold">{location.name}</h3>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {location.address}, {location.city}, {location.state} {location.zipCode}
+                                </p>
                               </div>
-                              <p className="text-sm text-muted-foreground">
-                                {location.address}, {location.city}, {location.state} {location.zipCode}
-                              </p>
+                              {location.isDefault && (
+                                <Badge variant="default" className="bg-yellow-500 flex items-center py-1 shadow-sm px-[7px]">
+                                  <Star className="h-3 w-3 mr-1" /> Default
+                                </Badge>
+                              )}
                             </div>
-                            {location.isDefault && (
-                              <Badge variant="default" className="bg-yellow-500 flex items-center py-1 shadow-sm px-[7px]">
-                                <Star className="h-3 w-3 mr-1" /> Default
-                              </Badge>
-                            )}
-                          </div>
 
-                          <div className="flex justify-between items-center mt-4">
-                            <Button variant="outline" size="sm" onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditLocation(location);
-                            }}>
-                              <Edit className="h-4 w-4 mr-2" /> Edit
-                            </Button>
-                            <div className="flex space-x-2">
-                              {!location.isDefault && (
+                            <div className="flex justify-between items-center mt-4">
+                              <Button variant="outline" size="sm" onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditLocation(location);
+                              }}>
+                                <Edit className="h-4 w-4 mr-2" /> Edit
+                              </Button>
+                              <div className="flex space-x-2">
+                                {!location.isDefault && (
+                                  <Button 
+                                    variant="secondary" 
+                                    size="sm" 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSetDefault(location);
+                                    }}
+                                  >
+                                    <Star className="h-4 w-4 mr-2" /> Set Default
+                                  </Button>
+                                )}
                                 <Button 
-                                  variant="secondary" 
+                                  variant="destructive" 
                                   size="sm" 
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleSetDefault(location);
+                                    handleDeleteLocation(location);
                                   }}
                                 >
-                                  <Star className="h-4 w-4 mr-2" /> Set Default
+                                  <Trash2 className="h-4 w-4 mr-2" /> Delete
                                 </Button>
-                              )}
-                              <Button 
-                                variant="destructive" 
-                                size="sm" 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteLocation(location);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" /> Delete
-                              </Button>
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="map">
+                  {!isMapInitialized ? (
+                    <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
+                      <RadarConfig onInitialized={handleMapInitialized} />
+                    </div>
+                  ) : filteredLocations.length === 0 ? (
+                    <div className="text-center my-12">
+                      <p className="text-muted-foreground mb-4">No locations found</p>
+                      <button
+                        onClick={handleAddLocation}
+                        className="text-primary hover:underline"
+                      >
+                        Add your first location
+                      </button>
+                    </div>
+                  ) : !hasCoordinates ? (
+                    <div className="text-center my-12">
+                      <p className="text-muted-foreground mb-4">
+                        Your locations don't have coordinates information.
+                        Edit your locations to add latitude and longitude.
+                      </p>
+                      <Button onClick={handleAddLocation} variant="outline">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Location with Coordinates
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="h-[calc(100vh-200px)]">
+                      <RadarMap
+                        locations={locationsWithCoordinates}
+                        selectedLocation={selectedLocation}
+                        onSelectLocation={handleSelectLocation}
+                      />
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             )}
-            
-            <TabsContent value="map" className="mt-4">
-              {!isMapInitialized ? (
-                <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
-                  <RadarConfig onInitialized={handleMapInitialized} />
-                </div>
-              ) : filteredLocations.length === 0 ? (
-                <div className="text-center my-12">
-                  <p className="text-muted-foreground mb-4">No locations found</p>
-                  <button
-                    onClick={handleAddLocation}
-                    className="text-primary hover:underline"
-                  >
-                    Add your first location
-                  </button>
-                </div>
-              ) : !hasCoordinates ? (
-                <div className="text-center my-12">
-                  <p className="text-muted-foreground mb-4">
-                    Your locations don't have coordinates information.
-                    Edit your locations to add latitude and longitude.
-                  </p>
-                  <Button onClick={handleAddLocation} variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Location with Coordinates
-                  </Button>
-                </div>
-              ) : (
-                <div className="h-[calc(100vh-200px)]">
-                  <RadarMap
-                    locations={locationsWithCoordinates}
-                    selectedLocation={selectedLocation}
-                    onSelectLocation={handleSelectLocation}
-                  />
-                </div>
-              )}
-            </TabsContent>
           </div>
 
           {viewMode === "map" && selectedLocation && (
