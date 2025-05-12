@@ -63,6 +63,15 @@ export function WashRequestCard({
     return `${format(start, "MMM dd")} - ${format(end, "MMM dd, yyyy")}`;
   };
 
+  // Format the header date based on status
+  const formatHeaderDate = () => {
+    if (washRequest.status === "completed") {
+      return format(washRequest.updatedAt, "MMM dd, yyyy");
+    } else {
+      return formatDateRange();
+    }
+  };
+
   const handleClick = () => {
     if (washRequest.status === "completed") {
       setShowCompletedDialog(true);
@@ -85,7 +94,7 @@ export function WashRequestCard({
               </Badge>
               <h4 className="font-medium flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                {formatDateRange()}
+                {formatHeaderDate()}
               </h4>
             </div>
             <div className="text-right">
