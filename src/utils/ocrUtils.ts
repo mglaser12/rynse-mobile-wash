@@ -1,4 +1,3 @@
-
 import { createWorker } from 'tesseract.js';
 import { toast } from "sonner";
 
@@ -11,6 +10,7 @@ export type OCRResult = {
     licensePlate?: string;
     vinNumber?: string;
     type?: string;
+    assetNumber?: string; // Add assetNumber to the type definition
   };
   error?: string;
 };
@@ -58,8 +58,8 @@ async function getWorker() {
   return worker;
 }
 
-// Function to perform OCR on an image
-async function performOCR(imageFile: File): Promise<string> {
+// Export the performOCR function so it can be used by other modules
+export async function performOCR(imageFile: File): Promise<string> {
   try {
     const ocrWorker = await getWorker();
     
