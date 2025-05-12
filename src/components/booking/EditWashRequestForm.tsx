@@ -17,10 +17,8 @@ export function EditWashRequestForm({ washRequest, onSuccess, onCancel }: EditWa
   const { updateWashRequest } = useWashRequests();
   const [isLoading, setIsLoading] = useState(false);
   const [notes, setNotes] = useState(washRequest.notes || "");
-  const [preferredDates, setPreferredDates] = useState({
-    start: washRequest.preferredDates.start,
-    end: washRequest.preferredDates.end
-  });
+  const [startDate, setStartDate] = useState<Date | undefined>(washRequest.preferredDates.start);
+  const [endDate, setEndDate] = useState<Date | undefined>(washRequest.preferredDates.end);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +26,10 @@ export function EditWashRequestForm({ washRequest, onSuccess, onCancel }: EditWa
     
     try {
       const success = await updateWashRequest(washRequest.id, {
-        preferredDates,
+        preferredDates: {
+          start: startDate,
+          end: endDate
+        },
         notes
       });
       
@@ -56,13 +57,15 @@ export function EditWashRequestForm({ washRequest, onSuccess, onCancel }: EditWa
       </div>
       
       <DateRangePicker
-        value={preferredDates} 
-        onChange={setPreferredDates}
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
       />
       
       <NotesSection 
-        value={notes} 
-        onChange={setNotes} 
+        notes={notes} 
+        onNotesChange={setNotes} 
       />
       
       <FormActions 
