@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { transitions } from '@/lib/animations';
@@ -6,6 +5,7 @@ import { transitions } from '@/lib/animations';
 interface AnimationProps {
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export const ScaleOnPress = ({ children, className }: AnimationProps) => {
@@ -69,17 +69,17 @@ export const SlideInLeft = ({ children, className }: AnimationProps) => {
   );
 };
 
-export const ScaleIn = ({ children, className }: AnimationProps) => {
+export const ScaleIn = ({ children, className, style }: AnimationProps) => {
   return (
-    <div className={cn("animate-scale-in", className)}>
+    <div className={cn("animate-scale-in", className)} style={style}>
       {children}
     </div>
   );
 };
 
-export const PulseSoft = ({ children, className }: AnimationProps) => {
+export const PulseSoft = ({ children, className, style }: AnimationProps) => {
   return (
-    <div className={cn("animate-pulse-soft", className)}>
+    <div className={cn("animate-pulse-soft", className)} style={style}>
       {children}
     </div>
   );

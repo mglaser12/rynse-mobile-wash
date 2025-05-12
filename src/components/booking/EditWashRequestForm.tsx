@@ -144,7 +144,7 @@ export function EditWashRequestForm({ washRequest, onSuccess, onCancel }: EditWa
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-6">
               <StaggeredChildren staggerMs={150}>
-                <SlideUp className="form-section">
+                <SlideUp>
                   <LocationSelectionSection
                     locations={locations}
                     selectedLocationId={selectedLocationId}
@@ -152,9 +152,9 @@ export function EditWashRequestForm({ washRequest, onSuccess, onCancel }: EditWa
                   />
                 </SlideUp>
 
-                <Separator className="animate-fade-in" style={{ animationDelay: '100ms' }} />
+                <Separator className="my-4" />
 
-                <SlideUp className="form-section">
+                <SlideUp>
                   <VehicleSelectionSection 
                     vehicles={filteredVehicles}
                     selectedVehicleIds={selectedVehicleIds}
@@ -164,9 +164,9 @@ export function EditWashRequestForm({ washRequest, onSuccess, onCancel }: EditWa
                   />
                 </SlideUp>
 
-                <Separator className="animate-fade-in" style={{ animationDelay: '250ms' }} />
+                <Separator className="my-4" />
                 
-                <SlideUp className="form-section">
+                <SlideUp>
                   <DateSelectionSection 
                     startDate={startDate}
                     endDate={endDate}
@@ -175,24 +175,24 @@ export function EditWashRequestForm({ washRequest, onSuccess, onCancel }: EditWa
                   />
                 </SlideUp>
                 
-                <Separator className="animate-fade-in" style={{ animationDelay: '400ms' }} />
+                <Separator className="my-4" />
                 
-                <SlideUp className="form-section">
+                <SlideUp>
                   <NotesSection 
                     notes={notes}
                     onNotesChange={setNotes}
                   />
                 </SlideUp>
                 
-                <Separator className="animate-fade-in" style={{ animationDelay: '550ms' }} />
+                <Separator className="my-4" />
                 
-                <SlideUp className="form-section">
+                <SlideUp>
                   <PriceSummary vehicleCount={selectedVehicleIds.length} />
                 </SlideUp>
                 
-                <Separator className="animate-fade-in" style={{ animationDelay: '700ms' }} />
+                <Separator className="my-4" />
                 
-                <FadeIn style={{ animationDelay: '800ms' }}>
+                <FadeIn>
                   <FormActions 
                     isLoading={isLoading} 
                     isValid={isFormValid}
