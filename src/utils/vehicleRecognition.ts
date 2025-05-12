@@ -1,3 +1,4 @@
+
 import { pipeline, env } from '@huggingface/transformers';
 import { toast } from "sonner";
 import { OCRResult } from "./ocrUtils";
@@ -164,8 +165,10 @@ export async function detectVehicleType(imageFile: File): Promise<string | null>
     // Extract the vehicle type with highest confidence
     if (result && Array.isArray(result) && result.length > 0) {
       console.log('Vehicle classification results:', result);
-      // Fix the property access to use the correct structure
-      return mapClassificationToType(result[0].label || '');
+      // Fix accessing the label property by checking its structure and providing a fallback
+      const classificationLabel = result[0] && typeof result[0] === 'object' ? 
+        ('label' in result[0] ? result[0].label as string : '') : '';
+      return mapClassificationToType(classificationLabel);
     }
     
     return null;
