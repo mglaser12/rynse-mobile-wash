@@ -1,5 +1,6 @@
 
 import React, { useEffect } from "react";
+import { AppProviders } from "./providers/AppProviders";
 import AppRoutes from "./routes/AppRoutes";
 import { useIosInputFix } from "./hooks/useIosInputFix";
 
@@ -28,8 +29,11 @@ const App = () => {
   // Apply iOS input fixes
   useIosInputFix();
   
-  // Remove the nested AppProviders component since it's already present in main.tsx
-  return <AppRoutes />;
+  return (
+    <AppProviders>
+      <AppRoutes />
+    </AppProviders>
+  );
 };
 
 export default App;

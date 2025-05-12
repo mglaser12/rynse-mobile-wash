@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { Location } from "@/models/types";
 import { useLocations } from "@/contexts/LocationContext";
-import { Loader2, MapPin } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
   Form, 
@@ -19,7 +18,6 @@ import {
 } from "@/components/ui/form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
 
 interface LocationFormProps {
   location: Location | null;
@@ -34,15 +32,6 @@ const formSchema = z.object({
   city: z.string().min(1, { message: "City is required" }),
   state: z.string().min(1, { message: "State is required" }),
   zipCode: z.string().min(1, { message: "Zip code is required" }),
-  // Properly handle latitude and longitude as optional numbers using transform
-  latitude: z.union([
-    z.number().optional(),
-    z.string().transform(val => val && val.trim() !== '' ? parseFloat(val) : undefined)
-  ]),
-  longitude: z.union([
-    z.number().optional(),
-    z.string().transform(val => val && val.trim() !== '' ? parseFloat(val) : undefined)
-  ]),
   notes: z.string().optional(),
   isDefault: z.boolean().default(false),
 });
@@ -53,7 +42,6 @@ type LocationFormData = z.infer<typeof formSchema>;
 export function LocationForm({ location, onCancel, onSuccess }: LocationFormProps) {
   const { createLocation, updateLocation } = useLocations();
   const { user } = useAuth();
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
   
   // Set up form with zod resolver
   const form = useForm<LocationFormData>({
@@ -64,19 +52,13 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
       city: "",
       state: "",
       zipCode: "",
-      latitude: undefined,
-      longitude: undefined,
       notes: "",
       isDefault: false,
     },
   });
   
   // Destructure form methods
-  const { reset, setValue, watch, formState: { isSubmitting } } = form;
-  
-  // Watch latitude and longitude
-  const latitude = watch("latitude");
-  const longitude = watch("longitude");
+  const { reset, formState: { isSubmitting } } = form;
   
   // When the dialog opens/closes or location changes, reset the form
   useEffect(() => {
@@ -88,8 +70,6 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
         city: location.city,
         state: location.state,
         zipCode: location.zipCode,
-        latitude: location.latitude,
-        longitude: location.longitude,
         notes: location.notes || "",
         isDefault: location.isDefault,
       });
@@ -101,8 +81,6 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
         city: "",
         state: "",
         zipCode: "",
-        latitude: undefined,
-        longitude: undefined,
         notes: "",
         isDefault: false,
       });
@@ -126,8 +104,6 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
           city: data.city,
           state: data.state,
           zipCode: data.zipCode,
-          latitude: data.latitude as number | undefined,
-          longitude: data.longitude as number | undefined,
           notes: data.notes,
           isDefault: data.isDefault,
           organizationId: user?.organizationId || ""
@@ -137,30 +113,6 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
     } catch (error) {
       console.error("Error saving location:", error);
     }
-  };
-
-  // Get current location using browser geolocation
-  const handleGetCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by your browser");
-      return;
-    }
-    
-    setIsGettingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setValue("latitude", latitude);
-        setValue("longitude", longitude);
-        setIsGettingLocation(false);
-        toast.success("Current location coordinates applied");
-      },
-      (error) => {
-        console.error("Error getting location:", error);
-        toast.error("Failed to get your current location");
-        setIsGettingLocation(false);
-      }
-    );
   };
 
   return (
@@ -252,73 +204,6 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
             </FormItem>
           )}
         />
-        
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <FormLabel>Coordinates</FormLabel>
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="sm" 
-              onClick={handleGetCurrentLocation}
-              disabled={isGettingLocation}
-            >
-              {isGettingLocation ? (
-                <Loader2 className="h-3 w-3 animate-spin mr-1" />
-              ) : (
-                <MapPin className="h-3 w-3 mr-1" />
-              )}
-              Use Current Location
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2">
-            <FormField
-              control={form.control}
-              name="latitude"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input
-                      placeholder="Latitude"
-                      {...field}
-                      value={field.value?.toString() || ''}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        field.onChange(value === '' ? undefined : parseFloat(value));
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="longitude"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input
-                      placeholder="Longitude"
-                      {...field}
-                      value={field.value?.toString() || ''}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        field.onChange(value === '' ? undefined : parseFloat(value));
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Optional: Add coordinates for map display
-          </p>
-        </div>
         
         <FormField
           control={form.control}

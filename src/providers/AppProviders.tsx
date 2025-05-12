@@ -7,14 +7,12 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { VehicleProvider } from "@/contexts/VehicleContext";
 import { WashProvider } from "@/contexts/WashContext";
 import { LocationProvider } from "@/contexts/LocationContext";
-import { RadarProvider } from "@/contexts/RadarContext";
 
 interface AppProvidersProps {
   children: React.ReactNode;
 }
 
 export function AppProviders({ children }: AppProvidersProps) {
-  // This is fine as this is the only Router in the app now
   return (
     <ThemeProvider defaultTheme="light" storageKey="theme">
       <Router>
@@ -22,11 +20,9 @@ export function AppProviders({ children }: AppProvidersProps) {
           <VehicleProvider>
             <WashProvider>
               <LocationProvider>
-                <RadarProvider>
-                  {children}
-                  <Toaster />
-                  <SonnerToaster />
-                </RadarProvider>
+                {children}
+                <Toaster />
+                <SonnerToaster />
               </LocationProvider>
             </WashProvider>
           </VehicleProvider>
