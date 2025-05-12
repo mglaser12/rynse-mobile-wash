@@ -14,7 +14,7 @@ interface TechnicianData {
   id: string;
   name: string;
   completedWashes: number;
-  averageCompletionTime: string;
+  averageCompletionTime: string | number;
   rating?: number;
   vehiclesWashed: number;
   averageRating?: number;

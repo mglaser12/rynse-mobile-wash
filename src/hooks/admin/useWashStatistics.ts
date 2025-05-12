@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -90,12 +91,15 @@ export function useWashStatistics() {
         // Fetch data based on time range
         const timeRangeFilter = getTimeFilter(timeRange);
         
-        // Get wash requests
+        // Get wash requests - FIXED QUERY to use proper join through wash_request_vehicles
         const { data: washRequests, error } = await supabase
           .from('wash_requests')
           .select(`
             *,
-            vehicles!inner(*),
+            wash_request_vehicles!inner(
+              vehicle_id,
+              vehicles:vehicle_id(*)
+            ),
             technician:technician_id(id, profiles(id, name))
           `)
           .gte('created_at', timeRangeFilter);
