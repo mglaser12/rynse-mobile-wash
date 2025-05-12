@@ -80,20 +80,17 @@ export function MobileNavigation() {
             className={cn(
               "flex flex-col items-center pt-1 pb-0.5 px-4 text-xs font-medium transition-all duration-150",
               pathname === item.href
-                ? "text-brand-primary scale-105 transform"
+                ? "text-brand-primary"
                 : "text-muted-foreground hover:text-foreground"
             )}
-            style={{ animationDelay: `${index * 50}ms` }}
           >
             <item.icon 
               className={cn(
-                "h-5 w-5 mb-1 transition-transform duration-200",
-                pathname === item.href && "animate-bounce-soft"
+                "h-5 w-5 mb-1",
+                pathname === item.href && "text-brand-primary"
               )} 
             />
-            <span className={cn(
-              pathname === item.href && "animate-pulse-soft"
-            )}>{item.name}</span>
+            <span>{item.name}</span>
           </Link>
         ))}
       </div>
