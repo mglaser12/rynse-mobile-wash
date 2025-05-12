@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { Location } from "@/models/types";
 import { useLocations } from "@/contexts/LocationContext";
-import { Loader2 } from "lucide-react";
+import { Loader2, MapPin } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
   Form, 
@@ -18,6 +19,9 @@ import {
 } from "@/components/ui/form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { GeocodeSearch } from "./GeocodeSearch";
+import { LocationMap } from "./LocationMap";
+import { useMap } from "@/contexts/MapContext";
 
 interface LocationFormProps {
   location: Location | null;
@@ -34,6 +38,8 @@ const formSchema = z.object({
   zipCode: z.string().min(1, { message: "Zip code is required" }),
   notes: z.string().optional(),
   isDefault: z.boolean().default(false),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 // Define the form data type from the schema
@@ -42,6 +48,7 @@ type LocationFormData = z.infer<typeof formSchema>;
 export function LocationForm({ location, onCancel, onSuccess }: LocationFormProps) {
   const { createLocation, updateLocation } = useLocations();
   const { user } = useAuth();
+  const { isMapAvailable } = useMap();
   
   // Set up form with zod resolver
   const form = useForm<LocationFormData>({
@@ -54,11 +61,17 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
       zipCode: "",
       notes: "",
       isDefault: false,
+      latitude: undefined,
+      longitude: undefined,
     },
   });
   
   // Destructure form methods
-  const { reset, formState: { isSubmitting } } = form;
+  const { reset, formState: { isSubmitting }, watch, setValue } = form;
+  
+  // Watch latitude and longitude for the map preview
+  const latitude = watch('latitude');
+  const longitude = watch('longitude');
   
   // When the dialog opens/closes or location changes, reset the form
   useEffect(() => {
@@ -72,6 +85,8 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
         zipCode: location.zipCode,
         notes: location.notes || "",
         isDefault: location.isDefault,
+        latitude: location.latitude,
+        longitude: location.longitude,
       });
     } else {
       // Add mode - reset form to defaults
@@ -83,6 +98,8 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
         zipCode: "",
         notes: "",
         isDefault: false,
+        latitude: undefined,
+        longitude: undefined,
       });
     }
   }, [location, reset]);
@@ -105,6 +122,8 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
           state: data.state,
           zipCode: data.zipCode,
           notes: data.notes,
+          latitude: data.latitude,
+          longitude: data.longitude,
           isDefault: data.isDefault,
           organizationId: user?.organizationId || ""
         });
@@ -115,9 +134,54 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
     }
   };
 
+  // Handle result from geocoding search
+  const handleGeocodeResult = (result: {
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    latitude: number;
+    longitude: number;
+  }) => {
+    setValue('address', result.address);
+    setValue('city', result.city);
+    setValue('state', result.state);
+    setValue('zipCode', result.zipCode);
+    setValue('latitude', result.latitude);
+    setValue('longitude', result.longitude);
+  };
+
+  // Generate a mocked location object for map preview
+  const getMapPreviewLocation = (): Location[] => {
+    if (latitude && longitude) {
+      return [{
+        id: 'preview',
+        name: watch('name') || 'New Location',
+        address: watch('address'),
+        city: watch('city'),
+        state: watch('state'),
+        zipCode: watch('zipCode'),
+        latitude,
+        longitude,
+        isDefault: watch('isDefault'),
+        createdBy: 'preview',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }];
+    }
+    return [];
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 mt-2">
+        {isMapAvailable && (
+          <div className="mb-4">
+            <FormLabel>Find Address</FormLabel>
+            <GeocodeSearch onLocationFound={handleGeocodeResult} />
+          </div>
+        )}
+      
         <FormField
           control={form.control}
           name="name"
@@ -204,6 +268,25 @@ export function LocationForm({ location, onCancel, onSuccess }: LocationFormProp
             </FormItem>
           )}
         />
+
+        {isMapAvailable && (
+          <div className="space-y-2 py-2">
+            <div className="flex items-center justify-between">
+              <FormLabel>Map Location</FormLabel>
+              <div className="text-sm text-muted-foreground">
+                {latitude && longitude ? (
+                  <span>Lat: {latitude.toFixed(5)}, Lng: {longitude.toFixed(5)}</span>
+                ) : (
+                  <span>No coordinates set</span>
+                )}
+              </div>
+            </div>
+            <LocationMap 
+              locations={getMapPreviewLocation()} 
+              height="h-48"
+            />
+          </div>
+        )}
         
         <FormField
           control={form.control}
