@@ -101,12 +101,7 @@ export function WashRequestCard({
                 {formatHeaderDate()}
               </h4>
             </div>
-            <div className="text-right">
-              <p className="font-medium">${washRequest.price.toFixed(2)}</p>
-              <p className="text-xs text-muted-foreground">
-                {format(washRequest.createdAt, "MMM dd, yyyy")}
-              </p>
-            </div>
+            {/* Removed price and date from here */}
           </div>
           
           <div className="mt-3 space-y-2 text-sm">
