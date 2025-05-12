@@ -5,7 +5,6 @@ import { WashRequestCard } from "@/components/shared/WashRequestCard";
 import { CreateWashRequestForm } from "@/components/booking/CreateWashRequestForm";
 import { useWashRequests } from "@/contexts/WashContext";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Loader2, PlusCircle } from "lucide-react";
@@ -138,12 +137,6 @@ const BookingsPage = () => {
             </TabsContent>
           </Tabs>
         )}
-        
-        <Alert className="mt-6">
-          <AlertDescription>
-            Need to modify a booking? Contact our support team for assistance.
-          </AlertDescription>
-        </Alert>
       </div>
       
       <Dialog open={showNewBookingDialog} onOpenChange={setShowNewBookingDialog}>

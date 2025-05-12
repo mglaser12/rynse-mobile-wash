@@ -11,7 +11,6 @@ import { CreateWashRequestForm } from "@/components/booking/CreateWashRequestFor
 import { useWashRequests } from "@/contexts/WashContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { PlusCircle, Car, Loader2 } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EditWashRequestDialog } from "@/components/wash/EditWashRequestDialog";
 import { WashRequestActions } from "@/components/wash/WashRequestActions";
 import { WashRequest } from "@/models/types";
@@ -144,12 +143,6 @@ const CustomerHome = () => {
             </TabsContent>
           </Tabs>
         )}
-        
-        <Alert className="mt-6">
-          <AlertDescription>
-            Need to modify a booking? Contact our support team for assistance.
-          </AlertDescription>
-        </Alert>
       </div>
       
       <Dialog open={showNewRequestDialog} onOpenChange={setShowNewRequestDialog}>
