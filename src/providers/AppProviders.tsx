@@ -14,6 +14,7 @@ interface AppProvidersProps {
 }
 
 export function AppProviders({ children }: AppProvidersProps) {
+  // This is fine as this is the only Router in the app now
   return (
     <ThemeProvider defaultTheme="light" storageKey="theme">
       <Router>
