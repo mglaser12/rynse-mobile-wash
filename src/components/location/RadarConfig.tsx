@@ -14,6 +14,7 @@ interface RadarConfigProps {
 export function RadarConfig({ onInitialized }: RadarConfigProps) {
   // Default value is now the provided key
   const [publishableKey, setPublishableKey] = useState("prj_live_pk_560d2a5b5bfcbd600e4b0f31e0962eb1a25b27a5");
+  const [initAttempted, setInitAttempted] = useState(false);
   const { isLoading, initializeRadar, isInitialized, scriptLoaded } = useRadar();
 
   // Auto-initialize on component mount
@@ -25,12 +26,13 @@ export function RadarConfig({ onInitialized }: RadarConfigProps) {
       return;
     }
     
-    // Only try to initialize if the script is loaded
-    if (scriptLoaded && publishableKey) {
+    // Only try to initialize if the script is loaded and we haven't attempted yet
+    if (scriptLoaded && publishableKey && !initAttempted) {
       console.log("Auto-initializing Radar with key");
+      setInitAttempted(true);
       handleInitialize();
     }
-  }, [isInitialized, scriptLoaded]);
+  }, [isInitialized, scriptLoaded, initAttempted]);
 
   const handleInitialize = async () => {
     if (!publishableKey.trim()) {
@@ -52,6 +54,7 @@ export function RadarConfig({ onInitialized }: RadarConfigProps) {
       onInitialized();
     } else {
       toast.error("Failed to initialize map service. Please check your API key.");
+      setInitAttempted(false); // Allow retrying
     }
   };
 
