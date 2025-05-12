@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { useMap } from '@/contexts/MapContext';
 import { MapPin, Loader2 } from 'lucide-react';
@@ -12,13 +11,6 @@ type MapboxLngLatBounds = any;
 type MapboxNavigationControl = any;
 type MapboxFullscreenControl = any;
 type MapboxGeolocateControl = any;
-
-// Add global mapboxgl declaration
-declare global {
-  interface Window {
-    mapboxgl: any;
-  }
-}
 
 // Function to load Mapbox from CDN
 const loadMapboxFromCDN = async () => {

@@ -3,5 +3,5 @@
 
 // Global mapboxgl for CDN fallback
 interface Window {
-  mapboxgl?: any;
+  mapboxgl: any;
 }
