@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +35,7 @@ export function WashRequestCard({
   const locationInfo = washRequest.locationId ? locations.find(loc => loc.id === washRequest.locationId) : washRequest.location?.name ? {
     name: washRequest.location.name
   } : null;
+  
   const statusColors: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800",
     confirmed: "bg-blue-100 text-blue-800",
@@ -41,6 +43,7 @@ export function WashRequestCard({
     completed: "bg-green-100 text-green-800",
     cancelled: "bg-red-100 text-red-800"
   };
+  
   const statusMessages: Record<string, string> = {
     pending: "Awaiting confirmation",
     confirmed: "Scheduled",
@@ -48,6 +51,7 @@ export function WashRequestCard({
     completed: "Completed",
     cancelled: "Cancelled"
   };
+  
   const formatDateRange = () => {
     const {
       start,
@@ -79,8 +83,9 @@ export function WashRequestCard({
               <Badge className={`${statusColors[washRequest.status]}`}>
                 {statusMessages[washRequest.status]}
               </Badge>
-              <h4 className="font-medium">
-                {requestVehicles.length} Vehicle{requestVehicles.length !== 1 && "s"}
+              <h4 className="font-medium flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                {formatDateRange()}
               </h4>
             </div>
             <div className="text-right">
@@ -98,21 +103,24 @@ export function WashRequestCard({
                 <span>{locationInfo.name}</span>
               </div>}
             
-            <div className="flex gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
-              <span>{formatDateRange()}</span>
-            </div>
-            
+            {/* Vehicle information */}
             <div className="flex gap-2">
               <Car className="h-4 w-4 text-muted-foreground mt-0.5" />
               <div>
-                {requestVehicles.length > 0 ? <>
-                    {requestVehicles.slice(0, 2).map((vehicle, index) => <span key={vehicle.id || index}>
+                {requestVehicles.length > 0 ? (
+                  <>
+                    {requestVehicles.length} Vehicle{requestVehicles.length !== 1 && "s"}: {" "}
+                    {requestVehicles.slice(0, 2).map((vehicle, index) => (
+                      <span key={vehicle.id || index}>
                         {vehicle.make} {vehicle.model}
                         {index < Math.min(requestVehicles.length, 2) - 1 && ", "}
-                      </span>)}
+                      </span>
+                    ))}
                     {requestVehicles.length > 2 && ` +${requestVehicles.length - 2} more`}
-                  </> : <span>No vehicles</span>}
+                  </>
+                ) : (
+                  <span>No vehicles</span>
+                )}
               </div>
             </div>
           </div>
