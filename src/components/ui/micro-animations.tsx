@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { transitions } from '@/lib/animations';
@@ -17,13 +16,20 @@ export const ScaleOnPress = ({ children, className }: AnimationProps) => {
   );
 };
 
-export const PressableTile = ({ children, className }: AnimationProps) => {
+export const PressableTile = ({ 
+  children, 
+  className, 
+  onClick,
+  ...props 
+}: AnimationProps & React.HTMLAttributes<HTMLDivElement>) => {
   return (
     <div 
       className={cn(
         "active:scale-98 hover:translate-y-[-2px] transition-all duration-200", 
         className
       )}
+      onClick={onClick}
+      {...props}
     >
       {children}
     </div>
@@ -191,9 +197,9 @@ export const RippleEffect = ({ className }: { className?: string }) => {
 // Enhanced button with ripple effect
 export const AnimatedButton = ({ 
   children, 
-  className, 
+  className,
   ...props 
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) => {
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string }) => {
   return (
     <button
       className={cn(

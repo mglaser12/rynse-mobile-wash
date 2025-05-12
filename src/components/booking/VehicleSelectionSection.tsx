@@ -8,7 +8,7 @@ import { VehicleSelectionTab } from "./VehicleSelectionTab";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useVehicleWashHistory } from "@/hooks/useVehicleWashHistory";
-import { PulseSoft, AnimatedButton, ScaleIn, StaggeredChildren } from "@/components/ui/micro-animations";
+import { PulseSoft, ScaleIn, StaggeredChildren } from "@/components/ui/micro-animations";
 import { cn } from "@/lib/utils";
 
 interface VehicleSelectionSectionProps {
@@ -101,17 +101,17 @@ export function VehicleSelectionSection({
       
       {selectedVehicleIds.length > 0 && onContinue && (
         <PulseSoft className="transition-all duration-300 transform">
-          <AnimatedButton 
+          <Button 
             type="button" 
             className={cn(
-              "w-full transition-all duration-300",
+              "w-full transition-all duration-300 relative overflow-hidden",
               selectedVehicleIds.length > 0 ? "opacity-100" : "opacity-70"
             )}
             onClick={onContinue}
           >
             Continue to Date Selection
             <ArrowRight className="h-4 w-4 ml-2" />
-          </AnimatedButton>
+          </Button>
         </PulseSoft>
       )}
     </div>
