@@ -6,7 +6,6 @@ import { useWashManagement } from "@/hooks/technician/wash-management";
 import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
 import { JobCalendarView } from "@/components/technician/JobCalendarView";
 import { VehicleWashProgressDialog } from "@/components/technician/wash-progress/VehicleWashProgressDialog";
-import { TechnicianJobMap } from "@/components/technician/map/TechnicianJobMap";
 
 const TechnicianJobsPage = () => {
   const { 
@@ -46,23 +45,6 @@ const TechnicianJobsPage = () => {
   const activeWashRequest = activeWashId && Array.isArray(washRequests)
     ? washRequests.find(req => req.id === activeWashId)
     : null;
-    
-  // Get job locations for the map
-  const jobLocations = Array.isArray(washRequests) 
-    ? washRequests
-        .filter(req => (
-          // Only include jobs assigned to this technician with locations
-          (req.status === "confirmed" || req.status === "in_progress") && 
-          req.technician === user?.id &&
-          req.location && 
-          req.location.name
-        ))
-        .map(req => ({
-          id: req.id,
-          location: req.location,
-          preferredDates: req.preferredDates
-        }))
-    : [];
 
   return (
     <AppLayout>
@@ -86,23 +68,12 @@ const TechnicianJobsPage = () => {
             <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            <div className="lg:col-span-8">
-              <JobCalendarView 
-                assignedRequests={assignedRequests}
-                inProgressRequests={inProgressRequests}
-                onSelectJob={setSelectedRequestId}
-                onReopenWash={handleReopenWash}
-              />
-            </div>
-            <div className="lg:col-span-4">
-              <TechnicianJobMap
-                jobLocations={jobLocations}
-                onSelectJob={setSelectedRequestId}
-                selectedJobId={selectedRequestId}
-              />
-            </div>
-          </div>
+          <JobCalendarView 
+            assignedRequests={assignedRequests}
+            inProgressRequests={inProgressRequests}
+            onSelectJob={setSelectedRequestId}
+            onReopenWash={handleReopenWash}
+          />
         )}
       </div>
 
