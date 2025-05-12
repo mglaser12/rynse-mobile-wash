@@ -15,46 +15,73 @@ export function RadarConfig({ onInitialized }: RadarConfigProps) {
   // Default value is now the provided key
   const [publishableKey, setPublishableKey] = useState("prj_live_pk_560d2a5b5bfcbd600e4b0f31e0962eb1a25b27a5");
   const [initAttempted, setInitAttempted] = useState(false);
-  const { isLoading, initializeRadar, isInitialized, scriptLoaded } = useRadar();
+  const [pendingInit, setPendingInit] = useState(false);
+  const { isLoading, initializeRadar, isInitialized, scriptLoaded, getRadarInstance } = useRadar();
 
-  // Auto-initialize on component mount
+  // Check when script loads or initialization changes
   useEffect(() => {
-    // Check if Radar is already initialized
+    // If already initialized, call onInitialized directly
     if (isInitialized) {
-      console.log("Radar is already initialized, calling onInitialized");
+      console.log("Radar is already initialized in RadarConfig, calling onInitialized");
       onInitialized();
       return;
     }
     
-    // Only try to initialize if the script is loaded and we haven't attempted yet
-    if (scriptLoaded && publishableKey && !initAttempted) {
-      console.log("Auto-initializing Radar with key");
-      setInitAttempted(true);
-      handleInitialize();
+    // If we're waiting for initialization and it's not yet attempted
+    if (scriptLoaded && !initAttempted && !pendingInit && publishableKey) {
+      console.log("Script loaded and not attempted yet, auto-initializing Radar");
+      setPendingInit(true);
+      // Small delay to ensure script is fully loaded
+      setTimeout(() => {
+        handleInitialize();
+      }, 500);
     }
   }, [isInitialized, scriptLoaded, initAttempted]);
 
   const handleInitialize = async () => {
     if (!publishableKey.trim()) {
       toast.error("Please enter a valid Radar publishable key");
+      setPendingInit(false);
       return;
     }
 
     if (!scriptLoaded) {
       toast.error("Map service script is still loading. Please wait.");
+      setPendingInit(false);
       return;
     }
 
+    // Verify that window.radar is available
+    const radar = getRadarInstance();
+    if (!radar) {
+      console.error("Radar instance not available before initialization");
+      toast.error("Map service not fully loaded. Please refresh the page and try again.");
+      setPendingInit(false);
+      return;
+    }
+
+    setInitAttempted(true);
     console.log("Initializing Radar from RadarConfig component");
-    const success = await initializeRadar(publishableKey);
-    if (success) {
-      console.log("Radar initialization successful, calling onInitialized");
-      toast.success("Map service initialized successfully");
-      localStorage.setItem("radar_publishable_key", publishableKey);
-      onInitialized();
-    } else {
-      toast.error("Failed to initialize map service. Please check your API key.");
+    
+    try {
+      const success = await initializeRadar(publishableKey);
+      
+      if (success) {
+        console.log("Radar initialization successful from RadarConfig, calling onInitialized");
+        toast.success("Map service initialized successfully");
+        localStorage.setItem("radar_publishable_key", publishableKey);
+        onInitialized();
+      } else {
+        console.error("Radar initialization failed");
+        toast.error("Failed to initialize map service. Please check your API key.");
+        setInitAttempted(false); // Allow retrying
+      }
+    } catch (error) {
+      console.error("Error during radar initialization:", error);
+      toast.error("Error initializing map service. Please try again.");
       setInitAttempted(false); // Allow retrying
+    } finally {
+      setPendingInit(false);
     }
   };
 
@@ -77,6 +104,7 @@ export function RadarConfig({ onInitialized }: RadarConfigProps) {
               placeholder="prj_live_pk_..."
               value={publishableKey}
               onChange={(e) => setPublishableKey(e.target.value)}
+              disabled={isLoading || initAttempted}
             />
             <p className="text-xs text-muted-foreground">
               You can find your publishable key in the Radar dashboard under API Keys
@@ -87,10 +115,10 @@ export function RadarConfig({ onInitialized }: RadarConfigProps) {
       <CardFooter>
         <Button 
           onClick={handleInitialize} 
-          disabled={isLoading || !publishableKey.trim() || !scriptLoaded}
+          disabled={isLoading || pendingInit || !publishableKey.trim() || !scriptLoaded}
           className="w-full"
         >
-          {isLoading ? (
+          {isLoading || pendingInit ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Initializing...

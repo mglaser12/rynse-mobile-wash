@@ -33,6 +33,33 @@ export const RadarProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return null;
   }, []);
 
+  // Check if Radar is ready with retries
+  const checkRadarReady = useCallback((maxRetries = 5, retryInterval = 300): Promise<boolean> => {
+    return new Promise((resolve) => {
+      let retries = 0;
+      
+      const check = () => {
+        if (typeof window !== 'undefined' && window.radar) {
+          console.log("Radar SDK is available");
+          resolve(true);
+          return;
+        }
+        
+        retries++;
+        if (retries >= maxRetries) {
+          console.error(`Radar SDK not available after ${maxRetries} retries`);
+          resolve(false);
+          return;
+        }
+        
+        console.log(`Waiting for Radar SDK (attempt ${retries}/${maxRetries})...`);
+        setTimeout(check, retryInterval);
+      };
+      
+      check();
+    });
+  }, []);
+
   // Load the Radar SDK script
   useEffect(() => {
     const loadRadarScript = async () => {
@@ -56,18 +83,31 @@ export const RadarProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         script.src = "https://js.radar.com/v3/radar.min.js";
         script.async = true;
         
-        const onScriptLoad = () => {
+        const onScriptLoad = async () => {
           console.log("Radar SDK script loaded successfully");
-          setScriptLoaded(true);
-          setScriptError(null);
           
-          // After loading the script, check for a saved key and initialize
-          const savedKey = localStorage.getItem("radar_publishable_key");
-          if (savedKey) {
-            console.log("Found saved Radar key after script load, initializing");
-            initializeRadar(savedKey).catch(err => {
-              console.error("Error initializing Radar after script load:", err);
-            });
+          // Wait a moment to ensure the script is fully initialized
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Verify Radar object is available
+          if (typeof window !== 'undefined' && window.radar) {
+            console.log("Radar object is available after script load");
+            setScriptLoaded(true);
+            setScriptError(null);
+            
+            // After loading the script, check for a saved key and initialize
+            const savedKey = localStorage.getItem("radar_publishable_key");
+            if (savedKey) {
+              console.log("Found saved Radar key after script load, initializing");
+              initializeRadar(savedKey).catch(err => {
+                console.error("Error initializing Radar after script load:", err);
+              });
+            }
+          } else {
+            console.error("Radar object not available despite script loading");
+            setScriptLoaded(false);
+            setScriptError(new Error("Radar SDK failed to initialize properly"));
+            toast.error("Map service failed to load properly. Please refresh the page.");
           }
         };
         
@@ -94,33 +134,33 @@ export const RadarProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   }, []);
 
-  const checkRadarReady = useCallback((): boolean => {
-    if (!window.radar) {
-      console.error("Radar SDK not loaded yet");
-      return false;
-    }
-    return true;
-  }, []);
-
   const initializeRadar = useCallback(async (publishableKey: string): Promise<boolean> => {
     setIsLoading(true);
+    console.log("Starting Radar initialization process with key:", publishableKey.substring(0, 10) + "...");
+    
     try {
-      if (!checkRadarReady()) {
+      // First ensure the script is available with retries
+      const isReady = await checkRadarReady();
+      
+      if (!isReady) {
+        console.error("Radar SDK not loaded yet despite retries");
         setIsLoading(false);
-        toast.error("Map service not available yet. Please try again in a moment.");
+        toast.error("Map service not available yet. Please refresh and try again.");
         return false;
       }
 
-      console.log("Initializing Radar with key:", publishableKey.substring(0, 10) + "...");
+      console.log("Radar SDK verified, proceeding with initialization");
+      
+      // Initialize Radar with the provided key
       window.radar.initialize(publishableKey);
       
       // Add a small delay to ensure initialization completes
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       // Check if initialization was successful by attempting to use the API
       try {
-        await window.radar.getContext();
-        console.log("Radar initialized successfully");
+        const contextResult = await window.radar.getContext();
+        console.log("Radar initialized successfully, context:", contextResult);
         setIsInitialized(true);
         
         // Save the key for future use
@@ -142,23 +182,25 @@ export const RadarProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const trackUser = useCallback(async (userId: string, locationContext: any = {}): Promise<boolean> => {
     try {
-      if (!checkRadarReady() || !isInitialized) {
-        console.warn("Radar not initialized, cannot track user");
+      // Verify Radar is available and initialized
+      const radar = getRadarInstance();
+      if (!radar || !isInitialized) {
+        console.warn("Radar not initialized or available, cannot track user");
         return false;
       }
 
-      await window.radar.setUserId(userId);
+      await radar.setUserId(userId);
       if (Object.keys(locationContext).length > 0) {
-        await window.radar.setMetadata(locationContext);
+        await radar.setMetadata(locationContext);
       }
       
-      const result = await window.radar.trackOnce();
+      const result = await radar.trackOnce();
       return result.status === "SUCCESS";
     } catch (error) {
       console.error("Error tracking user location:", error);
       return false;
     }
-  }, [checkRadarReady, isInitialized]);
+  }, [getRadarInstance, isInitialized]);
 
   // Provide context value
   const contextValue: RadarContextType = {

@@ -14,12 +14,17 @@ declare global {
   }
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <AppProviders>
-      <App />
-    </AppProviders>
-  </React.StrictMode>,
-);
-
-registerServiceWorker();
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+  console.log("DOM fully loaded, initializing app");
+  
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <AppProviders>
+        <App />
+      </AppProviders>
+    </React.StrictMode>,
+  );
+  
+  registerServiceWorker();
+});
