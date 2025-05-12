@@ -7,6 +7,13 @@ import './styles/mapbox.css'; // Import mapbox styles
 import { AppProviders } from './providers/AppProviders';
 import { registerServiceWorker } from './registerServiceWorker';
 
+// Add a window type declaration to handle Radar SDK
+declare global {
+  interface Window {
+    radar?: any;
+  }
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AppProviders>

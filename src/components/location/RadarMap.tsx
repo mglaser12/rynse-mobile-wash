@@ -20,62 +20,109 @@ export function RadarMap({
   className = "",
 }: RadarMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const { isInitialized } = useRadar();
+  const { isInitialized, scriptLoaded } = useRadar();
   const [map, setMap] = useState<any>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [isMapLoading, setIsMapLoading] = useState(true);
+  const [mapError, setMapError] = useState<string | null>(null);
 
-  // Initialize map
+  // Initialize map when component mounts and Radar is initialized
   useEffect(() => {
-    if (!isInitialized || !mapRef.current) return;
+    if (!isInitialized || !scriptLoaded || !mapRef.current) {
+      console.log("Conditions not met for map initialization:", {
+        isInitialized,
+        scriptLoaded,
+        hasMapRef: !!mapRef.current
+      });
+      return;
+    }
     
     // Prevent multiple map initializations
-    if (map) return;
-
-    // Default map center (US center)
-    const defaultCenter = { lat: 37.0902, lng: -95.7129 };
-    
-    // Create map
-    try {
-      setIsMapLoading(true);
-      
-      // Make sure radar is available in the window
-      if (!window.radar || !window.radar.ui) {
-        console.error("Radar SDK not fully loaded");
-        toast.error("Map service not initialized correctly");
-        setIsMapLoading(false);
-        return;
-      }
-      
-      console.log("Initializing map with Radar SDK");
-      const mapInstance = window.radar.ui.map({
-        container: mapRef.current,
-        style: 'mapbox://styles/mapbox/streets-v11',
-        center: [defaultCenter.lng, defaultCenter.lat],
-        zoom: 3
-      });
-      
-      mapInstance.on('load', () => {
-        console.log("Map loaded successfully");
-        setIsMapLoading(false);
-      });
-      
-      setMap(mapInstance);
-    } catch (error) {
-      console.error("Error initializing map:", error);
-      toast.error("Failed to load map");
-      setIsMapLoading(false);
+    if (map) {
+      console.log("Map already initialized, skipping");
+      return;
     }
-  }, [isInitialized, map, mapRef.current]);
 
-  // Add location markers
+    const initMap = () => {
+      // Default map center (US center)
+      const defaultCenter = { lat: 37.0902, lng: -95.7129 };
+      
+      try {
+        setIsMapLoading(true);
+        setMapError(null);
+        
+        // Make sure radar and radar.ui are available
+        if (!window.radar || !window.radar.ui) {
+          console.error("Radar SDK UI components not available");
+          setMapError("Map components not fully loaded");
+          setIsMapLoading(false);
+          return;
+        }
+        
+        console.log("Creating map with Radar UI");
+        
+        // Create map with error handling
+        try {
+          const mapInstance = window.radar.ui.map({
+            container: mapRef.current,
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [defaultCenter.lng, defaultCenter.lat],
+            zoom: 3
+          });
+          
+          // Add load event handler
+          mapInstance.on('load', () => {
+            console.log("Map loaded successfully");
+            setIsMapLoading(false);
+          });
+          
+          // Add error event handler
+          mapInstance.on('error', (e: any) => {
+            console.error("Map error:", e);
+            setMapError(`Map error: ${e.error?.message || "Unknown error"}`);
+            setIsMapLoading(false);
+          });
+          
+          setMap(mapInstance);
+        } catch (err) {
+          console.error("Error creating map:", err);
+          setMapError(`Failed to create map: ${err instanceof Error ? err.message : "Unknown error"}`);
+          setIsMapLoading(false);
+        }
+      } catch (err) {
+        console.error("Error in map initialization:", err);
+        setMapError(`Map initialization error: ${err instanceof Error ? err.message : "Unknown error"}`);
+        setIsMapLoading(false);
+      }
+    };
+    
+    // Small delay to ensure radar.ui is fully loaded
+    const timer = setTimeout(() => {
+      initMap();
+    }, 300);
+    
+    return () => {
+      clearTimeout(timer);
+      if (map) {
+        try {
+          map.remove();
+        } catch (err) {
+          console.error("Error removing map:", err);
+        }
+      }
+    };
+  }, [isInitialized, scriptLoaded, map]);
+
+  // Add location markers whenever locations change
   useEffect(() => {
     if (!map || !locations.length) return;
 
+    console.log("Adding markers for locations:", locations.length);
+
     // Clear existing markers
     try {
-      const markers = map.getMarkers();
+      const markers = map.getMarkers?.();
       if (markers) {
         markers.forEach((marker: any) => marker.remove());
       }
@@ -85,7 +132,10 @@ export function RadarMap({
 
     // Add new markers
     locations.forEach(location => {
-      if (!location.latitude || !location.longitude) return;
+      if (!location.latitude || !location.longitude) {
+        console.log("Location missing coordinates:", location.name);
+        return;
+      }
       
       const isSelected = selectedLocation?.id === location.id;
       
@@ -104,16 +154,18 @@ export function RadarMap({
           </div>
         `;
         
-        const marker = window.radar.ui.marker({
-          element: markerElement,
-          draggable: false
-        }).setLngLat([location.longitude, location.latitude])
-          .addTo(map);
-        
-        // Add click event
-        marker.getElement().addEventListener('click', () => {
-          onSelectLocation(location);
-        });
+        if (window.radar && window.radar.ui) {
+          const marker = window.radar.ui.marker({
+            element: markerElement,
+            draggable: false
+          }).setLngLat([location.longitude, location.latitude])
+            .addTo(map);
+          
+          // Add click event
+          marker.getElement().addEventListener('click', () => {
+            onSelectLocation(location);
+          });
+        }
       } catch (error) {
         console.error("Error adding marker for location:", location.name, error);
       }
@@ -122,18 +174,20 @@ export function RadarMap({
     // Fit bounds to show all markers if we have multiple locations
     if (locations.length > 1) {
       try {
-        const bounds = new window.radar.ui.LngLatBounds();
-        let hasValidCoordinates = false;
-        
-        locations.forEach(location => {
-          if (location.latitude && location.longitude) {
-            bounds.extend([location.longitude, location.latitude]);
-            hasValidCoordinates = true;
+        if (window.radar && window.radar.ui) {
+          const bounds = new window.radar.ui.LngLatBounds();
+          let hasValidCoordinates = false;
+          
+          locations.forEach(location => {
+            if (location.latitude && location.longitude) {
+              bounds.extend([location.longitude, location.latitude]);
+              hasValidCoordinates = true;
+            }
+          });
+          
+          if (hasValidCoordinates) {
+            map.fitBounds(bounds, { padding: 50 });
           }
-        });
-        
-        if (hasValidCoordinates) {
-          map.fitBounds(bounds, { padding: 50 });
         }
       } catch (error) {
         console.error("Error fitting bounds:", error);
@@ -150,11 +204,13 @@ export function RadarMap({
         console.error("Error flying to location:", error);
       }
     }
-  }, [map, locations, selectedLocation, onSelectLocation]);
+  }, [map, locations, selectedLocation]);
 
   // Focus on selected location
   useEffect(() => {
     if (!map || !selectedLocation || !selectedLocation.latitude || !selectedLocation.longitude) return;
+    
+    console.log("Flying to selected location:", selectedLocation.name);
     
     try {
       map.flyTo({
@@ -184,21 +240,23 @@ export function RadarMap({
             });
             
             // Add user marker
-            const userMarkerElement = document.createElement('div');
-            userMarkerElement.className = "user-marker";
-            userMarkerElement.innerHTML = `
-              <div class="w-8 h-8 flex items-center justify-center bg-blue-500 rounded-full shadow-md border-2 border-white pulse-animation">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </div>
-            `;
-            
-            window.radar.ui.marker({
-              element: userMarkerElement
-            }).setLngLat([lng, lat])
-              .addTo(map);
+            if (window.radar && window.radar.ui) {
+              const userMarkerElement = document.createElement('div');
+              userMarkerElement.className = "user-marker";
+              userMarkerElement.innerHTML = `
+                <div class="w-8 h-8 flex items-center justify-center bg-blue-500 rounded-full shadow-md border-2 border-white pulse-animation">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </div>
+              `;
+              
+              window.radar.ui.marker({
+                element: userMarkerElement
+              }).setLngLat([lng, lat])
+                .addTo(map);
+            }
           } catch (error) {
             console.error("Error adding user location to map:", error);
           }
@@ -209,7 +267,7 @@ export function RadarMap({
       },
       (error) => {
         console.error("Error getting location:", error);
-        toast.error("Couldn't access your location");
+        toast.error(`Couldn't access your location: ${error.message || "Unknown error"}`);
         setIsLoadingLocation(false);
       }
     );
@@ -226,6 +284,22 @@ export function RadarMap({
         </div>
       )}
       
+      {mapError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-90 z-20">
+          <div className="flex flex-col items-center text-center px-4">
+            <p className="text-red-500 mb-2">Failed to load map</p>
+            <p className="text-sm text-gray-600 mb-4">{mapError}</p>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => window.location.reload()}
+            >
+              Try Refreshing
+            </Button>
+          </div>
+        </div>
+      )}
+      
       <div ref={mapRef} className="w-full h-full" />
       
       <div className="absolute top-4 right-4 z-10">
@@ -234,7 +308,7 @@ export function RadarMap({
           size="sm" 
           className="shadow-md"
           onClick={handleGetUserLocation}
-          disabled={isLoadingLocation || isMapLoading}
+          disabled={isLoadingLocation || isMapLoading || !!mapError}
         >
           {isLoadingLocation ? (
             <>Finding location...</>

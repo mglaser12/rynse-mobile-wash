@@ -14,7 +14,7 @@ interface RadarConfigProps {
 export function RadarConfig({ onInitialized }: RadarConfigProps) {
   // Default value is now the provided key
   const [publishableKey, setPublishableKey] = useState("prj_live_pk_560d2a5b5bfcbd600e4b0f31e0962eb1a25b27a5");
-  const { isLoading, initializeRadar, isInitialized } = useRadar();
+  const { isLoading, initializeRadar, isInitialized, scriptLoaded } = useRadar();
 
   // Auto-initialize on component mount
   useEffect(() => {
@@ -25,15 +25,21 @@ export function RadarConfig({ onInitialized }: RadarConfigProps) {
       return;
     }
     
-    if (publishableKey) {
+    // Only try to initialize if the script is loaded
+    if (scriptLoaded && publishableKey) {
       console.log("Auto-initializing Radar with key");
       handleInitialize();
     }
-  }, [isInitialized]);
+  }, [isInitialized, scriptLoaded]);
 
   const handleInitialize = async () => {
     if (!publishableKey.trim()) {
       toast.error("Please enter a valid Radar publishable key");
+      return;
+    }
+
+    if (!scriptLoaded) {
+      toast.error("Map service script is still loading. Please wait.");
       return;
     }
 
@@ -44,6 +50,8 @@ export function RadarConfig({ onInitialized }: RadarConfigProps) {
       toast.success("Map service initialized successfully");
       localStorage.setItem("radar_publishable_key", publishableKey);
       onInitialized();
+    } else {
+      toast.error("Failed to initialize map service. Please check your API key.");
     }
   };
 
@@ -76,13 +84,18 @@ export function RadarConfig({ onInitialized }: RadarConfigProps) {
       <CardFooter>
         <Button 
           onClick={handleInitialize} 
-          disabled={isLoading || !publishableKey.trim()}
+          disabled={isLoading || !publishableKey.trim() || !scriptLoaded}
           className="w-full"
         >
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Initializing...
+            </>
+          ) : !scriptLoaded ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Loading map service...
             </>
           ) : (
             "Initialize Map"
