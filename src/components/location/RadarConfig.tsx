@@ -14,14 +14,22 @@ interface RadarConfigProps {
 export function RadarConfig({ onInitialized }: RadarConfigProps) {
   // Default value is now the provided key
   const [publishableKey, setPublishableKey] = useState("prj_live_pk_560d2a5b5bfcbd600e4b0f31e0962eb1a25b27a5");
-  const { isLoading, initializeRadar } = useRadar();
+  const { isLoading, initializeRadar, isInitialized } = useRadar();
 
   // Auto-initialize on component mount
   useEffect(() => {
+    // Check if Radar is already initialized
+    if (isInitialized) {
+      console.log("Radar is already initialized, calling onInitialized");
+      onInitialized();
+      return;
+    }
+    
     if (publishableKey) {
+      console.log("Auto-initializing Radar with key");
       handleInitialize();
     }
-  }, []);
+  }, [isInitialized]);
 
   const handleInitialize = async () => {
     if (!publishableKey.trim()) {
@@ -29,8 +37,10 @@ export function RadarConfig({ onInitialized }: RadarConfigProps) {
       return;
     }
 
+    console.log("Initializing Radar from RadarConfig component");
     const success = await initializeRadar(publishableKey);
     if (success) {
+      console.log("Radar initialization successful, calling onInitialized");
       toast.success("Map service initialized successfully");
       localStorage.setItem("radar_publishable_key", publishableKey);
       onInitialized();

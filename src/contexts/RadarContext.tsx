@@ -21,15 +21,43 @@ export const RadarProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Load the Radar SDK script
   useEffect(() => {
-    const loadRadarScript = () => {
-      if (window.radar) return Promise.resolve();
+    const loadRadarScript = async () => {
+      // Check if Radar is already loaded
+      if (window.radar) {
+        console.log("Radar SDK already loaded");
+        
+        // If Radar is loaded, check if it's also initialized
+        const savedKey = localStorage.getItem("radar_publishable_key");
+        if (savedKey) {
+          console.log("Found saved Radar key, initializing");
+          await initializeRadar(savedKey);
+        }
+        return;
+      }
       
+      console.log("Loading Radar SDK script");
       return new Promise<void>((resolve, reject) => {
         const script = document.createElement("script");
         script.src = "https://js.radar.com/v3/radar.min.js";
         script.async = true;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error("Failed to load Radar SDK"));
+        script.onload = () => {
+          console.log("Radar SDK script loaded successfully");
+          
+          // After loading the script, check for a saved key and initialize
+          const savedKey = localStorage.getItem("radar_publishable_key");
+          if (savedKey) {
+            console.log("Found saved Radar key after script load, initializing");
+            initializeRadar(savedKey)
+              .then(() => resolve())
+              .catch(reject);
+          } else {
+            resolve();
+          }
+        };
+        script.onerror = (error) => {
+          console.error("Failed to load Radar SDK:", error);
+          reject(new Error("Failed to load Radar SDK"));
+        };
         document.head.appendChild(script);
       });
     };
@@ -45,11 +73,18 @@ export const RadarProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsLoading(true);
     try {
       if (!window.radar) {
+        console.error("Radar SDK not loaded yet");
         throw new Error("Radar SDK not loaded");
       }
 
+      console.log("Initializing Radar with key:", publishableKey.substring(0, 5) + "...");
       window.radar.initialize(publishableKey);
       setIsInitialized(true);
+      
+      // Save the key for future use
+      localStorage.setItem("radar_publishable_key", publishableKey);
+      
+      console.log("Radar initialized successfully");
       return true;
     } catch (error) {
       console.error("Error initializing Radar:", error);
