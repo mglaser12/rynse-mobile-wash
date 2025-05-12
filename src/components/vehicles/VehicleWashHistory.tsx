@@ -27,13 +27,13 @@ export function VehicleWashHistory({ vehicle, onEditVehicle }: VehicleWashHistor
   const selectedWashRequest = selectedWashId ? getWashRequestById(selectedWashId) : null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pt-2">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">
+        <h3 className="text-lg font-semibold pr-8">
           {vehicle.make} {vehicle.model} Wash History
         </h3>
         {onEditVehicle && (
-          <Button variant="outline" size="sm" onClick={onEditVehicle}>
+          <Button variant="outline" size="sm" onClick={onEditVehicle} className="ml-auto">
             Edit Vehicle
           </Button>
         )}
