@@ -10,16 +10,21 @@ import { WashRequestCard } from "@/components/shared/WashRequestCard";
 import { CreateWashRequestForm } from "@/components/booking/CreateWashRequestForm";
 import { useWashRequests } from "@/contexts/WashContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { PlusCircle, Car } from "lucide-react";
+import { PlusCircle, Car, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const CustomerHome = () => {
   const { user } = useAuth();
   const { washRequests, isLoading } = useWashRequests();
   const [showNewRequestDialog, setShowNewRequestDialog] = useState(false);
 
-  const pendingRequests = washRequests.filter(req => req.status === "pending");
-  const confirmedRequests = washRequests.filter(req => ["confirmed", "in_progress"].includes(req.status));
-  const pastRequests = washRequests.filter(req => ["completed", "cancelled"].includes(req.status));
+  // Filter wash requests the same way as BookingsPage
+  const activeRequests = washRequests.filter(req => 
+    ["pending", "confirmed", "in_progress"].includes(req.status)
+  );
+  
+  const completedRequests = washRequests.filter(req => req.status === "completed");
+  const cancelledRequests = washRequests.filter(req => req.status === "cancelled");
 
   return (
     <AppLayout>
@@ -36,10 +41,14 @@ const CustomerHome = () => {
               <p className="text-sm text-muted-foreground">Welcome, {user?.name}</p>
             </div>
           </div>
+          <Button onClick={() => setShowNewRequestDialog(true)}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Schedule a Wash
+          </Button>
         </div>
       </header>
       
-      <div className="car-wash-container animate-fade-in">
+      <div className="car-wash-container animate-fade-in p-4">
         <Card className="mb-5 overflow-hidden bg-gradient-to-br from-brand-primary to-brand-secondary">
           <CardContent className="p-5 text-white">
             <h2 className="text-xl font-bold">Mobile Car Wash Services</h2>
@@ -58,58 +67,69 @@ const CustomerHome = () => {
         
         <h2 className="text-lg font-semibold mb-3">Your Wash Requests</h2>
         
-        <Tabs defaultValue="upcoming" className="mb-8">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-            <TabsTrigger value="pending">Pending</TabsTrigger>
-            <TabsTrigger value="past">Past</TabsTrigger>
-          </TabsList>
-          <TabsContent value="upcoming" className="pt-4">
-            {confirmedRequests.length > 0 ? (
-              <div className="space-y-4">
-                {confirmedRequests.map((request) => (
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
+          </div>
+        ) : (
+          <Tabs defaultValue="active" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="active">Active</TabsTrigger>
+              <TabsTrigger value="completed">Completed</TabsTrigger>
+              <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="active" className="pt-4 space-y-4">
+              {activeRequests.length > 0 ? (
+                activeRequests.map(request => (
                   <WashRequestCard key={request.id} washRequest={request} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-10">
-                <p className="text-muted-foreground mb-3">No upcoming wash appointments</p>
-                <Button onClick={() => setShowNewRequestDialog(true)}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Schedule a Wash
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="pending" className="pt-4">
-            {pendingRequests.length > 0 ? (
-              <div className="space-y-4">
-                {pendingRequests.map((request) => (
+                ))
+              ) : (
+                <div className="text-center py-10">
+                  <p className="text-muted-foreground mb-3">No active wash appointments</p>
+                  <Button onClick={() => setShowNewRequestDialog(true)}>
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Schedule a Wash
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="completed" className="pt-4 space-y-4">
+              {completedRequests.length > 0 ? (
+                completedRequests.map(request => (
+                  <WashRequestCard 
+                    key={request.id} 
+                    washRequest={request}
+                    showDetailsButton={true}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-10">
+                  <p className="text-muted-foreground">No completed washes</p>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="cancelled" className="pt-4 space-y-4">
+              {cancelledRequests.length > 0 ? (
+                cancelledRequests.map(request => (
                   <WashRequestCard key={request.id} washRequest={request} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-10">
-                <p className="text-muted-foreground">No pending requests</p>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="past" className="pt-4">
-            {pastRequests.length > 0 ? (
-              <div className="space-y-4">
-                {pastRequests.map((request) => (
-                  <WashRequestCard key={request.id} washRequest={request} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-10">
-                <p className="text-muted-foreground">No past washes</p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+                ))
+              ) : (
+                <div className="text-center py-10">
+                  <p className="text-muted-foreground">No cancelled bookings</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        )}
+        
+        <Alert className="mt-6">
+          <AlertDescription>
+            Need to modify a booking? Contact our support team for assistance.
+          </AlertDescription>
+        </Alert>
       </div>
       
       <Dialog open={showNewRequestDialog} onOpenChange={setShowNewRequestDialog}>
