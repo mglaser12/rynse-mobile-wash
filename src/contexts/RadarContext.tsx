@@ -18,6 +18,9 @@ const RadarContext = createContext<RadarContextType>({} as RadarContextType);
 // Hook to use the Radar context
 export const useRadar = () => useContext(RadarContext);
 
+// Radar API key - using the one provided by the user
+const RADAR_API_KEY = "prj_live_sk_5b5015129ef5dcc3472795775d1b174aa0249172";
+
 export const RadarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -68,12 +71,9 @@ export const RadarProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.log("Radar SDK already loaded");
         setScriptLoaded(true);
         
-        // If Radar is loaded, check if it's also initialized
-        const savedKey = localStorage.getItem("radar_publishable_key");
-        if (savedKey) {
-          console.log("Found saved Radar key, initializing");
-          await initializeRadar(savedKey);
-        }
+        // Try to initialize automatically with the predefined key
+        console.log("Attempting automatic initialization with predefined key");
+        await initializeRadar(RADAR_API_KEY);
         return;
       }
       
@@ -87,7 +87,7 @@ export const RadarProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           console.log("Radar SDK script loaded successfully");
           
           // Wait a moment to ensure the script is fully initialized
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise(resolve => setTimeout(resolve, 1000));
           
           // Verify Radar object is available
           if (typeof window !== 'undefined' && window.radar) {
@@ -95,14 +95,11 @@ export const RadarProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             setScriptLoaded(true);
             setScriptError(null);
             
-            // After loading the script, check for a saved key and initialize
-            const savedKey = localStorage.getItem("radar_publishable_key");
-            if (savedKey) {
-              console.log("Found saved Radar key after script load, initializing");
-              initializeRadar(savedKey).catch(err => {
-                console.error("Error initializing Radar after script load:", err);
-              });
-            }
+            // Initialize with the predefined key
+            console.log("Attempting initialization with predefined key after script load");
+            initializeRadar(RADAR_API_KEY).catch(err => {
+              console.error("Error initializing Radar after script load:", err);
+            });
           } else {
             console.error("Radar object not available despite script loading");
             setScriptLoaded(false);
@@ -155,7 +152,7 @@ export const RadarProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       window.radar.initialize(publishableKey);
       
       // Add a small delay to ensure initialization completes
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 1200));
       
       // Check if initialization was successful by attempting to use the API
       try {

@@ -12,8 +12,8 @@ interface RadarConfigProps {
 }
 
 export function RadarConfig({ onInitialized }: RadarConfigProps) {
-  // Default value is now the provided key
-  const [publishableKey, setPublishableKey] = useState("prj_live_pk_560d2a5b5bfcbd600e4b0f31e0962eb1a25b27a5");
+  // Default value is now the updated key
+  const [publishableKey, setPublishableKey] = useState("prj_live_sk_5b5015129ef5dcc3472795775d1b174aa0249172");
   const [initAttempted, setInitAttempted] = useState(false);
   const [pendingInit, setPendingInit] = useState(false);
   const { isLoading, initializeRadar, isInitialized, scriptLoaded, getRadarInstance } = useRadar();
@@ -34,7 +34,7 @@ export function RadarConfig({ onInitialized }: RadarConfigProps) {
       // Small delay to ensure script is fully loaded
       setTimeout(() => {
         handleInitialize();
-      }, 500);
+      }, 1000);
     }
   }, [isInitialized, scriptLoaded, initAttempted]);
 
@@ -101,7 +101,7 @@ export function RadarConfig({ onInitialized }: RadarConfigProps) {
             </label>
             <Input
               id="publishable-key"
-              placeholder="prj_live_pk_..."
+              placeholder="prj_live_sk_..."
               value={publishableKey}
               onChange={(e) => setPublishableKey(e.target.value)}
               disabled={isLoading || initAttempted}
