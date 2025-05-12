@@ -2,6 +2,8 @@
 import { toast } from "sonner";
 import { acceptJob } from "./jobAcceptance";
 import { patchWashRequest } from "./supabaseApi";
+import { supabase } from "@/integrations/supabase/client";
+import { createVehicleAssociations } from "./api";
 
 /**
  * Main function to update a wash request
@@ -55,12 +57,37 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
       updateData.location_id = data.locationId;
     }
 
-    // Handle vehicle changes - FIXED: Changed vehicleIds to use correct property name
+    // Handle vehicle changes - FIXED: Now properly handling through junction table
+    let vehicleUpdateSuccess = true;
     if (data.vehicleIds) {
       console.log("Processing vehicle IDs:", data.vehicleIds);
-      // We need to update the wash_request_vehicles junction table directly
-      // This requires separate calls to update the junction table
-      updateData.vehicle_ids = data.vehicleIds;
+      
+      try {
+        // Step 1: Delete existing vehicle associations
+        console.log(`Deleting existing vehicle associations for wash request: ${id}`);
+        const { error: deleteError } = await supabase
+          .from('wash_request_vehicles')
+          .delete()
+          .eq('wash_request_id', id);
+          
+        if (deleteError) {
+          console.error("Error deleting existing vehicle associations:", deleteError);
+          toast.error("Failed to update vehicle selections");
+          return false;
+        }
+        
+        // Step 2: Create new vehicle associations
+        console.log(`Creating new vehicle associations for wash request: ${id}`, data.vehicleIds);
+        vehicleUpdateSuccess = await createVehicleAssociations(id, data.vehicleIds);
+        
+        if (!vehicleUpdateSuccess) {
+          console.error("Failed to create new vehicle associations");
+          return false;
+        }
+      } catch (vehicleError) {
+        console.error("Error updating vehicle associations:", vehicleError);
+        return false;
+      }
     }
     
     if (data.notes) {
@@ -89,7 +116,7 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
     if (success) {
       console.log("Update successful!");
       toast.success("Request updated successfully");
-      return true;
+      return vehicleUpdateSuccess && true;
     } else {
       console.error("Update failed");
       toast.error("Failed to update wash request");

@@ -49,6 +49,7 @@ export function handleUpdateWashRequest(
           }, 1000);  
         } else {
           // For other updates, do a regular refresh to ensure vehicle changes are reflected
+          console.log("Regular update - scheduling refresh");
           setTimeout(() => {
             safeRefreshData();
           }, 2000);
@@ -61,6 +62,7 @@ export function handleUpdateWashRequest(
         setWashRequests(previousState);
         
         // Force refresh to get the true state from server
+        console.log("Scheduling immediate refresh to sync with server state");
         setTimeout(() => {
           safeRefreshData();
         }, 1000);
@@ -73,6 +75,7 @@ export function handleUpdateWashRequest(
       setWashRequests(previousState);
       
       // Force refresh to get the true state from server
+      console.log("Error occurred - scheduling immediate refresh");
       setTimeout(() => {
         safeRefreshData();
       }, 1000);
