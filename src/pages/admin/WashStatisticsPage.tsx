@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
-import { PageHeader } from "@/components/ui/sidebar";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WashMetricsOverview } from "@/components/admin/statistics/WashMetricsOverview";
@@ -10,6 +9,7 @@ import { TechnicianPerformanceTable } from "@/components/admin/statistics/Techni
 import { VehicleWashFrequencyTable } from "@/components/admin/statistics/VehicleWashFrequencyTable";
 import { WashStatusDistribution } from "@/components/admin/statistics/WashStatusDistribution";
 import { useWashStatistics } from "@/hooks/admin/useWashStatistics";
+import { PageHeader } from "@/components/admin/PageHeader";
 
 export default function WashStatisticsPage() {
   const { user } = useAuth();
@@ -41,7 +41,7 @@ export default function WashStatisticsPage() {
         <select 
           className="bg-background border rounded p-2"
           value={timeRange}
-          onChange={(e) => setTimeRange(e.target.value)}
+          onChange={(e) => setTimeRange(e.target.value as any)}
         >
           <option value="7days">Last 7 days</option>
           <option value="30days">Last 30 days</option>
