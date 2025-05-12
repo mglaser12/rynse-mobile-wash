@@ -1,9 +1,8 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import type { SupabaseVehicle, Vehicle } from '../types';
-import { mapVehicleToSupabaseVehicle, mapVehicleFromSupabaseVehicle } from './mappers';
 import { supabase } from '@/integrations/supabase/client';
 import { logVehicleOperation } from './logging';
+import { SupabaseVehicle } from '@/models/types';
 
 export type AddVehicleParams = {
   make: string;
@@ -18,10 +17,67 @@ export type AddVehicleParams = {
   organization_id?: string;
 };
 
+export interface Vehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: string;
+  type: string;
+  color: string;
+  licensePlate: string;
+  vinNumber: string;
+  assetNumber: string;
+  imageUrl: string;
+  userId: string;
+  organizationId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AddVehicleResponse {
   success: boolean;
   vehicle?: Vehicle;
   error?: string;
+}
+
+// Helper function to map our Vehicle type to Supabase format
+function mapVehicleToSupabaseVehicle(vehicle: Vehicle): SupabaseVehicle {
+  return {
+    id: vehicle.id,
+    user_id: vehicle.userId,
+    make: vehicle.make,
+    model: vehicle.model,
+    year: vehicle.year,
+    type: vehicle.type,
+    color: vehicle.color,
+    license_plate: vehicle.licensePlate,
+    vin_number: vehicle.vinNumber,
+    asset_number: vehicle.assetNumber,
+    image_url: vehicle.imageUrl,
+    organization_id: vehicle.organizationId,
+    created_at: vehicle.createdAt,
+    updated_at: vehicle.updatedAt
+  };
+}
+
+// Helper function to map Supabase data to our Vehicle type
+function mapVehicleFromSupabaseVehicle(data: SupabaseVehicle): Vehicle {
+  return {
+    id: data.id,
+    make: data.make,
+    model: data.model,
+    year: data.year,
+    type: data.type || '',
+    color: data.color || '',
+    licensePlate: data.license_plate || '',
+    vinNumber: data.vin_number || '',
+    assetNumber: data.asset_number || '',
+    imageUrl: data.image_url || '',
+    userId: data.user_id,
+    organizationId: data.organization_id,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at || data.created_at
+  };
 }
 
 export async function addVehicle(

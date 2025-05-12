@@ -1,9 +1,15 @@
+
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { Vehicle } from "@/models/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { VehicleContextType } from "./types";
 import { useLoadVehicles } from "./useLoadVehicles";
-import { addVehicle as addVehicleOp, updateVehicle as updateVehicleOp, removeVehicle as removeVehicleOp } from "./operations";
+import { 
+  addVehicle as addVehicleOp, 
+  AddVehicleParams,
+  updateVehicle as updateVehicleOp, 
+  removeVehicle as removeVehicleOp 
+} from "./operations";
 
 const VehicleContext = createContext<VehicleContextType>({} as VehicleContextType);
 
@@ -21,8 +27,39 @@ export function VehicleProvider({ children }: { children: React.ReactNode }) {
   }, [loadedVehicles]);
 
   const addVehicle = async (vehicleData: Omit<Vehicle, "id" | "dateAdded">, locationId?: string) => {
-    const newVehicle = await addVehicleOp(user, { ...vehicleData, locationId });
-    if (newVehicle) {
+    if (!user) return;
+    
+    // Transform the vehicle data to match AddVehicleParams
+    const params: AddVehicleParams = {
+      make: vehicleData.make,
+      model: vehicleData.model,
+      year: vehicleData.year,
+      type: vehicleData.type,
+      color: vehicleData.color,
+      license_plate: vehicleData.licensePlate,
+      vin_number: vehicleData.vinNumber,
+      image_url: vehicleData.image,
+      organization_id: vehicleData.organizationId
+    };
+    
+    const response = await addVehicleOp(params, user.id);
+    if (response.success && response.vehicle) {
+      // Convert the returned vehicle to match our Vehicle type
+      const newVehicle: Vehicle = {
+        id: response.vehicle.id,
+        customerId: response.vehicle.userId,
+        make: response.vehicle.make,
+        model: response.vehicle.model,
+        year: response.vehicle.year,
+        type: response.vehicle.type,
+        color: response.vehicle.color,
+        licensePlate: response.vehicle.licensePlate,
+        vinNumber: response.vehicle.vinNumber,
+        image: response.vehicle.imageUrl,
+        dateAdded: new Date(response.vehicle.createdAt),
+        organizationId: response.vehicle.organizationId,
+        assetNumber: response.vehicle.assetNumber
+      };
       setVehicles(prev => [...prev, newVehicle]);
     }
   };

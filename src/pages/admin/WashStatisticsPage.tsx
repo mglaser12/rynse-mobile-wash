@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useAuth } from "@/contexts/auth";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,6 +32,26 @@ export default function WashStatisticsPage() {
     </div>;
   }
 
+  // Create complete stats object that matches the expected structure
+  const completeStats = {
+    overview: {
+      totalWashes: washStats.overview?.totalWashes || 0,
+      completedWashes: washStats.overview?.completedWashes || 0,
+      pendingWashes: washStats.overview?.pendingWashes || 0,
+      averageCompletionTime: washStats.overview?.averageCompletionTime || "N/A",
+      totalVehicles: washStats.overview?.totalVehicles || 0,
+      washGrowth: washStats.overview?.washGrowth || "0%",
+      completionRate: washStats.overview?.completionRate || "0%",
+      averageRating: washStats.overview?.averageRating
+    }
+  };
+
+  // Transform technician performance data to include vehiclesWashed
+  const technicianData = washStats.technicianPerformance?.map(tech => ({
+    ...tech,
+    vehiclesWashed: tech.completedWashes || 0 // Default to same as completedWashes if not provided
+  })) || [];
+
   return (
     <div className="container py-6 space-y-6 max-w-7xl">
       <PageHeader heading="Wash Statistics Dashboard" text="Track and analyze wash metrics over time" />
@@ -58,7 +78,7 @@ export default function WashStatisticsPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          <WashMetricsOverview stats={washStats.overview} />
+          <WashMetricsOverview stats={completeStats.overview} />
           
           <Tabs defaultValue="trends">
             <TabsList className="grid w-full grid-cols-4">
@@ -69,19 +89,19 @@ export default function WashStatisticsPage() {
             </TabsList>
             
             <TabsContent value="trends" className="p-4 border rounded-md mt-2">
-              <WashTrendsChart data={washStats.trends} />
+              <WashTrendsChart data={washStats.trends || []} />
             </TabsContent>
             
             <TabsContent value="technicians" className="p-4 border rounded-md mt-2">
-              <TechnicianPerformanceTable data={washStats.technicianPerformance} />
+              <TechnicianPerformanceTable data={technicianData} />
             </TabsContent>
             
             <TabsContent value="vehicles" className="p-4 border rounded-md mt-2">
-              <VehicleWashFrequencyTable data={washStats.vehicleFrequency} />
+              <VehicleWashFrequencyTable data={washStats.vehicleFrequency || []} />
             </TabsContent>
             
             <TabsContent value="status" className="p-4 border rounded-md mt-2">
-              <WashStatusDistribution data={washStats.statusDistribution} />
+              <WashStatusDistribution data={washStats.statusDistribution || []} />
             </TabsContent>
           </Tabs>
         </div>
