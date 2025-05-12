@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useLocations } from "@/contexts/LocationContext";
@@ -74,7 +73,8 @@ export default function LocationsPage() {
 
   // Load Radar publishable key from localStorage on component mount
   useEffect(() => {
-    const savedKey = localStorage.getItem("radar_publishable_key");
+    // Check for saved key or use the hardcoded one
+    const savedKey = localStorage.getItem("radar_publishable_key") || "prj_live_pk_560d2a5b5bfcbd600e4b0f31e0962eb1a25b27a5";
     if (savedKey) {
       // If we have a saved key, we'll initialize Radar in the RadarMap component
       setIsMapInitialized(true);

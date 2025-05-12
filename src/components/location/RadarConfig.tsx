@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRadar } from "@/contexts/RadarContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,8 +12,16 @@ interface RadarConfigProps {
 }
 
 export function RadarConfig({ onInitialized }: RadarConfigProps) {
-  const [publishableKey, setPublishableKey] = useState("");
+  // Default value is now the provided key
+  const [publishableKey, setPublishableKey] = useState("prj_live_pk_560d2a5b5bfcbd600e4b0f31e0962eb1a25b27a5");
   const { isLoading, initializeRadar } = useRadar();
+
+  // Auto-initialize on component mount
+  useEffect(() => {
+    if (publishableKey) {
+      handleInitialize();
+    }
+  }, []);
 
   const handleInitialize = async () => {
     if (!publishableKey.trim()) {
