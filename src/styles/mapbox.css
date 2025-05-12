@@ -1,0 +1,10 @@
+
+@import 'mapbox-gl/dist/mapbox-gl.css';
+
+.mapboxgl-ctrl-logo {
+  display: none !important;
+}
+
+.mapboxgl-ctrl-attrib {
+  display: none !important;
+}

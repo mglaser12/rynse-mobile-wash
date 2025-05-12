@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { VehicleProvider } from "@/contexts/VehicleContext";
 import { WashProvider } from "@/contexts/WashContext";
 import { LocationProvider } from "@/contexts/LocationContext";
+import { RadarProvider } from "@/contexts/RadarContext";
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -20,9 +21,11 @@ export function AppProviders({ children }: AppProvidersProps) {
           <VehicleProvider>
             <WashProvider>
               <LocationProvider>
-                {children}
-                <Toaster />
-                <SonnerToaster />
+                <RadarProvider>
+                  {children}
+                  <Toaster />
+                  <SonnerToaster />
+                </RadarProvider>
               </LocationProvider>
             </WashProvider>
           </VehicleProvider>
