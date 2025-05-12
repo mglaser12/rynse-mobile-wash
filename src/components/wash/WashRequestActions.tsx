@@ -32,15 +32,15 @@ export function WashRequestActions({ requestId, status, onEdit }: WashRequestAct
   }
   
   return (
-    <div className="flex flex-col gap-2 mt-4">
+    <div className="flex gap-2 mt-4">
       <Button 
         variant="outline" 
         size="sm" 
-        className="w-full" 
+        className="flex-1" 
         onClick={onEdit}
       >
         <Edit2 className="h-4 w-4 mr-2" />
-        Edit Request
+        Edit
       </Button>
       
       <Button 
@@ -48,12 +48,12 @@ export function WashRequestActions({ requestId, status, onEdit }: WashRequestAct
         size="sm" 
         onClick={() => setShowCancelConfirm(true)}
         disabled={cancellingId === requestId}
-        className="w-full"
+        className="flex-1"
       >
         {cancellingId === requestId ? (
           <Loader2 className="h-4 w-4 animate-spin mr-2" />
         ) : null}
-        Cancel Request
+        Cancel
       </Button>
       
       <AlertDialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
