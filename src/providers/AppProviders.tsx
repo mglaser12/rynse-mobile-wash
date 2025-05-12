@@ -1,36 +1,33 @@
 
-import React from "react";
 import { BrowserRouter as Router } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "./ThemeProvider";
-import { Toaster } from "@/components/ui/sonner";
-import { AuthProvider } from "@/contexts/auth";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as SonnerToaster } from "sonner";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { VehicleProvider } from "@/contexts/VehicleContext";
 import { WashProvider } from "@/contexts/WashContext";
 import { LocationProvider } from "@/contexts/LocationContext";
-import { MapProvider } from "@/contexts/MapContext";
 
-const queryClient = new QueryClient();
+interface AppProvidersProps {
+  children: React.ReactNode;
+}
 
-export const AppProviders = ({ children }: { children: React.ReactNode }) => {
+export function AppProviders({ children }: AppProvidersProps) {
   return (
-    <QueryClientProvider client={queryClient}>
+    <ThemeProvider defaultTheme="light" storageKey="theme">
       <Router>
-        <ThemeProvider defaultTheme="light" storageKey="rynse-theme">
-          <AuthProvider>
-            <LocationProvider>
-              <VehicleProvider>
-                <WashProvider>
-                  <MapProvider>
-                    {children}
-                    <Toaster />
-                  </MapProvider>
-                </WashProvider>
-              </VehicleProvider>
-            </LocationProvider>
-          </AuthProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <VehicleProvider>
+            <WashProvider>
+              <LocationProvider>
+                {children}
+                <Toaster />
+                <SonnerToaster />
+              </LocationProvider>
+            </WashProvider>
+          </VehicleProvider>
+        </AuthProvider>
       </Router>
-    </QueryClientProvider>
+    </ThemeProvider>
   );
-};
+}

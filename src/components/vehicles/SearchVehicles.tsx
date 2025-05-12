@@ -8,17 +8,15 @@ interface SearchVehiclesProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   placeholder?: string;
-  className?: string;
 }
 
 export function SearchVehicles({
   searchQuery,
   onSearchChange,
-  placeholder = "Search vehicles by make, model, year, license plate...",
-  className
+  placeholder = "Search vehicles by make, model, year, license plate..."
 }: SearchVehiclesProps) {
   return (
-    <div className={cn("relative", className)}>
+    <div className="relative">
       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
       <Input
         type="text"
