@@ -84,18 +84,26 @@ export const RadarProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       if (!window.radar) {
         console.error("Radar SDK not loaded yet");
+        setIsLoading(false);
         return false;
       }
 
-      console.log("Initializing Radar with key:", publishableKey.substring(0, 5) + "...");
+      console.log("Initializing Radar with key:", publishableKey.substring(0, 10) + "...");
       window.radar.initialize(publishableKey);
-      setIsInitialized(true);
       
-      // Save the key for future use
-      localStorage.setItem("radar_publishable_key", publishableKey);
-      
-      console.log("Radar initialized successfully");
-      return true;
+      // Check if initialization was successful by attempting to use the API
+      try {
+        await window.radar.getContext();
+        console.log("Radar initialized successfully");
+        setIsInitialized(true);
+        
+        // Save the key for future use
+        localStorage.setItem("radar_publishable_key", publishableKey);
+        return true;
+      } catch (err) {
+        console.error("Radar initialization verification failed:", err);
+        return false;
+      }
     } catch (error) {
       console.error("Error initializing Radar:", error);
       toast.error("Failed to initialize mapping service");
