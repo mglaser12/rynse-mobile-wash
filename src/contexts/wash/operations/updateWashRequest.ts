@@ -49,6 +49,21 @@ export async function updateWashRequest(id: string, data: any): Promise<boolean>
       }
     }
     
+    // Handle location change
+    if (data.locationId) {
+      console.log("Setting location_id to:", data.locationId);
+      updateData.location_id = data.locationId;
+    }
+
+    // Handle vehicle changes
+    if (data.vehicleIds) {
+      console.log("Processing vehicle IDs:", data.vehicleIds);
+      // The vehicle update will need to be handled separately since
+      // we need to update the junction table (wash_request_vehicles)
+      // This would typically be handled using a transaction or server function
+      updateData.vehicle_ids = data.vehicleIds;
+    }
+    
     if (data.notes) {
       updateData.notes = data.notes;
     }
