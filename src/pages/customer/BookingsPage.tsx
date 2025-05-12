@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
@@ -15,7 +14,7 @@ import { WashRequest } from "@/models/types";
 const BookingsPage = () => {
   console.log("BookingsPage rendered - testing AI edits");
   
-  const { washRequests, isLoading } = useWashRequests();
+  const { washRequests, isLoading, cancelWashRequest } = useWashRequests();
   const [showNewBookingDialog, setShowNewBookingDialog] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [selectedWashRequest, setSelectedWashRequest] = useState<WashRequest | null>(null);
@@ -30,6 +29,15 @@ const BookingsPage = () => {
   
   const completedRequests = washRequests.filter(req => req.status === "completed");
   const cancelledRequests = washRequests.filter(req => req.status === "cancelled");
+
+  const handleCancelRequest = async (id: string) => {
+    setCancellingId(id);
+    try {
+      await cancelWashRequest(id);
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   const handleViewCompletedWash = (washRequest: WashRequest) => {
     setSelectedWashRequest(washRequest);
@@ -77,7 +85,23 @@ const BookingsPage = () => {
                 activeRequests.map(request => (
                   <WashRequestCard 
                     key={request.id} 
-                    washRequest={request}
+                    washRequest={request} 
+                    actions={
+                      request.status === "pending" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleCancelRequest(request.id)}
+                          disabled={cancellingId === request.id}
+                          className="w-full mt-2"
+                        >
+                          {cancellingId === request.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : null}
+                          Cancel Request
+                        </Button>
+                      )
+                    }
                   />
                 ))
               ) : (
@@ -125,7 +149,7 @@ const BookingsPage = () => {
         
         <Alert className="mt-6">
           <AlertDescription>
-            Need additional help? Contact our support team for assistance.
+            Need to modify a booking? Contact our support team for assistance.
           </AlertDescription>
         </Alert>
       </div>
