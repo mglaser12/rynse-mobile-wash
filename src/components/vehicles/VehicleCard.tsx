@@ -68,7 +68,7 @@ export function VehicleCard({
   
   return (
     <Card 
-      className={`overflow-hidden transition-all duration-200 ${selected ? 'ring-2 ring-primary' : ''} ${isClickable ? 'cursor-pointer hover:bg-accent' : ''} ${className}`}
+      className={`overflow-hidden transition-all duration-200 ${selected ? 'ring-2 ring-primary' : ''} ${isClickable ? 'cursor-pointer hover:bg-gray-50' : ''} ${className}`}
       onClick={isClickable ? onClick : undefined}
     >
       <CardContent className="p-0">
