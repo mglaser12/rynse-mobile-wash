@@ -187,22 +187,24 @@ export function RadarMap({
         </Button>
       </div>
       
-      <style jsx>{`
-        .pulse-animation {
-          animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-          0% {
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+      <style>
+        {`
+          .pulse-animation {
+            animation: pulse 2s infinite;
           }
-          70% {
-            box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+          @keyframes pulse {
+            0% {
+              box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+            70% {
+              box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+            100% {
+              box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            }
           }
-          100% {
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-          }
-        }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 }

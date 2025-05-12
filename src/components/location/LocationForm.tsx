@@ -34,8 +34,11 @@ const formSchema = z.object({
   city: z.string().min(1, { message: "City is required" }),
   state: z.string().min(1, { message: "State is required" }),
   zipCode: z.string().min(1, { message: "Zip code is required" }),
-  latitude: z.string().optional().transform(val => val ? parseFloat(val) : undefined),
-  longitude: z.string().optional().transform(val => val ? parseFloat(val) : undefined),
+  // Properly handle latitude and longitude as optional numbers
+  latitude: z.string().optional()
+    .transform(val => val && val.trim() !== '' ? parseFloat(val) : undefined),
+  longitude: z.string().optional()
+    .transform(val => val && val.trim() !== '' ? parseFloat(val) : undefined),
   notes: z.string().optional(),
   isDefault: z.boolean().default(false),
 });
