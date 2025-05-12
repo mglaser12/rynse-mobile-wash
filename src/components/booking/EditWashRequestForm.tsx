@@ -29,7 +29,17 @@ export function EditWashRequestForm({ washRequest, onSuccess, onCancel }: EditWa
   const [endDate, setEndDate] = useState<Date | undefined>(washRequest.preferredDates.end);
   const [locations, setLocations] = useState<any[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState<string | undefined>(washRequest.locationId);
-  const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>(washRequest.vehicles?.map(v => v.id) || []);
+  
+  // Fix: Use the correct type for vehicle IDs. If washRequest.vehicles is array of strings,
+  // use them directly, or if it's an array of objects, map to get their IDs
+  const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>(
+    Array.isArray(washRequest.vehicles) && typeof washRequest.vehicles[0] === 'string' 
+      ? washRequest.vehicles
+      : washRequest.vehicleDetails 
+        ? washRequest.vehicleDetails.map(v => v.id) 
+        : []
+  );
+  
   const [filteredVehicles, setFilteredVehicles] = useState(vehicles);
   const formRef = useRef<HTMLDivElement>(null);
   
