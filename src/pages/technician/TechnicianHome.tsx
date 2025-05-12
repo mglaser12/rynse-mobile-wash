@@ -8,6 +8,7 @@ import { JobRequestsTabs } from "@/components/technician/JobRequestsTabs";
 import { RequestDetailDialog } from "@/components/technician/RequestDetailDialog";
 import { VehicleWashProgressDialog } from "@/components/technician/wash-progress/VehicleWashProgressDialog";
 import { useWashManagement } from "@/hooks/technician/wash-management";
+import { TechnicianJobMap } from "@/components/technician/map/TechnicianJobMap";
 
 const TechnicianHome = () => {
   const { 
@@ -48,6 +49,23 @@ const TechnicianHome = () => {
   const activeWashRequest = activeWashId && Array.isArray(washRequests)
     ? washRequests.find(req => req.id === activeWashId)
     : null;
+    
+  // Get job locations for the map
+  const jobLocations = Array.isArray(washRequests) 
+    ? washRequests
+        .filter(req => (
+          // Only include jobs assigned to this technician with locations
+          (req.status === "confirmed" || req.status === "in_progress") && 
+          req.technician === user?.id &&
+          req.location && 
+          req.location.name
+        ))
+        .map(req => ({
+          id: req.id,
+          location: req.location,
+          preferredDates: req.preferredDates
+        }))
+    : [];
 
   return (
     <AppLayout>
@@ -61,21 +79,33 @@ const TechnicianHome = () => {
         ) : (
           <>
             {/* Main content */}
-            <TodaySchedule
-              inProgressRequests={inProgressRequests}
-              assignedRequests={assignedRequests}
-              onRequestClick={setSelectedRequestId}
-              onStartWash={handleStartWash}
-              onReopenWash={handleReopenWash}
-              onCompleteWash={handleCompleteWash}
-            />
-            
-            <JobRequestsTabs
-              pendingRequests={pendingRequests}
-              assignedRequests={assignedRequests}
-              onRequestClick={setSelectedRequestId}
-              onStartWash={handleStartWash}
-            />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              <div className="lg:col-span-7 space-y-4">
+                <TodaySchedule
+                  inProgressRequests={inProgressRequests}
+                  assignedRequests={assignedRequests}
+                  onRequestClick={setSelectedRequestId}
+                  onStartWash={handleStartWash}
+                  onReopenWash={handleReopenWash}
+                  onCompleteWash={handleCompleteWash}
+                />
+                
+                <JobRequestsTabs
+                  pendingRequests={pendingRequests}
+                  assignedRequests={assignedRequests}
+                  onRequestClick={setSelectedRequestId}
+                  onStartWash={handleStartWash}
+                />
+              </div>
+              
+              <div className="lg:col-span-5">
+                <TechnicianJobMap
+                  jobLocations={jobLocations}
+                  onSelectJob={setSelectedRequestId}
+                  selectedJobId={selectedRequestId}
+                />
+              </div>
+            </div>
           </>
         )}
       </div>
