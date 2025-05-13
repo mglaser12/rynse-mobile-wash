@@ -3,17 +3,18 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
 import { CreateWashRequestForm } from "@/components/booking/CreateWashRequestForm";
 import { useWashRequests } from "@/contexts/WashContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { PlusCircle, Car, Loader2 } from "lucide-react";
+import { PlusCircle, Car, Loader2, CalendarDays } from "lucide-react";
 import { EditWashRequestDialog } from "@/components/wash/EditWashRequestDialog";
 import { WashRequestActions } from "@/components/wash/WashRequestActions";
 import { WashRequest } from "@/models/types";
+import { format, isAfter, isSameDay, parseISO } from "date-fns";
+import { CustomerCalendarView } from "@/components/customer/CustomerCalendarView";
 
 const CustomerHome = () => {
   const { user } = useAuth();
@@ -21,14 +22,26 @@ const CustomerHome = () => {
   const [showNewRequestDialog, setShowNewRequestDialog] = useState(false);
   const [selectedWashRequest, setSelectedWashRequest] = useState<WashRequest | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showCalendarView, setShowCalendarView] = useState(false);
 
-  // Filter wash requests the same way as BookingsPage
+  // Filter wash requests for active ones
   const activeRequests = washRequests.filter(req => 
     ["pending", "confirmed", "in_progress"].includes(req.status)
   );
   
-  const completedRequests = washRequests.filter(req => req.status === "completed");
-  const cancelledRequests = washRequests.filter(req => req.status === "cancelled");
+  // Filter for upcoming washes (today and future dates)
+  const upcomingRequests = washRequests.filter(req => {
+    if (!req.preferredDates?.start) return false;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const washDate = new Date(req.preferredDates.start);
+    washDate.setHours(0, 0, 0, 0);
+    
+    return (isSameDay(washDate, today) || isAfter(washDate, today)) && 
+           req.status !== 'cancelled';
+  });
 
   const handleEditWashRequest = (washRequest: WashRequest) => {
     setSelectedWashRequest(washRequest);
@@ -74,74 +87,80 @@ const CustomerHome = () => {
           </CardContent>
         </Card>
         
-        <h2 className="text-lg font-semibold mb-3">Your Wash Requests</h2>
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-lg font-semibold">Your Wash Requests</h2>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-muted-foreground">Calendar View</span>
+            <Switch 
+              checked={showCalendarView} 
+              onCheckedChange={setShowCalendarView}
+            />
+            <CalendarDays className="h-4 w-4 text-muted-foreground ml-1" />
+          </div>
+        </div>
         
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
           </div>
         ) : (
-          <Tabs defaultValue="active" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-              <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="active" className="pt-4 space-y-4">
-              {activeRequests.length > 0 ? (
-                activeRequests.map(request => (
-                  <WashRequestCard 
-                    key={request.id} 
-                    washRequest={request}
-                    actions={
-                      <WashRequestActions
-                        requestId={request.id}
-                        status={request.status}
-                        onEdit={() => handleEditWashRequest(request)}
-                      />
-                    }
-                  />
-                ))
-              ) : (
-                <div className="text-center py-10">
-                  <p className="text-muted-foreground mb-3">No active wash appointments</p>
-                  <Button onClick={() => setShowNewRequestDialog(true)}>
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Schedule a Wash
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="completed" className="pt-4 space-y-4">
-              {completedRequests.length > 0 ? (
-                completedRequests.map(request => (
-                  <WashRequestCard 
-                    key={request.id} 
-                    washRequest={request}
-                    showDetailsButton={true}
-                  />
-                ))
-              ) : (
-                <div className="text-center py-10">
-                  <p className="text-muted-foreground">No completed washes</p>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="cancelled" className="pt-4 space-y-4">
-              {cancelledRequests.length > 0 ? (
-                cancelledRequests.map(request => (
-                  <WashRequestCard key={request.id} washRequest={request} />
-                ))
-              ) : (
-                <div className="text-center py-10">
-                  <p className="text-muted-foreground">No cancelled bookings</p>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+          <>
+            {showCalendarView ? (
+              <CustomerCalendarView 
+                washRequests={washRequests}
+                onSelectRequest={(request) => {
+                  setSelectedWashRequest(request);
+                  setShowEditDialog(true);
+                }}
+              />
+            ) : (
+              <div className="space-y-4">
+                <h3 className="text-md font-medium mb-2">Active Requests</h3>
+                {activeRequests.length > 0 ? (
+                  activeRequests.map(request => (
+                    <WashRequestCard 
+                      key={request.id} 
+                      washRequest={request}
+                      actions={
+                        <WashRequestActions
+                          requestId={request.id}
+                          status={request.status}
+                          onEdit={() => handleEditWashRequest(request)}
+                        />
+                      }
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-10 bg-muted rounded-md">
+                    <p className="text-muted-foreground mb-3">No active wash appointments</p>
+                    <Button onClick={() => setShowNewRequestDialog(true)}>
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Schedule a Wash
+                    </Button>
+                  </div>
+                )}
+                
+                {upcomingRequests.length > 0 && (
+                  <>
+                    <h3 className="text-md font-medium mt-6 mb-2">Upcoming Washes</h3>
+                    <div className="space-y-3">
+                      {upcomingRequests
+                        .sort((a, b) => new Date(a.preferredDates.start).getTime() - new Date(b.preferredDates.start).getTime())
+                        .map(request => (
+                          <WashRequestCard 
+                            key={request.id} 
+                            washRequest={request}
+                            showDetailsButton={true}
+                            onClick={() => handleEditWashRequest(request)}
+                          />
+                        ))
+                      }
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
       
