@@ -19,8 +19,8 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
     const organizationId = await getUserOrganizationId(data.customerId);
     console.log("User organization ID for wash request:", organizationId);
 
-    // Create the wash request data object
-    const washRequestData = {
+    // Create the wash request data object with correctly typed metadata
+    const washRequestData: any = {
       user_id: data.customerId,
       preferred_date_start: data.preferredDates.start.toISOString(),
       preferred_date_end: data.preferredDates.end ? data.preferredDates.end.toISOString() : null,
@@ -32,9 +32,20 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
       organization_id: organizationId, // Add organization_id to wash request data
       recurring_frequency: data.recurringFrequency || null,
       recurring_count: data.recurringCount || null,
-      // Add vehicle services as JSON in metadata field
-      metadata: data.vehicleServices && data.vehicleServices.length > 0 ? { vehicleServices: data.vehicleServices } : null
     };
+    
+    // Only add metadata if vehicleServices exists and has items
+    if (data.vehicleServices && data.vehicleServices.length > 0) {
+      // Convert the complex object to a simple JSON-compatible structure
+      washRequestData.metadata = {
+        vehicleServices: data.vehicleServices.map(vs => ({
+          vehicleId: vs.vehicleId,
+          services: vs.services
+        }))
+      };
+    } else {
+      washRequestData.metadata = null;
+    }
 
     console.log("Inserting wash request with:", washRequestData);
 
