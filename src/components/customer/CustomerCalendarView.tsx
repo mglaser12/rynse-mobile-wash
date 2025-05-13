@@ -1,9 +1,11 @@
+
 import React, { useState } from "react";
 import { WashRequest } from "@/models/types";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { format, isSameDay } from "date-fns";
 import { WashRequestCard } from "@/components/shared/WashRequestCard";
+import { CalendarDays } from "lucide-react";
 
 interface CustomerCalendarViewProps {
   washRequests: WashRequest[];
@@ -65,6 +67,7 @@ export const CustomerCalendarView = ({ washRequests, onSelectRequest }: Customer
                   
                   return (
                     <div 
+                      onClick={() => setSelectedDate(date)}
                       {...props} 
                       className={`${props.className} ${hasWash ? 'cursor-pointer font-medium' : ''} ${isSelected ? 'bg-primary text-white' : ''}`}
                     >
@@ -89,9 +92,12 @@ export const CustomerCalendarView = ({ washRequests, onSelectRequest }: Customer
       </Card>
       
       <div>
-        <h3 className="text-md font-medium mb-3">
-          Washes on {format(selectedDate, "MMMM d, yyyy")}
-        </h3>
+        <div className="flex items-center mb-3 space-x-2">
+          <CalendarDays className="h-4 w-4 text-primary" />
+          <h3 className="text-md font-medium">
+            Washes on {format(selectedDate, "MMMM d, yyyy")}
+          </h3>
+        </div>
         
         {selectedDateRequests.length > 0 ? (
           <div className="space-y-3">
