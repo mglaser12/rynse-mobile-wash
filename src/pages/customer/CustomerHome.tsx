@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,11 +9,10 @@ import { WashRequestCard } from "@/components/shared/WashRequestCard";
 import { CreateWashRequestForm } from "@/components/booking/CreateWashRequestForm";
 import { useWashRequests } from "@/contexts/WashContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { PlusCircle, Car, Loader2, CalendarDays } from "lucide-react";
+import { PlusCircle, Loader2, CalendarDays } from "lucide-react";
 import { EditWashRequestDialog } from "@/components/wash/EditWashRequestDialog";
 import { WashRequestActions } from "@/components/wash/WashRequestActions";
 import { WashRequest } from "@/models/types";
-import { format, isAfter, isSameDay, parseISO } from "date-fns";
 import { CustomerCalendarView } from "@/components/customer/CustomerCalendarView";
 
 const CustomerHome = () => {
@@ -33,20 +33,6 @@ const CustomerHome = () => {
     ["pending", "confirmed", "in_progress"].includes(req.status)
   );
   
-  // Filter for upcoming washes (today and future dates)
-  const upcomingRequests = sortedWashRequests.filter(req => {
-    if (!req.preferredDates?.start) return false;
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const washDate = new Date(req.preferredDates.start);
-    washDate.setHours(0, 0, 0, 0);
-    
-    return (isSameDay(washDate, today) || isAfter(washDate, today)) && 
-           req.status !== 'cancelled';
-  });
-
   const handleEditWashRequest = (washRequest: WashRequest) => {
     setSelectedWashRequest(washRequest);
     setShowEditDialog(true);
@@ -142,25 +128,6 @@ const CustomerHome = () => {
                       Schedule a Wash
                     </Button>
                   </div>
-                )}
-                
-                {upcomingRequests.length > 0 && (
-                  <>
-                    <h3 className="text-md font-medium mt-6 mb-2">Upcoming Washes</h3>
-                    <div className="space-y-3">
-                      {upcomingRequests
-                        .sort((a, b) => new Date(a.preferredDates.start).getTime() - new Date(b.preferredDates.start).getTime())
-                        .map(request => (
-                          <WashRequestCard 
-                            key={request.id} 
-                            washRequest={request}
-                            showDetailsButton={true}
-                            onClick={() => handleEditWashRequest(request)}
-                          />
-                        ))
-                      }
-                    </div>
-                  </>
                 )}
               </div>
             )}
