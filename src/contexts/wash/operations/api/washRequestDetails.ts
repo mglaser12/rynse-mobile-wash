@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Vehicle, WashStatus } from "@/models/types";
+import { Vehicle, WashStatus, RecurringFrequency } from "@/models/types";
 
 /**
  * Retrieve a full wash request with all associated data
@@ -125,6 +125,17 @@ export const getFullWashRequest = async (washRequestId: string) => {
     // Ensure status is explicitly cast as WashStatus
     const status = washRequest.status as WashStatus;
     
+    // Convert recurring_frequency from string to RecurringFrequency type
+    let recurring = undefined;
+    if (washRequest.recurring_frequency) {
+      // Type assertion to ensure the frequency is a valid RecurringFrequency
+      const frequency = washRequest.recurring_frequency as RecurringFrequency;
+      recurring = {
+        frequency,
+        count: washRequest.recurring_count || undefined
+      };
+    }
+
     const formattedRequest = {
       id: washRequest.id,
       customerId: washRequest.user_id,
@@ -143,10 +154,7 @@ export const getFullWashRequest = async (washRequestId: string) => {
       organizationId: washRequest.organization_id,
       locationId: washRequest.location_id,
       location: locationData,
-      recurring: washRequest.recurring_frequency ? {
-        frequency: washRequest.recurring_frequency,
-        count: washRequest.recurring_count || undefined
-      } : undefined
+      recurring: recurring
     };
 
     return formattedRequest;

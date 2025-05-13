@@ -1,6 +1,7 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { CreateWashRequestData } from "../types";
-import { WashRequest, WashStatus } from "@/models/types";
+import { WashRequest, WashStatus, RecurringFrequency } from "@/models/types";
 import { toast } from "sonner";
 import { getFullWashRequest } from "./api/washRequestDetails";
 import { createVehicleAssociations } from "./api/vehicleApi";
@@ -49,7 +50,8 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
         }
         
         // Get the full wash request with all associations
-        return await getFullWashRequest(result.id);
+        const fullRequest = await getFullWashRequest(result.id);
+        return fullRequest;
       }
       
       // Second attempt: Use direct API call
@@ -69,7 +71,8 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
         }
         
         // Get the full wash request with all associations
-        return await getFullWashRequest(directResult.id);
+        const fullRequest = await getFullWashRequest(directResult.id);
+        return fullRequest;
       }
       
       // If both methods failed, try without a location ID
@@ -102,7 +105,8 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
       }
       
       // Get the full wash request with all associations
-      return await getFullWashRequest(fallbackResult.id);
+      const fullRequest = await getFullWashRequest(fallbackResult.id);
+      return fullRequest;
       
     } catch (insertError) {
       console.error("Error in insert process:", insertError);

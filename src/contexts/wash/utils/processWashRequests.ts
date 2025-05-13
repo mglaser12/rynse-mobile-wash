@@ -1,4 +1,5 @@
-import { WashRequest, Vehicle } from "@/models/types";
+
+import { WashRequest, Vehicle, RecurringFrequency } from "@/models/types";
 
 /**
  * Process the raw wash requests data from Supabase to match our app's format
@@ -52,8 +53,10 @@ export const processWashRequests = (data: any[]): WashRequest[] => {
     // Create recurring data if frequency is set
     let recurring = undefined;
     if (item.recurring_frequency) {
+      // Type assertion to ensure it's a valid RecurringFrequency
+      const frequency = item.recurring_frequency as RecurringFrequency;
       recurring = {
-        frequency: item.recurring_frequency,
+        frequency: frequency,
         count: item.recurring_count
       };
     }
