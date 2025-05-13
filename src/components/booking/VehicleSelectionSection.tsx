@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Car, AlertCircle, ArrowRight } from "lucide-react";
+import { Car, AlertCircle, ArrowRight, Check } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Vehicle } from "@/models/types";
 import { VehicleSelectionTab } from "./VehicleSelectionTab";
@@ -79,13 +79,43 @@ export function VehicleSelectionSection({
     );
   }
 
+  // Handler for selecting all vehicles
+  const handleSelectAll = () => {
+    // If all vehicles are already selected, do nothing
+    if (selectedVehicleIds.length === vehicles.length) return;
+    
+    // Get all vehicle IDs
+    const allVehicleIds = vehicles.map(vehicle => vehicle.id);
+    
+    // Call onSelectVehicle for each vehicle ID
+    allVehicleIds.forEach(id => {
+      if (!selectedVehicleIds.includes(id)) {
+        onSelectVehicle(id);
+      }
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div>
-        <Label className="flex items-center">
-          <Car className="h-4 w-4 mr-2" />
-          Select Vehicle(s)
-        </Label>
+        <div className="flex items-center justify-between mb-2">
+          <Label className="flex items-center">
+            <Car className="h-4 w-4 mr-2" />
+            Select Vehicle(s)
+          </Label>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleSelectAll}
+            className="text-xs"
+            disabled={vehicles.length === 0 || selectedVehicleIds.length === vehicles.length}
+          >
+            <Check className="h-3 w-3 mr-1" />
+            Select All
+          </Button>
+        </div>
+        
         <StaggeredChildren staggerMs={80} className="grid grid-cols-1 gap-2 mt-2">
           {vehicles.map((vehicle) => (
             <VehicleSelectionTab

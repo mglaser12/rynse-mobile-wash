@@ -2,9 +2,10 @@
 import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Droplet } from "lucide-react";
+import { Droplet, Check } from "lucide-react";
 import { Vehicle } from "@/models/types";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export interface ServiceOption {
   id: string;
@@ -89,6 +90,40 @@ export function ServicesSelectionSection({
     onServiceChange(updatedServices);
   };
 
+  // Handle select all services for a specific vehicle
+  const handleSelectAllForVehicle = (vehicleId: string) => {
+    const updatedServices = [...vehicleServices];
+    const vehicleServiceIndex = updatedServices.findIndex(vs => vs.vehicleId === vehicleId);
+    const allServiceIds = AVAILABLE_SERVICES.map(service => service.id);
+    
+    if (vehicleServiceIndex >= 0) {
+      // Update existing vehicle services
+      updatedServices[vehicleServiceIndex] = {
+        ...updatedServices[vehicleServiceIndex],
+        services: allServiceIds
+      };
+    } else {
+      // Create new vehicle services entry
+      updatedServices.push({
+        vehicleId,
+        services: allServiceIds
+      });
+    }
+    
+    onServiceChange(updatedServices);
+  };
+
+  // Handle select all services for all vehicles
+  const handleSelectAllServices = () => {
+    const allServiceIds = AVAILABLE_SERVICES.map(service => service.id);
+    const updatedServices = selectedVehicleIds.map(vehicleId => ({
+      vehicleId,
+      services: allServiceIds
+    }));
+    
+    onServiceChange(updatedServices);
+  };
+
   // If no vehicles selected, show message
   if (selectedVehicles.length === 0) {
     return (
@@ -100,17 +135,40 @@ export function ServicesSelectionSection({
 
   return (
     <div className="space-y-4">
-      <Label className="flex items-center">
-        <Droplet className="h-4 w-4 mr-2" />
-        Select Services for Each Vehicle
-      </Label>
+      <div className="flex items-center justify-between">
+        <Label className="flex items-center">
+          <Droplet className="h-4 w-4 mr-2" />
+          Select Services for Each Vehicle
+        </Label>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleSelectAllServices}
+          className="text-xs"
+        >
+          <Check className="h-3 w-3 mr-1" />
+          Select All Services
+        </Button>
+      </div>
       
       <div className="space-y-6">
         {selectedVehicles.map(vehicle => (
           <Card key={vehicle.id} className="p-4">
-            <h3 className="font-medium mb-3">
-              {vehicle.year} {vehicle.make} {vehicle.model} {vehicle.color && `(${vehicle.color})`}
-            </h3>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-medium">
+                {vehicle.year} {vehicle.make} {vehicle.model} {vehicle.color && `(${vehicle.color})`}
+              </h3>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => handleSelectAllForVehicle(vehicle.id)}
+              >
+                Select All
+              </Button>
+            </div>
             
             <div className="space-y-3">
               {AVAILABLE_SERVICES.map(service => (
