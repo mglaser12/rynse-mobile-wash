@@ -28,7 +28,14 @@ export const handleCreateWashRequest = (
       if (newWashRequest) {
         // Update the client state
         setWashRequests([...washRequests, newWashRequest]);
-        toast.success("Wash request created successfully");
+        
+        // Show a specific message for recurring washes
+        if (data.recurringFrequency && data.recurringFrequency !== 'none') {
+          toast.success(`${data.recurringFrequency} wash request created successfully`);
+        } else {
+          toast.success("Wash request created successfully");
+        }
+        
         return newWashRequest;
       } else {
         // If the operation failed

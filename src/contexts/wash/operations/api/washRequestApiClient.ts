@@ -14,6 +14,8 @@ interface WashRequestInsertData {
   notes?: string | null;
   status: WashStatus;
   organization_id?: string;
+  recurring_frequency?: string | null;
+  recurring_count?: number | null;
 }
 
 /**

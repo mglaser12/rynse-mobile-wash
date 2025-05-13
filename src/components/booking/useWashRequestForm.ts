@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWashRequests } from "@/contexts/WashContext";
 import { toast } from "sonner";
 import { useLocations } from "@/contexts/LocationContext";
+import { RecurringFrequency } from "@/models/types";
 
 export function useWashRequestForm(onSuccess?: () => void) {
   const { user } = useAuth();
@@ -16,6 +17,7 @@ export function useWashRequestForm(onSuccess?: () => void) {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [notes, setNotes] = useState("");
   const [selectedLocationId, setSelectedLocationId] = useState<string | undefined>(undefined);
+  const [recurringFrequency, setRecurringFrequency] = useState<RecurringFrequency>("none");
 
   const handleVehicleSelection = (vehicleId: string) => {
     setSelectedVehicleIds(prev => {
@@ -63,6 +65,7 @@ export function useWashRequestForm(onSuccess?: () => void) {
         price: selectedVehicleIds.length * 39.99,
         notes: notes,
         locationId: selectedLocationId,
+        recurringFrequency: recurringFrequency === "none" ? undefined : recurringFrequency,
       });
       
       if (onSuccess) onSuccess();
@@ -83,11 +86,13 @@ export function useWashRequestForm(onSuccess?: () => void) {
     notes,
     selectedLocationId,
     locations,
+    recurringFrequency,
     isFormValid,
     setNotes,
     setStartDate,
     setEndDate,
     setSelectedLocationId,
+    setRecurringFrequency,
     handleVehicleSelection,
     handleSubmit
   };

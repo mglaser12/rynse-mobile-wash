@@ -1,52 +1,98 @@
 
-import { WashRequest, WashStatus } from "@/models/types";
+import { 
+  WashRequest, 
+  SupabaseWashRequest, 
+  SupabaseWashRequestVehicle,
+  SupabaseVehicle,
+  Vehicle,
+  Location,
+  SupabaseLocation
+} from "@/models/types";
 
 /**
- * Maps a Supabase wash request response to our application's WashRequest model
+ * Map a wash request from the Supabase format to our application format
  */
-export const mapToWashRequest = (
-  data: any, 
-  userId: string, 
-  vehicleIds: string[],
-  organizationId?: string
-): WashRequest => {
+export function mapWashRequest(
+  washRequest: SupabaseWashRequest,
+  vehicles: SupabaseWashRequestVehicle[] = [],
+  vehicleDetails?: SupabaseVehicle[],
+  locationDetail?: SupabaseLocation | null
+): WashRequest {
+  // Map vehicles if we have vehicle details
+  const mappedVehicleDetails = vehicleDetails?.map(mapVehicleFromSupabase);
+  
+  // Map location if we have location details
+  let mappedLocation: Location | undefined = undefined;
+  if (locationDetail) {
+    mappedLocation = {
+      id: locationDetail.id,
+      name: locationDetail.name,
+      address: locationDetail.address,
+      city: locationDetail.city,
+      state: locationDetail.state,
+      zipCode: locationDetail.zip_code,
+      latitude: locationDetail.latitude || undefined,
+      longitude: locationDetail.longitude || undefined,
+      notes: locationDetail.notes || undefined,
+      isDefault: locationDetail.is_default || false,
+      organizationId: locationDetail.organization_id || undefined,
+      createdBy: locationDetail.created_by,
+      createdAt: new Date(locationDetail.created_at),
+      updatedAt: new Date(locationDetail.updated_at)
+    };
+  }
+
+  // Get recurring information if available
+  const recurringFrequency = washRequest.recurring_frequency;
+  
   return {
-    id: data.id,
-    customerId: data.user_id || userId,
-    vehicles: vehicleIds,
+    id: washRequest.id,
+    customerId: washRequest.user_id,
+    vehicles: vehicles.map(vehicle => vehicle.vehicle_id),
+    vehicleDetails: mappedVehicleDetails,
     preferredDates: {
-      start: new Date(data.preferred_date_start),
-      end: data.preferred_date_end ? new Date(data.preferred_date_end) : undefined
+      start: new Date(washRequest.preferred_date_start),
+      end: washRequest.preferred_date_end ? new Date(washRequest.preferred_date_end) : undefined,
     },
-    status: data.status as WashStatus,
-    price: data.price,
-    notes: data.notes || undefined,
-    createdAt: new Date(data.created_at || Date.now()),
-    updatedAt: new Date(data.updated_at || Date.now()),
-    organizationId: data.organization_id || organizationId
+    status: washRequest.status as any,
+    technician: washRequest.technician_id || undefined,
+    price: Number(washRequest.price),
+    notes: washRequest.notes || undefined,
+    createdAt: new Date(washRequest.created_at),
+    updatedAt: new Date(washRequest.updated_at),
+    organizationId: washRequest.organization_id,
+    locationId: washRequest.location_id || undefined,
+    locationDetail: mappedLocation,
+    location: mappedLocation ? {
+      name: mappedLocation.name,
+      address: mappedLocation.address
+    } : undefined,
+    ...(recurringFrequency && recurringFrequency !== 'none' && {
+      recurring: {
+        frequency: recurringFrequency as any,
+        count: washRequest.recurring_count
+      }
+    })
   };
-};
+}
 
 /**
- * Prepares data for inserting into the wash_requests table
+ * Map a vehicle from the Supabase format to our application format
  */
-export const prepareWashRequestData = (
-  userId: string,
-  locationId: string,
-  preferredDateStart: Date,
-  preferredDateEnd: Date | undefined,
-  price: number,
-  notes: string | undefined,
-  organizationId?: string
-) => {
+export function mapVehicleFromSupabase(vehicle: SupabaseVehicle): Vehicle {
   return {
-    user_id: userId,
-    location_id: locationId,
-    preferred_date_start: preferredDateStart.toISOString(),
-    preferred_date_end: preferredDateEnd?.toISOString(),
-    price,
-    notes,
-    status: 'pending' as WashStatus,
-    organization_id: organizationId
+    id: vehicle.id,
+    customerId: vehicle.user_id,
+    type: vehicle.type || "",
+    make: vehicle.make,
+    model: vehicle.model,
+    year: vehicle.year,
+    licensePlate: vehicle.license_plate || "",
+    color: vehicle.color || "",
+    image: vehicle.image_url || undefined,
+    vinNumber: vehicle.vin_number || undefined,
+    dateAdded: new Date(vehicle.created_at),
+    organizationId: vehicle.organization_id || undefined,
+    assetNumber: vehicle.asset_number || undefined
   };
-};
+}

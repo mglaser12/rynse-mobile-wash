@@ -12,6 +12,7 @@ import { useWashRequestForm } from "./useWashRequestForm";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LocationSelectionSection } from "./LocationSelectionSection";
 import { supabase } from "@/integrations/supabase/client";
+import { RecurringSelectionSection } from "./RecurringSelectionSection";
 
 interface CreateWashRequestFormProps {
   onSuccess?: () => void;
@@ -31,11 +32,13 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
     notes,
     selectedLocationId,
     locations,
+    recurringFrequency,
     isFormValid,
     setNotes,
     setStartDate,
     setEndDate,
     setSelectedLocationId,
+    setRecurringFrequency,
     handleVehicleSelection,
     handleSubmit
   } = useWashRequestForm(onSuccess);
@@ -122,6 +125,15 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
                   endDate={endDate}
                   onStartDateChange={setStartDate}
                   onEndDateChange={setEndDate}
+                />
+              </div>
+              
+              <Separator />
+              
+              <div className="form-section">
+                <RecurringSelectionSection
+                  selectedFrequency={recurringFrequency}
+                  onSelectFrequency={setRecurringFrequency}
                 />
               </div>
               

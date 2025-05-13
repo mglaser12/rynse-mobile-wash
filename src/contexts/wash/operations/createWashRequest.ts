@@ -29,7 +29,9 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
       notes: data.notes || null,
       location_id: data.locationId || null,
       location_detail_id: data.locationId || null,
-      organization_id: organizationId // Add organization_id to wash request data
+      organization_id: organizationId, // Add organization_id to wash request data
+      recurring_frequency: data.recurringFrequency || null,
+      recurring_count: data.recurringCount || null
     };
 
     console.log("Inserting wash request with:", washRequestData);

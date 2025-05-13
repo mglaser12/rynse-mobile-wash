@@ -1,5 +1,5 @@
 
-import { WashRequest, Vehicle } from "@/models/types";
+import { WashRequest, Vehicle, RecurringFrequency } from "@/models/types";
 
 export interface WashContextType {
   washRequests: WashRequest[];
@@ -22,4 +22,6 @@ export interface CreateWashRequestData {
   price: number;
   notes?: string;
   locationId?: string; // Add locationId field to the wash request data
+  recurringFrequency?: RecurringFrequency; // Add recurring frequency
+  recurringCount?: number; // Optional count of recurring instances
 }
