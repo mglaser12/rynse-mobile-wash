@@ -33,7 +33,7 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
       recurring_frequency: data.recurringFrequency || null,
       recurring_count: data.recurringCount || null,
       // Add vehicle services as JSON in metadata field
-      metadata: data.vehicleServices ? { vehicleServices: data.vehicleServices } : null
+      metadata: data.vehicleServices && data.vehicleServices.length > 0 ? { vehicleServices: data.vehicleServices } : null
     };
 
     console.log("Inserting wash request with:", washRequestData);

@@ -375,6 +375,7 @@ export type Database = {
           id: string
           location_detail_id: string | null
           location_id: string | null
+          metadata: Json | null
           notes: string | null
           organization_id: string | null
           preferred_date_end: string | null
@@ -392,6 +393,7 @@ export type Database = {
           id?: string
           location_detail_id?: string | null
           location_id?: string | null
+          metadata?: Json | null
           notes?: string | null
           organization_id?: string | null
           preferred_date_end?: string | null
@@ -409,6 +411,7 @@ export type Database = {
           id?: string
           location_detail_id?: string | null
           location_id?: string | null
+          metadata?: Json | null
           notes?: string | null
           organization_id?: string | null
           preferred_date_end?: string | null

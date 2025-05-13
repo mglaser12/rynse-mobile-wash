@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { logApiError, handleSupabaseError } from "./apiErrorHandling";
 
@@ -30,9 +31,9 @@ export const insertWashRequestDirect = async (washRequestData: any, accessToken:
   }
   
   try {
-    // Use environment variables or public constants instead of accessing protected properties
-    const supabaseUrl = process.env.SUPABASE_URL || "https://ebzruvonvlowdglrmduf.supabase.co";
-    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVienJ1dm9udmxvd2RnbHJtZHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2NzAzNTEsImV4cCI6MjA2MDI0NjM1MX0.1Hdcd2TyWfmGo6-1xIif2XoF8a14v7iHRRk7Tlw7DC0";
+    // Use hardcoded constants instead of environment variables 
+    const supabaseUrl = "https://ebzruvonvlowdglrmduf.supabase.co";
+    const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVienJ1dm9udmxvd2RnbHJtZHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2NzAzNTEsImV4cCI6MjA2MDI0NjM1MX0.1Hdcd2TyWfmGo6-1xIif2XoF8a14v7iHRRk7Tlw7DC0";
     
     const endpoint = `${supabaseUrl}/rest/v1/wash_requests`;
     
