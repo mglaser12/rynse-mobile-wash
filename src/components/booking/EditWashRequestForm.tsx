@@ -44,6 +44,9 @@ export function EditWashRequestForm({ washRequest, onSuccess, onCancel }: EditWa
   const [filteredVehicles, setFilteredVehicles] = useState(vehicles);
   const formRef = useRef<HTMLDivElement>(null);
   
+  // Extract recurring frequency from the wash request if it exists
+  const recurringFrequency = washRequest.recurring?.frequency;
+  
   // Fetch locations
   useEffect(() => {
     const fetchLocations = async () => {
@@ -191,7 +194,7 @@ export function EditWashRequestForm({ washRequest, onSuccess, onCancel }: EditWa
                 <SlideUp>
                   <PriceSummary 
                     vehicleCount={selectedVehicleIds.length} 
-                    recurringFrequency={washRequest.recurringFrequency}
+                    recurringFrequency={recurringFrequency}
                   />
                 </SlideUp>
                 

@@ -42,6 +42,9 @@ export const RequestDetailDialog = ({
   
   const isMockRequest = selectedRequest.id.startsWith("mock-");
   const vehicleCount = selectedRequest.vehicleDetails?.length || selectedRequest.vehicles.length || 0;
+  
+  // Extract recurring frequency from the selected request if it exists
+  const recurringFrequency = selectedRequest.recurring?.frequency;
 
   const handleAcceptJob = () => {
     if (userId) {
@@ -92,7 +95,7 @@ export const RequestDetailDialog = ({
           <PriceSummary
             vehicleCount={vehicleCount}
             className="pt-2"
-            recurringFrequency={selectedRequest.recurringFrequency}
+            recurringFrequency={recurringFrequency}
           />
           
           {!readOnly && (

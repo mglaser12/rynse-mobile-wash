@@ -24,7 +24,8 @@ export function PriceSummary({
     const frequencyMap = {
       weekly: "Weekly",
       biweekly: "Every two weeks",
-      monthly: "Monthly"
+      monthly: "Monthly",
+      quarterly: "Quarterly"
     };
     
     return ` (${frequencyMap[recurringFrequency]})`;
