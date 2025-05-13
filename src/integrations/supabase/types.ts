@@ -380,6 +380,8 @@ export type Database = {
           preferred_date_end: string | null
           preferred_date_start: string
           price: number
+          recurring_count: number | null
+          recurring_frequency: string | null
           status: string
           technician_id: string | null
           updated_at: string
@@ -395,6 +397,8 @@ export type Database = {
           preferred_date_end?: string | null
           preferred_date_start: string
           price: number
+          recurring_count?: number | null
+          recurring_frequency?: string | null
           status?: string
           technician_id?: string | null
           updated_at?: string
@@ -410,6 +414,8 @@ export type Database = {
           preferred_date_end?: string | null
           preferred_date_start?: string
           price?: number
+          recurring_count?: number | null
+          recurring_frequency?: string | null
           status?: string
           technician_id?: string | null
           updated_at?: string

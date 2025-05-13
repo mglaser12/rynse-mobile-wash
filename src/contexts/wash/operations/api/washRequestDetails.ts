@@ -142,7 +142,11 @@ export const getFullWashRequest = async (washRequestId: string) => {
       updatedAt: new Date(washRequest.updated_at),
       organizationId: washRequest.organization_id,
       locationId: washRequest.location_id,
-      location: locationData
+      location: locationData,
+      recurring: washRequest.recurring_frequency ? {
+        frequency: washRequest.recurring_frequency,
+        count: washRequest.recurring_count || undefined
+      } : undefined
     };
 
     return formattedRequest;

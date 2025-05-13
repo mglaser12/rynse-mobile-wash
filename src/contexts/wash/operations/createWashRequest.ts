@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CreateWashRequestData } from "../types";
 import { WashRequest, WashStatus } from "@/models/types";
@@ -36,6 +35,7 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
 
     console.log("Inserting wash request with:", washRequestData);
 
+    
     try {
       // First attempt: Use the standard Supabase client
       const result = await insertWashRequestStandard(washRequestData);
