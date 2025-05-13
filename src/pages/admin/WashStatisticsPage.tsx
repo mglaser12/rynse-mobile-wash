@@ -26,7 +26,8 @@ export default function WashStatisticsPage() {
     </div>;
   }
   
-  if (user.role !== "admin" && user.role !== "fleet_manager") {
+  // Modified to allow customer role to access this page
+  if (user.role !== "admin" && user.role !== "fleet_manager" && user.role !== "customer") {
     return <div className="flex items-center justify-center h-screen">
       <div>Access denied. Admin permission required.</div>
     </div>;

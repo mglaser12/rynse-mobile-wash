@@ -164,7 +164,7 @@ const AppRoutes = () => {
         } 
       />
       
-      {/* Admin Routes */}
+      {/* Admin Routes - Modified to allow customers to access the statistics page */}
       <Route 
         path="/admin/organizations" 
         element={
@@ -178,6 +178,7 @@ const AppRoutes = () => {
         path="/admin/statistics" 
         element={
           <PrivateRoute>
+            {/* Removed route protection so any authenticated user can access statistics */}
             <WashStatisticsPage />
           </PrivateRoute>
         } 
