@@ -10,6 +10,7 @@ interface WashRequestCardProps {
   washRequest: WashRequest;
   actions?: React.ReactNode;
   onClick?: () => void;
+  showDetailsButton?: boolean; // Add this missing prop
 }
 
 const formatRecurring = (frequency?: string): string => {
@@ -49,7 +50,7 @@ const WashStatusBadge: React.FC<{ status: WashStatus }> = ({ status }) => {
   );
 };
 
-export function WashRequestCard({ washRequest, actions, onClick }: WashRequestCardProps) {
+export function WashRequestCard({ washRequest, actions, onClick, showDetailsButton }: WashRequestCardProps) {
   const { id, preferredDates, vehicles, vehicleDetails, status, location, recurring } = washRequest;
   
   const createdAtDate = new Date(washRequest.createdAt);
