@@ -1,17 +1,12 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Droplet, Check } from "lucide-react";
 import { Vehicle } from "@/models/types";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
-export interface ServiceOption {
-  id: string;
-  name: string;
-  description: string;
-}
+import { AVAILABLE_SERVICES } from "./services/ServiceConstants";
+import { VehicleServiceCard } from "./services/VehicleServiceCard";
+import { NoVehiclesSelected } from "./services/NoVehiclesSelected";
 
 export interface VehicleService {
   vehicleId: string;
@@ -24,24 +19,6 @@ interface ServicesSelectionSectionProps {
   vehicleServices: VehicleService[];
   onServiceChange: (vehicleServices: VehicleService[]) => void;
 }
-
-export const AVAILABLE_SERVICES: ServiceOption[] = [
-  {
-    id: "exterior-wash",
-    name: "Exterior Wash",
-    description: "Complete exterior wash including wheels and windows"
-  },
-  {
-    id: "interior-clean",
-    name: "Interior Clean",
-    description: "Vacuum, wipe down surfaces, and clean windows"
-  },
-  {
-    id: "trailer-washout",
-    name: "Trailer Washout",
-    description: "Complete washout of trailer interior and exterior"
-  }
-];
 
 export function ServicesSelectionSection({
   vehicles,
@@ -126,11 +103,7 @@ export function ServicesSelectionSection({
 
   // If no vehicles selected, show message
   if (selectedVehicles.length === 0) {
-    return (
-      <div className="text-center py-8 bg-muted rounded-md">
-        <p className="text-muted-foreground">Please select vehicles first</p>
-      </div>
-    );
+    return <NoVehiclesSelected />;
   }
 
   return (
@@ -154,45 +127,14 @@ export function ServicesSelectionSection({
       
       <div className="space-y-6">
         {selectedVehicles.map(vehicle => (
-          <Card key={vehicle.id} className="p-4">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="font-medium">
-                {vehicle.year} {vehicle.make} {vehicle.model} {vehicle.color && `(${vehicle.color})`}
-              </h3>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={() => handleSelectAllForVehicle(vehicle.id)}
-              >
-                Select All
-              </Button>
-            </div>
-            
-            <div className="space-y-3">
-              {AVAILABLE_SERVICES.map(service => (
-                <div key={service.id} className="flex items-start space-x-2">
-                  <Checkbox
-                    id={`${vehicle.id}-${service.id}`}
-                    checked={isServiceSelected(vehicle.id, service.id)}
-                    onCheckedChange={(checked) => 
-                      handleServiceChange(vehicle.id, service.id, checked === true)
-                    }
-                  />
-                  <div className="grid gap-1.5 leading-none">
-                    <Label
-                      htmlFor={`${vehicle.id}-${service.id}`}
-                      className="cursor-pointer font-medium"
-                    >
-                      {service.name}
-                    </Label>
-                    <p className="text-sm text-muted-foreground">{service.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
+          <VehicleServiceCard
+            key={vehicle.id}
+            vehicle={vehicle}
+            availableServices={AVAILABLE_SERVICES}
+            isServiceSelected={isServiceSelected}
+            onServiceChange={handleServiceChange}
+            onSelectAllForVehicle={handleSelectAllForVehicle}
+          />
         ))}
       </div>
     </div>
