@@ -10,7 +10,7 @@ interface WashRequestCardProps {
   washRequest: WashRequest;
   actions?: React.ReactNode;
   onClick?: () => void;
-  showDetailsButton?: boolean; // Add this missing prop
+  showDetailsButton?: boolean;
 }
 
 const formatRecurring = (frequency?: string): string => {
@@ -105,7 +105,7 @@ export function WashRequestCard({ washRequest, actions, onClick, showDetailsButt
       </CardContent>
       
       {actions && (
-        <CardFooter className="px-4 py-3 bg-accent/50">
+        <CardFooter className="px-4 py-3 bg-gray-50">
           {actions}
         </CardFooter>
       )}
