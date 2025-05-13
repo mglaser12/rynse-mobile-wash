@@ -92,6 +92,7 @@ export const RequestDetailDialog = ({
           <PriceSummary
             vehicleCount={vehicleCount}
             className="pt-2"
+            recurringFrequency={selectedRequest.recurringFrequency}
           />
           
           {!readOnly && (

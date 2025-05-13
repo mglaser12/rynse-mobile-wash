@@ -1,34 +1,42 @@
 
 import React from "react";
 import { Card } from "@/components/ui/card";
+import { RecurringFrequency } from "@/models/types";
 
 interface PriceSummaryProps {
   vehicleCount: number;
-  pricePerVehicle?: number;
   className?: string;
   showCard?: boolean;
+  recurringFrequency?: RecurringFrequency;
 }
 
 export function PriceSummary({ 
   vehicleCount, 
-  pricePerVehicle = 39.99, 
   className = "",
-  showCard = true
+  showCard = true,
+  recurringFrequency
 }: PriceSummaryProps) {
-  const calculatePrice = () => {
-    return vehicleCount * pricePerVehicle;
-  };
-  
   if (vehicleCount === 0) return null;
+
+  const getFrequencyText = () => {
+    if (!recurringFrequency || recurringFrequency === "none") return "";
+    
+    const frequencyMap = {
+      weekly: "Weekly",
+      biweekly: "Every two weeks",
+      monthly: "Monthly"
+    };
+    
+    return ` (${frequencyMap[recurringFrequency]})`;
+  };
   
   const summaryContent = (
     <div className={`${className}`}>
       <div className="flex items-center justify-between font-medium">
-        <span>Price Estimate:</span>
-        <span className="text-lg">${calculatePrice().toFixed(2)}</span>
+        <span>Service Summary:</span>
       </div>
-      <p className="text-xs text-muted-foreground mt-1">
-        Price based on {vehicleCount} vehicle{vehicleCount !== 1 && "s"} at ${pricePerVehicle.toFixed(2)} each.
+      <p className="text-sm text-muted-foreground mt-1">
+        {vehicleCount} vehicle{vehicleCount !== 1 && "s"}{getFrequencyText()}
       </p>
     </div>
   );

@@ -55,7 +55,7 @@ const CustomerHome = () => {
           </div>
           <Button onClick={() => setShowNewRequestDialog(true)}>
             <PlusCircle className="h-4 w-4 mr-2" />
-            Schedule a Wash
+            Request a Quote
           </Button>
         </div>
       </header>
@@ -72,7 +72,7 @@ const CustomerHome = () => {
               className="mt-3" 
               onClick={() => setShowNewRequestDialog(true)}
             >
-              Schedule a Wash
+              Request a Quote
             </Button>
           </CardContent>
         </Card>
@@ -125,7 +125,7 @@ const CustomerHome = () => {
                     <p className="text-muted-foreground mb-3">No active wash appointments</p>
                     <Button onClick={() => setShowNewRequestDialog(true)}>
                       <PlusCircle className="h-4 w-4 mr-2" />
-                      Schedule a Wash
+                      Request a Quote
                     </Button>
                   </div>
                 )}

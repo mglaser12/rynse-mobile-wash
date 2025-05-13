@@ -84,9 +84,9 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
   return (
     <div className="space-y-6 overflow-hidden flex flex-col h-full max-h-[80vh]">
       <div>
-        <h3 className="text-lg font-medium">Request a Mobile Wash</h3>
+        <h3 className="text-lg font-medium">Request a Mobile Wash Quote</h3>
         <p className="text-sm text-muted-foreground">
-          Select a location, vehicles and preferred details for your mobile wash.
+          Select a location, vehicles and preferred details for your mobile wash quote.
         </p>
       </div>
       
@@ -149,7 +149,10 @@ export function CreateWashRequestForm({ onSuccess, onCancel }: CreateWashRequest
               <Separator />
               
               <div className="form-section">
-                <PriceSummary vehicleCount={selectedVehicleIds.length} />
+                <PriceSummary 
+                  vehicleCount={selectedVehicleIds.length} 
+                  recurringFrequency={recurringFrequency}
+                />
               </div>
               
               <Separator />

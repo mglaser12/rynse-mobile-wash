@@ -11,7 +11,7 @@ interface FormActionsProps {
   submitText?: string;
 }
 
-export function FormActions({ isLoading, isValid, onCancel, submitText = "Request Wash" }: FormActionsProps) {
+export function FormActions({ isLoading, isValid, onCancel, submitText = "Request Quote" }: FormActionsProps) {
   return (
     <div className="flex justify-end space-x-2 pt-4">
       <Button 

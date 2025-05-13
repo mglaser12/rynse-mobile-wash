@@ -189,7 +189,10 @@ export function EditWashRequestForm({ washRequest, onSuccess, onCancel }: EditWa
                 <Separator className="my-4" />
                 
                 <SlideUp>
-                  <PriceSummary vehicleCount={selectedVehicleIds.length} />
+                  <PriceSummary 
+                    vehicleCount={selectedVehicleIds.length} 
+                    recurringFrequency={washRequest.recurringFrequency}
+                  />
                 </SlideUp>
                 
                 <Separator className="my-4" />
@@ -199,7 +202,7 @@ export function EditWashRequestForm({ washRequest, onSuccess, onCancel }: EditWa
                     isLoading={isLoading} 
                     isValid={isFormValid}
                     onCancel={onCancel}
-                    submitText="Update Request"
+                    submitText="Update Quote"
                   />
                 </FadeIn>
               </StaggeredChildren>
