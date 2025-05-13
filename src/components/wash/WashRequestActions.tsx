@@ -32,11 +32,11 @@ export function WashRequestActions({ requestId, status, onEdit }: WashRequestAct
   }
   
   return (
-    <div className="flex gap-2 mt-4">
+    <div className="flex items-center justify-center w-full gap-3">
       <Button 
         variant="outline" 
         size="sm" 
-        className="flex-1" 
+        className="flex-1 justify-center" 
         onClick={onEdit}
       >
         <Edit2 className="h-4 w-4 mr-2" />
@@ -48,7 +48,7 @@ export function WashRequestActions({ requestId, status, onEdit }: WashRequestAct
         size="sm" 
         onClick={() => setShowCancelConfirm(true)}
         disabled={cancellingId === requestId}
-        className="flex-1"
+        className="flex-1 justify-center"
       >
         {cancellingId === requestId ? (
           <Loader2 className="h-4 w-4 animate-spin mr-2" />

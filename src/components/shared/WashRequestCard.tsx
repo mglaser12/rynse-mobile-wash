@@ -105,8 +105,10 @@ export function WashRequestCard({ washRequest, actions, onClick, showDetailsButt
       </CardContent>
       
       {actions && (
-        <CardFooter className="px-4 py-3 bg-gray-50">
-          {actions}
+        <CardFooter className="px-4 py-3 bg-gray-50 flex justify-center">
+          <div className="w-full">
+            {actions}
+          </div>
         </CardFooter>
       )}
     </Card>
