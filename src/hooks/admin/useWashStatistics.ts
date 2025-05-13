@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -91,7 +90,7 @@ export function useWashStatistics() {
         // Fetch data based on time range
         const timeRangeFilter = getTimeFilter(timeRange);
         
-        // Get wash requests - FIXED QUERY to use proper join through wash_request_vehicles
+        // FIXED QUERY: Use explicit join syntax instead of foreign key references
         const { data: washRequests, error } = await supabase
           .from('wash_requests')
           .select(`
@@ -100,7 +99,7 @@ export function useWashStatistics() {
               vehicle_id,
               vehicles:vehicle_id(*)
             ),
-            technician:technician_id(id, profiles(id, name))
+            profiles:technician_id(id, name)
           `)
           .gte('created_at', timeRangeFilter);
 
@@ -205,9 +204,9 @@ function calculateStatistics(washRequests: any[]): WashStatistics {
   const technicianMap = new Map<string, any>();
   
   washRequests.forEach(wash => {
-    if (wash.technician && wash.technician.profiles) {
-      const techId = wash.technician.profiles.id;
-      const techName = wash.technician.profiles.name;
+    if (wash.profiles) {
+      const techId = wash.profiles.id;
+      const techName = wash.profiles.name;
       
       if (!technicianMap.has(techId)) {
         technicianMap.set(techId, {
