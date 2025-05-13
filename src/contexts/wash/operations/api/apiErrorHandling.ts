@@ -29,3 +29,6 @@ export const handleDirectApiResponse = async (
   
   return await response.json();
 };
+
+// Add the handleApiError function to maintain backward compatibility
+export const handleApiError = logApiError;

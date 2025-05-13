@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
-import { WashRequest } from "@/models/types";
+import { WashRequest, RecurringFrequency } from "@/models/types";
 import { useWashRequests } from "@/contexts/WashContext";
 import { DateSelectionSection } from "@/components/booking/DateSelectionSection";
 import { NotesSection } from "@/components/booking/NotesSection";
