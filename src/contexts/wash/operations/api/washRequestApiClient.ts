@@ -1,97 +1,80 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { WashStatus } from "@/models/types";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabaseApi";
-import { handleSupabaseError, handleDirectApiResponse } from "./apiErrorHandling";
+import { handleApiError } from "./apiErrorHandling";
 
-interface WashRequestInsertData {
-  user_id: string;
-  location_id: string | null;
-  location_detail_id: string | null;
-  preferred_date_start: string;
-  preferred_date_end?: string | null;
-  price: number;
-  notes?: string | null;
-  status: WashStatus;
-  organization_id?: string;
-  recurring_frequency?: string | null;
-  recurring_count?: number | null;
-}
-
-/**
- * Insert a wash request using standard Supabase client
- */
-export const insertWashRequestStandard = async (
-  data: WashRequestInsertData
-) => {
+// Standard insert using Supabase client
+export const insertWashRequestStandard = async (washRequestData: any) => {
   try {
-    const { data: result, error } = await supabase
+    const { data, error } = await supabase
       .from('wash_requests')
-      .insert(data)
+      .insert(washRequestData)
       .select('*')
       .single();
-
+    
     if (error) {
-      return handleSupabaseError("standard insert", error);
+      console.error("Standard insert error:", error);
+      return null;
     }
-
-    return result;
-  } catch (error) {
-    return handleSupabaseError("standard insert exception", error);
+    
+    return data;
+  } catch (err) {
+    handleApiError(err, "insertWashRequestStandard");
+    return null;
   }
 };
 
-/**
- * Generate a UUID for the new request
- */
-const generateRequestId = (): string => {
-  return crypto.randomUUID();
-};
-
-/**
- * Prepare headers for direct API request
- */
-const prepareApiHeaders = (accessToken: string | undefined) => {
-  return {
-    'apikey': SUPABASE_ANON_KEY,
-    'Authorization': `Bearer ${accessToken || ''}`,
-    'Content-Type': 'application/json',
-    'Prefer': 'return=representation'
-  };
-};
-
-/**
- * Make the direct API request to insert wash request
- */
-const makeDirectApiRequest = async (
-  requestId: string, 
-  insertData: WashRequestInsertData, 
-  accessToken: string | undefined
-) => {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/wash_requests`, {
-    method: 'POST',
-    headers: prepareApiHeaders(accessToken),
-    body: JSON.stringify({
-      id: requestId,
-      ...insertData
-    })
-  });
-
-  const result = await handleDirectApiResponse(response, "direct wash request insert");
-  return result ? { id: requestId, ...result } : null;
-};
-
-/**
- * Insert a wash request using direct API call (fallback method)
- */
-export const insertWashRequestDirect = async (
-  insertData: WashRequestInsertData,
-  accessToken: string | undefined
-) => {
+// Direct insert using REST API
+export const insertWashRequestDirect = async (washRequestData: any, accessToken: string | undefined) => {
+  if (!accessToken) {
+    console.error("No access token available for direct API call");
+    return null;
+  }
+  
   try {
-    const requestId = generateRequestId();
-    return await makeDirectApiRequest(requestId, insertData, accessToken);
-  } catch (error) {
-    return handleSupabaseError("direct insert exception", error);
+    const endpoint = `${supabase.supabaseUrl}/rest/v1/wash_requests`;
+    
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'apikey': supabase.supabaseKey,
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(washRequestData)
+    });
+    
+    if (!response.ok) {
+      console.error("Direct API error:", await response.text());
+      return null;
+    }
+    
+    const result = await response.json();
+    return Array.isArray(result) && result.length > 0 ? result[0] : null;
+  } catch (err) {
+    handleApiError(err, "insertWashRequestDirect");
+    return null;
   }
+};
+
+// Process inserted wash request data from API
+export const processInsertedWashRequest = async (result: any) => {
+  if (!result) return null;
+  
+  // Extract the relevant data
+  const { id, user_id, preferred_date_start, preferred_date_end, status, price, notes } = result;
+  
+  // Return the processed data
+  return {
+    id,
+    customerId: user_id,
+    preferredDates: {
+      start: new Date(preferred_date_start),
+      end: preferred_date_end ? new Date(preferred_date_end) : undefined
+    },
+    status,
+    price,
+    notes,
+    vehicleServices: result.metadata?.vehicleServices || []
+  };
 };

@@ -5,6 +5,7 @@ import { useWashRequests } from "@/contexts/WashContext";
 import { toast } from "sonner";
 import { useLocations } from "@/contexts/LocationContext";
 import { RecurringFrequency } from "@/models/types";
+import { VehicleService } from "./ServicesSelectionSection";
 
 export function useWashRequestForm(onSuccess?: () => void) {
   const { user } = useAuth();
@@ -29,7 +30,7 @@ export function useWashRequestForm(onSuccess?: () => void) {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, vehicleServices?: VehicleService[]) => {
     e.preventDefault();
 
     if (!user) {
@@ -52,6 +53,19 @@ export function useWashRequestForm(onSuccess?: () => void) {
       return;
     }
 
+    // Validate that all selected vehicles have at least one service
+    if (vehicleServices) {
+      const missingServiceVehicles = selectedVehicleIds.filter(vehicleId => {
+        const service = vehicleServices.find(vs => vs.vehicleId === vehicleId);
+        return !service || service.services.length === 0;
+      });
+
+      if (missingServiceVehicles.length > 0) {
+        toast.error("Please select at least one service for each vehicle");
+        return;
+      }
+    }
+
     setIsLoading(true);
 
     try {
@@ -66,6 +80,7 @@ export function useWashRequestForm(onSuccess?: () => void) {
         notes: notes,
         locationId: selectedLocationId,
         recurringFrequency: recurringFrequency === "none" ? undefined : recurringFrequency,
+        vehicleServices: vehicleServices || [],
       });
       
       if (onSuccess) onSuccess();

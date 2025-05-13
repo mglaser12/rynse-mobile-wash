@@ -1,9 +1,11 @@
-
 // Add the UserRole type to the existing types
 export type UserRole = "fleet_manager" | "technician" | "admin";
 
-// Add RecurringSchedule type
+// Add RecurringFrequency type
 export type RecurringFrequency = "none" | "weekly" | "biweekly" | "monthly" | "quarterly";
+
+// Add VehicleServiceType
+export type VehicleServiceType = "exterior-wash" | "interior-clean" | "trailer-washout";
 
 export type Vehicle = {
   id: string;
@@ -27,6 +29,12 @@ export type WashStatus =
   | "in_progress" 
   | "completed" 
   | "cancelled";
+
+// Vehicle service selection for wash requests
+export type VehicleServiceSelection = {
+  vehicleId: string;
+  services: VehicleServiceType[];
+};
 
 export type WashRequest = {
   id: string;
@@ -60,6 +68,7 @@ export type WashRequest = {
     frequency: RecurringFrequency;
     count?: number; // How many times it should be repeated (optional)
   };
+  vehicleServices?: VehicleServiceSelection[]; // Services selected for each vehicle
 };
 
 // New type to track the wash status for each vehicle
@@ -143,6 +152,12 @@ export type SupabaseWashRequest = {
   location_detail_id?: string;
   recurring_frequency?: string | null;
   recurring_count?: number | null;
+  metadata?: {
+    vehicleServices?: {
+      vehicleId: string;
+      services: string[];
+    }[];
+  } | null;
 };
 
 export type SupabaseWashRequestVehicle = {

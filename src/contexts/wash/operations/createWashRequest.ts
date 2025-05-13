@@ -31,12 +31,13 @@ export async function createWashRequest(data: CreateWashRequestData): Promise<Wa
       location_detail_id: data.locationId || null,
       organization_id: organizationId, // Add organization_id to wash request data
       recurring_frequency: data.recurringFrequency || null,
-      recurring_count: data.recurringCount || null
+      recurring_count: data.recurringCount || null,
+      // Add vehicle services as JSON in metadata field
+      metadata: data.vehicleServices ? { vehicleServices: data.vehicleServices } : null
     };
 
     console.log("Inserting wash request with:", washRequestData);
 
-    
     try {
       // First attempt: Use the standard Supabase client
       const result = await insertWashRequestStandard(washRequestData);

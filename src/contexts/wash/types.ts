@@ -12,6 +12,11 @@ export interface WashContextType {
   refreshData: () => Promise<void>;
 }
 
+export interface VehicleServiceData {
+  vehicleId: string;
+  services: string[]; // Array of service IDs
+}
+
 export interface CreateWashRequestData {
   customerId: string;
   vehicles: string[];
@@ -21,7 +26,8 @@ export interface CreateWashRequestData {
   };
   price: number;
   notes?: string;
-  locationId?: string; // Add locationId field to the wash request data
-  recurringFrequency?: RecurringFrequency; // Add recurring frequency
-  recurringCount?: number; // Optional count of recurring instances
+  locationId?: string; 
+  recurringFrequency?: RecurringFrequency;
+  recurringCount?: number;
+  vehicleServices?: VehicleServiceData[]; // New field for vehicle services
 }
