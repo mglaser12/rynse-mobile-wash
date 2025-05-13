@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { WashRequest } from "@/models/types";
 import { Calendar } from "@/components/ui/calendar";
@@ -14,8 +13,13 @@ interface CustomerCalendarViewProps {
 export const CustomerCalendarView = ({ washRequests, onSelectRequest }: CustomerCalendarViewProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
+  // Sort wash requests by createdAt date (most recent first)
+  const sortedWashRequests = [...washRequests].sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  
   // Group wash requests by date
-  const washRequestsByDate = washRequests.reduce((acc, request) => {
+  const washRequestsByDate = sortedWashRequests.reduce((acc, request) => {
     if (!request.preferredDates?.start) return acc;
     
     const dateKey = format(new Date(request.preferredDates.start), "yyyy-MM-dd");

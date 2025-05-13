@@ -26,12 +26,17 @@ const BookingsPage = () => {
     console.log("BookingsPage - Wash Requests:", washRequests.length);
   }, [washRequests]);
 
-  const activeRequests = washRequests.filter(req => 
+  // Sort wash requests by createdAt date (most recent first)
+  const sortedWashRequests = [...washRequests].sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  const activeRequests = sortedWashRequests.filter(req => 
     ["pending", "confirmed", "in_progress"].includes(req.status)
   );
   
-  const completedRequests = washRequests.filter(req => req.status === "completed");
-  const cancelledRequests = washRequests.filter(req => req.status === "cancelled");
+  const completedRequests = sortedWashRequests.filter(req => req.status === "completed");
+  const cancelledRequests = sortedWashRequests.filter(req => req.status === "cancelled");
 
   const handleViewCompletedWash = (washRequest: WashRequest) => {
     setSelectedWashRequest(washRequest);

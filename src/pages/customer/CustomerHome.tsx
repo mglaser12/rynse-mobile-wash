@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,13 +23,18 @@ const CustomerHome = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showCalendarView, setShowCalendarView] = useState(false);
 
+  // Sort wash requests by createdAt date (most recent first)
+  const sortedWashRequests = [...washRequests].sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
   // Filter wash requests for active ones
-  const activeRequests = washRequests.filter(req => 
+  const activeRequests = sortedWashRequests.filter(req => 
     ["pending", "confirmed", "in_progress"].includes(req.status)
   );
   
   // Filter for upcoming washes (today and future dates)
-  const upcomingRequests = washRequests.filter(req => {
+  const upcomingRequests = sortedWashRequests.filter(req => {
     if (!req.preferredDates?.start) return false;
     
     const today = new Date();
@@ -107,7 +111,7 @@ const CustomerHome = () => {
           <>
             {showCalendarView ? (
               <CustomerCalendarView 
-                washRequests={washRequests}
+                washRequests={sortedWashRequests}
                 onSelectRequest={(request) => {
                   setSelectedWashRequest(request);
                   setShowEditDialog(true);
